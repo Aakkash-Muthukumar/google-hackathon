@@ -1,91 +1,73 @@
-# 🧠 Offline Programming Tutor (Multilingual)
+# Welcome to your Lovable project
 
-An **offline-first**, multilingual AI-powered programming tutor designed for **low-resource schools and communities**. Powered locally by **Gemma 3n**, **Whisper**, and open-source tools, this tutor helps students learn programming through voice or text without needing internet access.
+## Project info
 
-## 🌍 Why This Matters
+**URL**: https://lovable.dev/projects/9b703055-d7da-49fd-a69a-1a5b2f48da4a
 
-Many students across the world lack stable internet or access to quality programming education. Our solution levels the playing field by providing:
+## How can I edit this code?
 
-* 📶 **No internet required**
-* 🌐 **Multilingual support**
-* 💻 **Offline AI model with code understanding**
-* 🧑‍🏫 **Interactive voice + text tutoring**
-* 🕹️ **Gamified learning progression (level-up + streaks)**
+There are several ways of editing your application.
 
-## 🛠️ Features
+**Use Lovable**
 
-* 🎤 **Speech-to-Text** using offline **Whisper**
-* 💬 **Text & Voice Q\&A** with Gemma 3n (running on-device via Ollama)
-* 📚 **Language-specific flashcards & coding quizzes**
-* 🎮 **XP-based level system** with progressive challenges
-* 🧩 **Support for multiple languages**: Python, JavaScript, C++, etc.
-* 🔌 **100% offline**, runs on low-spec hardware
-* 📄 **Daily summary export** for teacher or parent review
+Simply visit the [Lovable Project](https://lovable.dev/projects/9b703055-d7da-49fd-a69a-1a5b2f48da4a) and start prompting.
 
-## 🧱 Tech Stack
+Changes made via Lovable will be committed automatically to this repo.
 
-| Component        | Tech Used                                          |
-| ---------------- | -------------------------------------------------- |
-| LLM              | [Gemma 3n](https://ai.google.dev/gemma) via Ollama |
-| Speech-to-Text   | Whisper.cpp (offline)                              |
-| Frontend         | Local web UI (e.g., Streamlit or custom)           |
-| Backend          | Python + FastAPI (or Flask offline)                |
-| Data Storage     | SQLite (for offline use)                           |
-| Model Finetuning | Unsloth (optional)                                 |
+**Use your preferred IDE**
 
-## 🏁 Getting Started
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-### 🔧 Requirements
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-* Python 3.10+
-* Ollama with Gemma 3n installed (`ollama pull gemma:3n`)
-* whisper.cpp or faster-whisper installed locally
-* Streamlit (for frontend) or basic HTML/CSS/JS if preferred
+Follow these steps:
 
-### ▶️ Run the App
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-```bash
-git clone https://github.com/yourname/offline-programming-tutor.git
-cd offline-programming-tutor
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-# Start Ollama in the background (Gemma 3n)
-ollama run gemma:3n
+# Step 3: Install the necessary dependencies.
+npm i
 
-# Start backend
-python app.py
-
-# (Optional) Start frontend
-streamlit run frontend.py
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
 
-## 🔍 Example Use Case
+**Edit a file directly in GitHub**
 
-1. Student opens the local tutor interface.
-2. Chooses language → starts a challenge (e.g., Python loops).
-3. Speaks question: “Can you explain while loops?”
-4. Whisper transcribes → Gemma 3n responds offline.
-5. Student earns XP and unlocks next level.
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-## 📦 Project Structure
+**Use GitHub Codespaces**
 
-```
-offline-programming-tutor/
-├── app.py               # Backend API (local)
-├── frontend.py          # Streamlit UI
-├── whisper_module/      # Local STT handler
-├── prompts/             # Gemma tutoring prompts
-├── database/            # SQLite DB for user progress
-└── README.md
-```
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## 🧑‍💻 Team
+## What technologies are used for this project?
 
-* Vishal Vasanthakumar Poornima
-* Aakkash Muthukumar
-* Shriman Oppilamani
-* Rishi Keshava Damarla
-* Kshrugal Jain
+This project is built with:
 
-## 🎯 Hackathon
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-Built for the **Gemma 3n Impact Challenge** — enabling education access through offline, private, personal AI.
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/9b703055-d7da-49fd-a69a-1a5b2f48da4a) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
