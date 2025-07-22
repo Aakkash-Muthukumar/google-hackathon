@@ -56,8 +56,9 @@ export default function Tutor() {
     setIsLoading(true);
 
     try {
-      // Send to local Flask API
-      const response = await fetch('http://localhost:5000/ask', {
+      // Send to local API (URL from Vite config)
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,10 +87,11 @@ export default function Tutor() {
       console.error('Error sending message:', error);
       
       // Fallback response when offline or API unavailable
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const fallbackMessage: ChatMessageType = {
         id: (Date.now() + 1).toString(),
         content: isOnline 
-          ? "I'm sorry, but I'm having trouble connecting to the tutoring service right now. Please make sure the local server is running on http://localhost:5000. In the meantime, try reviewing your flashcards or working on coding challenges!"
+          ? `I'm sorry, but I'm having trouble connecting to the tutoring service right now. Please make sure the local server is running on ${apiUrl}. In the meantime, try reviewing your flashcards or working on coding challenges!`
           : "I'm currently offline, but I'd love to help when you're back online! In the meantime, you can practice with flashcards and coding challenges that work offline.",
         sender: 'tutor',
         timestamp: new Date()
