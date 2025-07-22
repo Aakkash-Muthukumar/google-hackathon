@@ -1,6 +1,5 @@
 import sys
 import subprocess
-import resource
 from backend.services.ai_service import ask_gemma
 
 # 1. Format a prompt for the model
@@ -32,12 +31,6 @@ def verify_with_model(problem, user_code, test_cases):
 
 # 3. Local sandboxed code execution (Unix only)
 
-def set_limits():
-    # Set CPU time limit (seconds)
-    resource.setrlimit(resource.RLIMIT_CPU, (2, 2))
-    # Set memory limit (bytes)
-    resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024, 256 * 1024 * 1024))  # 256MB
-
 def run_user_code(code, input_data):
     """
     Run user code in a subprocess with CPU and memory limits.
@@ -49,7 +42,6 @@ def run_user_code(code, input_data):
             input=input_data.encode(),
             capture_output=True,
             timeout=2,
-            preexec_fn=set_limits  # Only works on Unix
         )
         return result.stdout.decode(), result.stderr.decode()
     except subprocess.TimeoutExpired:
