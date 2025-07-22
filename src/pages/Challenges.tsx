@@ -4,11 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { storage } from '@/lib/storage';
-import { mockChallenges } from '@/lib/mockData';
-import { Challenge, User } from '@/lib/types';
+import { Challenge } from '@/lib/types';
 
-// Add this function to call the backend for model-based verification
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 async function verifyChallenge(challengeId: number | string, userCode: string) {
   const response = await fetch(`${apiUrl}/challenge/verify`, {
@@ -24,24 +21,66 @@ async function verifyChallenge(challengeId: number | string, userCode: string) {
   return response.json();
 }
 
+async function fetchChallenges() {
+  const response = await fetch(`${apiUrl}/challenge/all`);
+  if (!response.ok) throw new Error('Failed to fetch challenges');
+  return response.json();
+}
+
+async function fetchSolution(challengeId: number | string) {
+  const response = await fetch(`${apiUrl}/challenge/solution`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge_id: Number(challengeId) }),
+  });
+  if (!response.ok) throw new Error('Failed to fetch solution');
+  return response.json();
+}
+
+async function fetchHints(challengeId: number | string) {
+  const response = await fetch(`${apiUrl}/challenge/hints`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ challenge_id: Number(challengeId) }),
+  });
+  if (!response.ok) throw new Error('Failed to fetch hints');
+  return response.json();
+}
+
 export default function Challenges() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [code, setCode] = useState('');
   const [showSolution, setShowSolution] = useState(false);
   const [showHints, setShowHints] = useState(false);
+  const [solution, setSolution] = useState<string>('');
+  const [hints, setHints] = useState<string>('');
+  const [loadingSolution, setLoadingSolution] = useState(false);
+  const [loadingHints, setLoadingHints] = useState(false);
   const [testResults, setTestResults] = useState<string[]>([]);
-  const [user, setUser] = useState<User>(storage.getUser());
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
-    // Load challenges from storage or use mock data
-    let storedChallenges = storage.getChallenges();
-    if (storedChallenges.length === 0) {
-      storedChallenges = mockChallenges;
-      storage.saveChallenges(storedChallenges);
-    }
-    setChallenges(storedChallenges);
+    fetchChallenges()
+      .then((data) => {
+        const mapped = data.map((c: any) => ({
+          id: c.id.toString(),
+          title: c.title,
+          description: c.description,
+          difficulty: c.difficulty,
+          language: c.language || 'python',
+          topic: c.topic || '',
+          xpReward: c.xpReward || 50,
+          completed: false,
+          template: c.template || '',
+          testCases: (c.examples || []).map((ex: any) => ({
+            input: JSON.stringify(ex.input),
+            expectedOutput: JSON.stringify(ex.output)
+          })),
+        }));
+        setChallenges(mapped);
+      })
+      .catch(() => setChallenges([]));
   }, []);
 
   useEffect(() => {
@@ -49,42 +88,82 @@ export default function Challenges() {
       setCode(selectedChallenge.template);
       setShowSolution(false);
       setShowHints(false);
+      setSolution('');
+      setHints('');
       setTestResults([]);
     }
   }, [selectedChallenge]);
 
-  // Updated runTests to use backend model verification
   const runTests = async () => {
     if (!selectedChallenge) return;
     setIsRunning(true);
     setTestResults(["⏳ Running tests with AI model..."]);
     try {
       const data = await verifyChallenge(selectedChallenge.id, code);
-      // The backend returns { result: string } for model method
-      // We'll display the model's response as a single result
-      setTestResults([data.result]);
+      // data: { correct: boolean, feedback: string }
+      setTestResults([
+        (data.correct ? '✅ Correct! ' : '❌ Incorrect. ') + (data.feedback || '')
+      ]);
     } catch (err) {
       setTestResults(["❌ Error running tests. Please try again."]);
     }
     setIsRunning(false);
   };
 
-  const submitSolution = () => {
+  const submitSolution = async () => {
     if (!selectedChallenge) return;
-    // Mark challenge as completed and award XP
-    const updatedChallenges = challenges.map(c =>
-      c.id === selectedChallenge.id 
-        ? { ...c, completed: true }
-        : c
-    );
-    setChallenges(updatedChallenges);
-    storage.saveChallenges(updatedChallenges);
-    // Award XP to user
-    const newXP = user.xp + selectedChallenge.xpReward;
-    const updatedUser = { ...user, xp: newXP };
-    setUser(updatedUser);
-    storage.saveUser(updatedUser);
-    setTestResults(['🎉 Challenge completed! +' + selectedChallenge.xpReward + ' XP']);
+    setIsRunning(true);
+    setTestResults(["⏳ Submitting solution for review..."]);
+    try {
+      const data = await verifyChallenge(selectedChallenge.id, code);
+      setTestResults([
+        (data.correct ? '🎉 Challenge completed! ' : '❌ Not correct. ') + (data.feedback || '')
+      ]);
+      if (data.correct) {
+        setChallenges((prev) =>
+          prev.map((c) =>
+            c.id === selectedChallenge.id ? { ...c, completed: true } : c
+          )
+        );
+      }
+    } catch {
+      setTestResults(["❌ Error submitting solution."]);
+    }
+    setIsRunning(false);
+  };
+
+  const handleShowSolution = async () => {
+    if (!selectedChallenge) return;
+    if (showSolution) {
+      setShowSolution(false);
+      return;
+    }
+    setLoadingSolution(true);
+    setShowSolution(true);
+    try {
+      const data = await fetchSolution(selectedChallenge.id);
+      setSolution(data.solution);
+    } catch {
+      setSolution('❌ Error fetching solution.');
+    }
+    setLoadingSolution(false);
+  };
+
+  const handleShowHints = async () => {
+    if (!selectedChallenge) return;
+    if (showHints) {
+      setShowHints(false);
+      return;
+    }
+    setLoadingHints(true);
+    setShowHints(true);
+    try {
+      const data = await fetchHints(selectedChallenge.id);
+      setHints(data.hints);
+    } catch {
+      setHints('❌ Error fetching hints.');
+    }
+    setLoadingHints(false);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -113,7 +192,6 @@ export default function Challenges() {
             </span>
           </div>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Problem Description */}
           <div className="space-y-6">
@@ -150,7 +228,8 @@ export default function Challenges() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setShowHints(!showHints)}
+                    onClick={handleShowHints}
+                    disabled={loadingHints}
                   >
                     {showHints ? 'Hide' : 'Show'} Hints
                   </Button>
@@ -159,14 +238,11 @@ export default function Challenges() {
               {showHints && (
                 <CardContent>
                   <div className="space-y-3">
-                    {selectedChallenge.hints.map((hint, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <span className="bg-warning/20 text-warning w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium mt-0.5">
-                          {index + 1}
-                        </span>
-                        <p className="text-sm">{hint}</p>
-                      </div>
-                    ))}
+                    {loadingHints ? (
+                      <div className="text-sm text-muted-foreground">Loading hints...</div>
+                    ) : (
+                      <pre className="text-sm whitespace-pre-wrap">{hints}</pre>
+                    )}
                   </div>
                 </CardContent>
               )}
@@ -220,23 +296,27 @@ export default function Challenges() {
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setShowSolution(!showSolution)}
-                disabled={isRunning}
+                onClick={handleShowSolution}
+                disabled={isRunning || loadingSolution}
               >
                 <Eye className="w-4 h-4 mr-2" />
                 {showSolution ? 'Hide' : 'Show'} Solution
               </Button>
             </div>
             {/* Solution */}
-            {showSolution && selectedChallenge.solution && (
+            {showSolution && (
               <Card className="bg-gradient-card shadow-card">
                 <CardHeader>
                   <CardTitle className="text-lg">Solution</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="bg-muted p-4 rounded-lg text-sm font-mono overflow-x-auto">
-                    {selectedChallenge.solution}
-                  </pre>
+                  {loadingSolution ? (
+                    <div className="text-sm text-muted-foreground">Loading solution...</div>
+                  ) : (
+                    <pre className="bg-muted p-4 rounded-lg text-sm font-mono overflow-x-auto whitespace-pre-wrap">
+                      {solution}
+                    </pre>
+                  )}
                 </CardContent>
               </Card>
             )}

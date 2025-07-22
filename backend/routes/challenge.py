@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from backend.services.challenge_service import verify_with_model, run_user_code
+from backend.services.ai_service import ask_gemma
 import json
 import os
 
@@ -18,6 +19,48 @@ class VerifyRequest(BaseModel):
     user_code: str
     method: str = "model"  # "model" or "local"
 
+class ChallengeIdRequest(BaseModel):
+    challenge_id: int
+
+@router.get("/all")
+def get_all_challenges():
+    """Return all coding challenges for the frontend."""
+    return load_challenges()
+
+@router.post("/solution")
+def get_solution(request: ChallengeIdRequest):
+    challenges = load_challenges()
+    challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
+    if not challenge:
+        raise HTTPException(status_code=404, detail="Challenge not found.")
+    prompt = f"""
+You are an expert coding tutor. Provide a clean, idiomatic solution in Python for the following problem:
+
+Title: {challenge['title']}
+Description: {challenge['description']}
+Input Format: {challenge.get('input_format', '')}
+Output Format: {challenge.get('output_format', '')}
+"""
+    solution = ask_gemma(prompt)
+    return {"solution": solution}
+
+@router.post("/hints")
+def get_hints(request: ChallengeIdRequest):
+    challenges = load_challenges()
+    challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
+    if not challenge:
+        raise HTTPException(status_code=404, detail="Challenge not found.")
+    prompt = f"""
+You are an expert coding tutor. Provide 3 helpful hints for solving the following problem. Do not give away the full solution.
+
+Title: {challenge['title']}
+Description: {challenge['description']}
+Input Format: {challenge.get('input_format', '')}
+Output Format: {challenge.get('output_format', '')}
+"""
+    hints = ask_gemma(prompt)
+    return {"hints": hints}
+
 @router.post("/verify")
 def verify_challenge(request: VerifyRequest):
     challenges = load_challenges()
@@ -27,9 +70,8 @@ def verify_challenge(request: VerifyRequest):
     test_cases = challenge.get("examples", [])
     if request.method == "model":
         result = verify_with_model(challenge, request.user_code, test_cases)
-        return {"result": result}
+        return result  # Now returns dict with 'correct' and 'feedback'
     elif request.method == "local":
-        # For local, run user code on all test cases and collect results
         results = []
         for case in test_cases:
             input_data = json.dumps(case["input"]) if isinstance(case["input"], dict) else str(case["input"])
