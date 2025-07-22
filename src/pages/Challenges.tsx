@@ -8,6 +8,22 @@ import { storage } from '@/lib/storage';
 import { mockChallenges } from '@/lib/mockData';
 import { Challenge, User } from '@/lib/types';
 
+// Add this function to call the backend for model-based verification
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+async function verifyChallenge(challengeId: number | string, userCode: string) {
+  const response = await fetch(`${apiUrl}/challenge/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      challenge_id: Number(challengeId),
+      user_code: userCode,
+      method: 'model',
+    }),
+  });
+  if (!response.ok) throw new Error('Verification failed');
+  return response.json();
+}
+
 export default function Challenges() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
@@ -16,6 +32,7 @@ export default function Challenges() {
   const [showHints, setShowHints] = useState(false);
   const [testResults, setTestResults] = useState<string[]>([]);
   const [user, setUser] = useState<User>(storage.getUser());
+  const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
     // Load challenges from storage or use mock data
@@ -36,38 +53,37 @@ export default function Challenges() {
     }
   }, [selectedChallenge]);
 
-  const runTests = () => {
+  // Updated runTests to use backend model verification
+  const runTests = async () => {
     if (!selectedChallenge) return;
-    
-    // Simulate test execution (in a real app, this would run the code)
-    const results = selectedChallenge.testCases.map((testCase, index) => {
-      // This is a mock - in reality you'd execute the code
-      const passed = Math.random() > 0.3; // 70% pass rate for demo
-      return passed ? `✅ Test ${index + 1}: Passed` : `❌ Test ${index + 1}: Failed`;
-    });
-    
-    setTestResults(results);
+    setIsRunning(true);
+    setTestResults(["⏳ Running tests with AI model..."]);
+    try {
+      const data = await verifyChallenge(selectedChallenge.id, code);
+      // The backend returns { result: string } for model method
+      // We'll display the model's response as a single result
+      setTestResults([data.result]);
+    } catch (err) {
+      setTestResults(["❌ Error running tests. Please try again."]);
+    }
+    setIsRunning(false);
   };
 
   const submitSolution = () => {
     if (!selectedChallenge) return;
-    
     // Mark challenge as completed and award XP
     const updatedChallenges = challenges.map(c =>
       c.id === selectedChallenge.id 
         ? { ...c, completed: true }
         : c
     );
-    
     setChallenges(updatedChallenges);
     storage.saveChallenges(updatedChallenges);
-    
     // Award XP to user
     const newXP = user.xp + selectedChallenge.xpReward;
     const updatedUser = { ...user, xp: newXP };
     setUser(updatedUser);
     storage.saveUser(updatedUser);
-    
     setTestResults(['🎉 Challenge completed! +' + selectedChallenge.xpReward + ' XP']);
   };
 
@@ -112,7 +128,6 @@ export default function Challenges() {
                 <p className="text-muted-foreground leading-relaxed">
                   {selectedChallenge.description}
                 </p>
-                
                 <div className="space-y-3">
                   <h4 className="font-semibold">Test Cases:</h4>
                   {selectedChallenge.testCases.map((testCase, index) => (
@@ -124,7 +139,6 @@ export default function Challenges() {
                 </div>
               </CardContent>
             </Card>
-
             {/* Hints */}
             <Card className="bg-gradient-card shadow-card">
               <CardHeader>
@@ -157,7 +171,6 @@ export default function Challenges() {
                 </CardContent>
               )}
             </Card>
-
             {/* Test Results */}
             {testResults.length > 0 && (
               <Card className="bg-gradient-card shadow-card">
@@ -179,7 +192,6 @@ export default function Challenges() {
               </Card>
             )}
           </div>
-
           {/* Code Editor */}
           <div className="space-y-4">
             <Card className="bg-gradient-card shadow-card">
@@ -192,31 +204,29 @@ export default function Challenges() {
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="Write your solution here..."
                   className="min-h-96 font-mono text-sm resize-none"
+                  disabled={isRunning}
                 />
               </CardContent>
             </Card>
-
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
-              <Button onClick={runTests} variant="outline">
+              <Button onClick={runTests} variant="outline" disabled={isRunning}>
                 <Play className="w-4 h-4 mr-2" />
-                Run Tests
+                {isRunning ? 'Running...' : 'Run Tests'}
               </Button>
-              
-              <Button onClick={submitSolution} variant="success">
+              <Button onClick={submitSolution} variant="success" disabled={isRunning}>
                 <CheckCircle className="w-4 h-4 mr-2" />
                 Submit Solution
               </Button>
-              
               <Button 
                 variant="outline" 
                 onClick={() => setShowSolution(!showSolution)}
+                disabled={isRunning}
               >
                 <Eye className="w-4 h-4 mr-2" />
                 {showSolution ? 'Hide' : 'Show'} Solution
               </Button>
             </div>
-
             {/* Solution */}
             {showSolution && selectedChallenge.solution && (
               <Card className="bg-gradient-card shadow-card">
@@ -245,7 +255,6 @@ export default function Challenges() {
           Solve problems and level up your programming skills
         </p>
       </div>
-
       {/* Challenge Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {challenges.map((challenge) => (
@@ -274,12 +283,10 @@ export default function Challenges() {
                 )}
               </div>
             </CardHeader>
-            
             <CardContent className="space-y-4">
               <p className="text-muted-foreground text-sm leading-relaxed">
                 {challenge.description}
               </p>
-              
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Code className="w-4 h-4 text-primary" />
@@ -289,7 +296,6 @@ export default function Challenges() {
                   +{challenge.xpReward} XP
                 </div>
               </div>
-              
               <Button 
                 variant={challenge.completed ? "success" : "default"}
                 className="w-full group-hover:scale-105 transition-transform"
@@ -310,7 +316,6 @@ export default function Challenges() {
           </Card>
         ))}
       </div>
-
       {/* Progress Summary */}
       <Card className="bg-gradient-card shadow-card">
         <CardHeader>

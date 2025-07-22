@@ -1,1 +1,88 @@
-[] 
+[
+  {
+    "id": 1,
+    "title": "Merge Strings Alternately",
+    "difficulty": "Easy",
+    "description": "Given two strings word1 and word2, merge them by alternating characters starting with word1. If one string is longer, append the remaining characters at the end.",
+    "input_format": "word1: string, word2: string",
+    "output_format": "string",
+    "examples": [
+      {
+        "input": {"word1": "abc", "word2": "pqr"},
+        "output": "apbqcr"
+      },
+      {
+        "input": {"word1": "ab", "word2": "pqrs"},
+        "output": "apbqrs"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Number of Recent Calls",
+    "difficulty": "Easy",
+    "description": "You have a RecentCounter class that counts recent requests within a 3000 ms window. Implement the ping(int t) method that returns the number of pings in the last 3000 ms including the current one.",
+    "input_format": "t: integer (milliseconds)",
+    "output_format": "integer",
+    "examples": [
+      {
+        "input": ["ping(1)", "ping(100)", "ping(3001)", "ping(3002)"],
+        "output": [1, 2, 3, 3]
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Odd Even Linked List",
+    "difficulty": "Medium",
+    "description": "Given the head of a singly linked list, group all the nodes with odd indices together followed by the nodes with even indices, and return the reordered list.",
+    "input_format": "head: ListNode",
+    "output_format": "ListNode",
+    "examples": [
+      {
+        "input": [1,2,3,4,5],
+        "output": [1,3,5,2,4]
+      },
+      {
+        "input": [2,1,3,5,6,4,7],
+        "output": [2,3,6,7,1,5,4]
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Odd Even Linked List",
+    "difficulty": "Medium",
+    "description": "Given the head of a singly linked list, group all the nodes with odd indices together followed by the nodes with even indices, and return the reordered list.",
+    "input_format": "head: ListNode",
+    "output_format": "ListNode",
+    "examples": [
+      {
+        "input": [1,2,3,4,5],
+        "output": [1,3,5,2,4]
+      },
+      {
+        "input": [2,1,3,5,6,4,7],
+        "output": [2,3,6,7,1,5,4]
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Serialize and Deserialize Binary Tree",
+    "difficulty": "Hard",
+    "description": "Design an algorithm to serialize and deserialize a binary tree. Serialization is converting a tree to a string, and deserialization is converting the string back to the original tree structure.",
+    "input_format": "root: TreeNode",
+    "output_format": "string (for serialize), TreeNode (for deserialize)",
+    "examples": [
+      {
+        "input": {"root": [1,2,3,null,null,4,5]},
+        "output": "1,2,null,null,3,4,null,null,5,null,null"
+      },
+      {
+        "input": {"root": []},
+        "output": ""
+      }
+    ]
+  }
+] 
