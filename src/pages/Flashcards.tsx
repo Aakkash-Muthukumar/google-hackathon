@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, RotateCcw, Check, Clock, Filter, Shuffle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Check, Clock, Filter, Shuffle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { storage } from '@/lib/storage';
 import { mockFlashCards } from '@/lib/mockData';
 import { FlashCard, User } from '@/lib/types';
@@ -13,6 +16,15 @@ export default function Flashcards() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [user, setUser] = useState<User>(storage.getUser());
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    term: '',
+    definition: '',
+    language: 'python',
+    topic: '',
+    difficulty: 'easy',
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     // Load flashcards from storage or use mock data
@@ -93,6 +105,58 @@ export default function Flashcards() {
     handleNext();
   };
 
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleFormSelect = (name: string, value: string) => {
+    setForm({ ...form, [name]: value });
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${apiUrl}/flashcard/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          term: form.term,
+          definition: form.definition,
+          language: form.language,
+          topic: form.topic,
+          difficulty: form.difficulty,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to add flashcard');
+      const newCard = await res.json();
+      setFlashcards(prev => [...prev, { ...newCard, known: false, reviewLater: false }]);
+      setShowForm(false);
+      setForm({ term: '', definition: '', language: 'python', topic: '', difficulty: 'easy' });
+    } catch (err) {
+      alert('Error adding flashcard.');
+    }
+    setSubmitting(false);
+  };
+
+  const handleDelete = async () => {
+    if (!currentCard) return;
+    if (!window.confirm('Are you sure you want to delete this flashcard?')) return;
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${apiUrl}/flashcard/${currentCard.id}`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) throw new Error('Failed to delete flashcard');
+      setFlashcards(prev => prev.filter(card => card.id !== currentCard.id));
+      setCurrentIndex(0);
+      setIsFlipped(false);
+    } catch (err) {
+      alert('Error deleting flashcard.');
+    }
+  };
+
   if (!currentCard) {
     return (
       <div className="max-w-4xl mx-auto text-center py-20">
@@ -109,6 +173,50 @@ export default function Flashcards() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+      {/* Add Flashcard Button & Form */}
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={() => setShowForm(f => !f)}>
+          {showForm ? 'Cancel' : 'Add Flashcard'}
+        </Button>
+      </div>
+      {showForm && (
+        <form onSubmit={handleFormSubmit} className="bg-muted p-6 rounded-lg space-y-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="term">Term</Label>
+              <Input id="term" name="term" value={form.term} onChange={handleFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="definition">Definition</Label>
+              <Textarea id="definition" name="definition" value={form.definition} onChange={handleFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="language">Language</Label>
+              <select id="language" name="language" value={form.language} onChange={handleFormChange} className="w-full h-10 rounded-md border px-3 py-2">
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript</option>
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="topic">Topic</Label>
+              <Input id="topic" name="topic" value={form.topic} onChange={handleFormChange} required />
+            </div>
+            <div>
+              <Label htmlFor="difficulty">Difficulty</Label>
+              <select id="difficulty" name="difficulty" value={form.difficulty} onChange={handleFormChange} className="w-full h-10 rounded-md border px-3 py-2">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+          </div>
+          <Button type="submit" variant="success" disabled={submitting}>
+            {submitting ? 'Adding...' : 'Add Flashcard'}
+          </Button>
+        </form>
+      )}
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold">Flashcards</h1>
@@ -128,15 +236,10 @@ export default function Flashcards() {
             <SelectContent>
               <SelectItem value="all">All Cards</SelectItem>
               <SelectItem value="unknown">Unknown</SelectItem>
-              <SelectItem value="review">Review Later</SelectItem>
               <SelectItem value="known">Known</SelectItem>
               <SelectItem value="easy">Easy</SelectItem>
               <SelectItem value="medium">Medium</SelectItem>
               <SelectItem value="hard">Hard</SelectItem>
-              <SelectItem value="basics">Basics</SelectItem>
-              <SelectItem value="control-flow">Control Flow</SelectItem>
-              <SelectItem value="oop">OOP</SelectItem>
-              <SelectItem value="advanced">Advanced</SelectItem>
             </SelectContent>
           </Select>
           
@@ -224,6 +327,14 @@ export default function Flashcards() {
         >
           Next
           <ChevronRight className="w-4 h-4" />
+        </Button>
+        <Button 
+          variant="destructive"
+          onClick={handleDelete}
+          disabled={!currentCard}
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          Delete
         </Button>
       </div>
 
