@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.routes import ask
 from backend.routes import subject
 from backend.routes import challenge
+from backend.routes import flashcard
 
 app = FastAPI()
 
@@ -17,6 +18,7 @@ app.add_middleware(
 app.include_router(ask.router)
 app.include_router(subject.router)
 app.include_router(challenge.router)
+app.include_router(flashcard.router)
 
 if __name__ == "__main__":
     import uvicorn

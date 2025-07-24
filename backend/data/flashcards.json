@@ -1,1 +1,18 @@
-[] 
+[
+  {
+    "term": "Monkey",
+    "definition": "Vishal",
+    "language": "python",
+    "topic": "Hello",
+    "difficulty": "medium",
+    "id": 1
+  },
+  {
+    "term": "Black",
+    "definition": "Vishal",
+    "language": "python",
+    "topic": "Review Later",
+    "difficulty": "easy",
+    "id": 2
+  }
+]
