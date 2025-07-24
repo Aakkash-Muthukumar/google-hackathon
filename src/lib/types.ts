@@ -61,3 +61,11 @@ export interface Progress {
   longestStreak: number;
   lastActiveDate: Date;
 }
+
+export interface ChatSession {
+  id: string;
+  name: string;
+  messages: ChatMessage[];
+  createdAt: Date;
+  updatedAt: Date;
+}
