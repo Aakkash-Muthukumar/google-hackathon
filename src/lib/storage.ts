@@ -57,14 +57,31 @@ class LocalStorage {
     this.setItem('challenges', challenges);
   }
 
-  // Chat messages
-  getChatMessages(): ChatMessage[] {
-    return this.getItem('chatMessages', []);
+  // Multi-chat support
+  getChats(): import('./types').ChatSession[] {
+    return this.getItem('chats', []);
   }
 
-  saveChatMessages(messages: ChatMessage[]): void {
-    this.setItem('chatMessages', messages);
+  saveChats(chats: import('./types').ChatSession[]): void {
+    this.setItem('chats', chats);
   }
+
+  getCurrentChatId(): string | null {
+    return this.getItem('currentChatId', null);
+  }
+
+  setCurrentChatId(id: string): void {
+    this.setItem('currentChatId', id);
+  }
+
+  // Deprecated single chat
+  // getChatMessages(): ChatMessage[] {
+  //   return this.getItem('chatMessages', []);
+  // }
+
+  // saveChatMessages(messages: ChatMessage[]): void {
+  //   this.setItem('chatMessages', messages);
+  // }
 
   // Progress
   getProgress(): Progress {
