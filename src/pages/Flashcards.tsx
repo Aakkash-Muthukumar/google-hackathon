@@ -175,9 +175,52 @@ export default function Flashcards() {
         <p className="text-muted-foreground mb-8">
           No flashcards match your current filter. Try changing the filter or add some new cards.
         </p>
-        <Button onClick={() => setFilter('all')}>
-          Show All Cards
-        </Button>
+        <div className="flex flex-col items-center gap-4">
+          <Button onClick={() => setFilter('all')}>
+            Show All Cards
+          </Button>
+          <Button variant="outline" onClick={() => setShowForm(f => !f)}>
+            {showForm ? 'Cancel' : 'Add Flashcard'}
+          </Button>
+        </div>
+        {showForm && (
+          <form onSubmit={handleFormSubmit} className="bg-muted p-6 rounded-lg space-y-4 mt-8 inline-block text-left">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="term">Term</Label>
+                <Input id="term" name="term" value={form.term} onChange={handleFormChange} required />
+              </div>
+              <div>
+                <Label htmlFor="definition">Definition</Label>
+                <Textarea id="definition" name="definition" value={form.definition} onChange={handleFormChange} required />
+              </div>
+              <div>
+                <Label htmlFor="language">Language</Label>
+                <select id="language" name="language" value={form.language} onChange={handleFormChange} className="w-full h-10 rounded-md border px-3 py-2">
+                  <option value="python">Python</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="cpp">C++</option>
+                  <option value="java">Java</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="topic">Topic</Label>
+                <Input id="topic" name="topic" value={form.topic} onChange={handleFormChange} required />
+              </div>
+              <div>
+                <Label htmlFor="difficulty">Difficulty</Label>
+                <select id="difficulty" name="difficulty" value={form.difficulty} onChange={handleFormChange} className="w-full h-10 rounded-md border px-3 py-2">
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+            </div>
+            <Button type="submit" variant="success" disabled={submitting}>
+              {submitting ? 'Adding...' : 'Add Flashcard'}
+            </Button>
+          </form>
+        )}
       </div>
     );
   }

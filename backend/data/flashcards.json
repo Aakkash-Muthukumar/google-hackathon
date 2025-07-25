@@ -1,34 +1,10 @@
 [
   {
-    "term": "Monkey",
-    "definition": "Vishal",
+    "term": "Water",
+    "definition": "Something that's not available in Africa",
     "language": "python",
-    "topic": "Hello",
-    "difficulty": "medium",
+    "topic": "World",
+    "difficulty": "easy",
     "id": 1
-  },
-  {
-    "term": "Black",
-    "definition": "Vishal",
-    "language": "python",
-    "topic": "Review Later",
-    "difficulty": "easy",
-    "id": 2
-  },
-  {
-    "term": "Monkeys",
-    "definition": "VISHAL",
-    "language": "python",
-    "topic": "Animal Kingdom",
-    "difficulty": "easy",
-    "id": 3
-  },
-  {
-    "term": "GAY",
-    "definition": "RISHI",
-    "language": "python",
-    "topic": "WEIRD",
-    "difficulty": "easy",
-    "id": 4
   }
 ]
