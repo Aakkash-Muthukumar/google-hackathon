@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { storage } from '@/lib/storage';
 import { ChatMessage as ChatMessageType, ChatSession } from '@/lib/types';
+import ReactMarkdown from 'react-markdown';
 
 export default function Tutor() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
@@ -136,6 +137,14 @@ export default function Tutor() {
     setMessages(updatedMessages);
     setInputMessage('');
     setIsLoading(true);
+    let tutorMessageId = (Date.now() + 1).toString();
+    let tutorMessage: ChatMessageType = {
+      id: tutorMessageId,
+      content: '',
+      sender: 'tutor',
+      timestamp: new Date()
+    };
+    setMessages([...updatedMessages, tutorMessage]);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${apiUrl}/ask`, {
@@ -145,25 +154,33 @@ export default function Tutor() {
         },
         body: JSON.stringify({ prompt: inputMessage }),
       });
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         throw new Error('Failed to get response from tutor');
       }
-      const data = await response.json();
-      const tutorMessage: ChatMessageType = {
-        id: (Date.now() + 1).toString(),
-        content: data.response,
-        sender: 'tutor',
-        timestamp: new Date()
-      };
-      const finalMessages = [...updatedMessages, tutorMessage];
-      setMessages(finalMessages);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let fullText = '';
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunk = decoder.decode(value);
+          fullText += chunk;
+          tutorMessage = {
+            ...tutorMessage,
+            content: fullText
+          };
+          setMessages([...updatedMessages, { ...tutorMessage }]);
+        }
+      }
       // Save to current chat session
       const chats = storage.getChats();
       const idx = chats.findIndex(c => c.id === currentChatId);
       if (idx !== -1) {
         chats[idx] = {
           ...chats[idx],
-          messages: finalMessages,
+          messages: [...updatedMessages, { ...tutorMessage }],
           updatedAt: new Date(),
         };
         storage.saveChats(chats);
@@ -353,7 +370,7 @@ export default function Tutor() {
                             : 'bg-muted'
                         }`}
                       >
-                        <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                        <p className="whitespace-pre-wrap leading-relaxed">{message.sender === 'tutor' ? <ReactMarkdown>{message.content}</ReactMarkdown> : message.content}</p>
                       </div>
                       
                       <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">

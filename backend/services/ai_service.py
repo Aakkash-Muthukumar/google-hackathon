@@ -1,13 +1,11 @@
 import time
 from ollama import chat
 
-def ask_gemma(prompt: str) -> str:
-    print("\n🧠 Model is thinking...")
-    for i in range(3, 0, -1):
-        print(f"⏳ {i}...")
-        time.sleep(1)
+MODEL = "gemma3n:e2b-it-q4_K_M"
+
+def ask_gemma(prompt: str):
     response = chat(
-        model="gemma3n",
+        model=MODEL,
         messages=[
             {"role": "system", "content": (
                 "You are a highly skilled and friendly programming tutor. "
@@ -15,7 +13,10 @@ def ask_gemma(prompt: str) -> str:
                 "You are well-versed in Python, JavaScript, C++, and Java."
             )},
             {"role": "user", "content": prompt}
-        ]
+        ],
+        stream=True
     )
-    print("✅ Response ready!\n")
-    return response["message"]["content"] 
+    for chunk in response:
+        content = chunk.get("message", {}).get("content", "")
+        if content:
+            yield content 
