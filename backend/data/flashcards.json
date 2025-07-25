@@ -14,5 +14,21 @@
     "topic": "Review Later",
     "difficulty": "easy",
     "id": 2
+  },
+  {
+    "term": "Monkeys",
+    "definition": "VISHAL",
+    "language": "python",
+    "topic": "Animal Kingdom",
+    "difficulty": "easy",
+    "id": 3
+  },
+  {
+    "term": "GAY",
+    "definition": "RISHI",
+    "language": "python",
+    "topic": "WEIRD",
+    "difficulty": "easy",
+    "id": 4
   }
 ]

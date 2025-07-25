@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { storage } from '@/lib/storage';
-import { mockFlashCards } from '@/lib/mockData';
 import { FlashCard, User } from '@/lib/types';
 
 export default function Flashcards() {
@@ -25,15 +24,27 @@ export default function Flashcards() {
     difficulty: 'easy',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load flashcards from storage or use mock data
-    let storedCards = storage.getFlashCards();
-    if (storedCards.length === 0) {
-      storedCards = mockFlashCards;
-      storage.saveFlashCards(storedCards);
-    }
-    setFlashcards(storedCards);
+    // Fetch flashcards from backend API
+    const fetchFlashcards = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${apiUrl}/flashcard/`);
+        if (!res.ok) throw new Error('Failed to fetch flashcards');
+        const data = await res.json();
+        setFlashcards(data);
+        storage.saveFlashCards(data); // Optionally cache to local storage
+      } catch (err: any) {
+        setError('Could not load flashcards.');
+      }
+      setLoading(false);
+    };
+    fetchFlashcards();
   }, []);
 
   const filteredCards = flashcards.filter(card => {
