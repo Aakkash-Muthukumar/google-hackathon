@@ -14,7 +14,6 @@ async function verifyChallenge(challengeId: number | string, userCode: string) {
     body: JSON.stringify({
       challenge_id: Number(challengeId),
       user_code: userCode,
-      method: 'model',
     }),
   });
   if (!response.ok) throw new Error('Verification failed');
@@ -97,13 +96,21 @@ export default function Challenges() {
   const runTests = async () => {
     if (!selectedChallenge) return;
     setIsRunning(true);
-    setTestResults(["⏳ Running tests with AI model..."]);
+    setTestResults(["⏳ Running tests..."]);
     try {
       const data = await verifyChallenge(selectedChallenge.id, code);
-      // data: { correct: boolean, feedback: string }
-      setTestResults([
-        (data.correct ? '✅ Correct! ' : '❌ Incorrect. ') + (data.feedback || '')
-      ]);
+      // data: { results: [{input, expected_output, output, error, pass}] }
+      const failed = data.results.find((r: any) => !r.pass);
+      if (!failed) {
+        // All passed, get model-based congrats/feedback
+        setTestResults(["🎉 All test cases passed! Generating feedback..."]);
+        const feedback = await fetchCongratsFeedback(selectedChallenge.title, code);
+        setTestResults([`✅ Correct! ${feedback}`]);
+      } else {
+        setTestResults([
+          `❌ Test failed.\nInput: ${failed.input}\nExpected: ${failed.expected_output}\nYour Output: ${failed.output}\nError: ${failed.error}`
+        ]);
+      }
     } catch (err) {
       setTestResults(["❌ Error running tests. Please try again."]);
     }
@@ -174,6 +181,21 @@ export default function Challenges() {
       default: return 'bg-muted/20 text-muted-foreground';
     }
   };
+
+  async function fetchCongratsFeedback(challengeTitle: string, userCode: string) {
+    // Call backend to get model-based feedback (implement endpoint if needed)
+    const response = await fetch(`${apiUrl}/challenge/congrats`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: challengeTitle,
+        user_code: userCode,
+      }),
+    });
+    if (!response.ok) return 'Great job!';
+    const data = await response.json();
+    return data.feedback || 'Great job!';
+  }
 
   if (selectedChallenge) {
     return (

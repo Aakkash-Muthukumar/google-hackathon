@@ -47,7 +47,7 @@ def verify_with_model(problem, user_code, test_cases):
 
 def run_user_code(code, input_data):
     """
-    Run user code in a subprocess with CPU and memory limits.
+    Run user code in a subprocess for isolation. This works on both Unix and Windows, but does not enforce resource limits.
     Returns (stdout, stderr).
     """
     try:
@@ -61,6 +61,4 @@ def run_user_code(code, input_data):
     except subprocess.TimeoutExpired:
         return "", "Time Limit Exceeded"
     except Exception as e:
-        return "", str(e)
-
-# You can now use verify_with_model for LLM-based checking, and run_user_code for local execution. 
+        return "", str(e) 
