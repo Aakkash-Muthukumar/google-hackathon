@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from backend.services.subject_service import get_subject_data
+from services.subject_service import get_subject_data
 
 router = APIRouter(prefix="/subject")
 

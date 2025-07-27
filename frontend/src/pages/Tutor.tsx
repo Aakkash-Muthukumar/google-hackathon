@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { storage } from '@/lib/storage';
 import { ChatMessage as ChatMessageType, ChatSession } from '@/lib/types';
+import { buildApiUrl, API_ENDPOINTS, API_CONFIG } from '@/lib/config';
 import ReactMarkdown from 'react-markdown';
 
 export default function Tutor() {
@@ -146,8 +147,7 @@ export default function Tutor() {
     };
     setMessages([...updatedMessages, tutorMessage]);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/ask`, {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.ASK), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,11 +187,10 @@ export default function Tutor() {
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const fallbackMessage: ChatMessageType = {
         id: (Date.now() + 1).toString(),
         content: isOnline 
-          ? `I'm sorry, but I'm having trouble connecting to the tutoring service right now. Please make sure the local server is running on ${apiUrl}. In the meantime, try reviewing your flashcards or working on coding challenges!`
+          ? `I'm sorry, but I'm having trouble connecting to the tutoring service right now. Please make sure the local server is running on ${API_CONFIG.BASE_URL}. In the meantime, try reviewing your flashcards or working on coding challenges!`
           : "I'm currently offline, but I'd love to help when you're back online! In the meantime, you can practice with flashcards and coding challenges that work offline.",
         sender: 'tutor',
         timestamp: new Date()

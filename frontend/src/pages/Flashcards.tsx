@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { storage } from '@/lib/storage';
 import { FlashCard, User } from '@/lib/types';
+import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 
 export default function Flashcards() {
   const [flashcards, setFlashcards] = useState<FlashCard[]>([]);
@@ -39,8 +40,7 @@ export default function Flashcards() {
         setFlashcards(localCards);
 
         // Then fetch from API and merge
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${apiUrl}/flashcard/`);
+        const res = await fetch(buildApiUrl(API_ENDPOINTS.FLASHCARDS));
         if (!res.ok) throw new Error('Failed to fetch flashcards');
         const apiData = await res.json();
         
@@ -117,8 +117,7 @@ export default function Flashcards() {
     
     // Update the backend
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      await fetch(`${apiUrl}/flashcard/${currentCard.id}`, {
+      await fetch(buildApiUrl(`${API_ENDPOINTS.FLASHCARDS}/${currentCard.id}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ known: true, lastReviewed: new Date() }),
@@ -154,8 +153,7 @@ export default function Flashcards() {
     
     // Update the backend
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      await fetch(`${apiUrl}/flashcard/${currentCard.id}`, {
+      await fetch(buildApiUrl(`${API_ENDPOINTS.FLASHCARDS}/${currentCard.id}`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ known: false, lastReviewed: new Date() }),
@@ -197,8 +195,7 @@ export default function Flashcards() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiUrl}/flashcard/`, {
+      const res = await fetch(buildApiUrl(API_ENDPOINTS.FLASHCARDS), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -224,8 +221,7 @@ export default function Flashcards() {
     if (!currentCard) return;
     if (!window.confirm('Are you sure you want to delete this flashcard?')) return;
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiUrl}/flashcard/${currentCard.id}`, {
+      const res = await fetch(buildApiUrl(`${API_ENDPOINTS.FLASHCARDS}/${currentCard.id}`), {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Failed to delete flashcard');

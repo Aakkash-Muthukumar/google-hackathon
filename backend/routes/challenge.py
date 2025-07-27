@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body
 from pydantic import BaseModel
-from backend.services.challenge_service import run_user_code
-from backend.services.ai_service import ask_gemma
+from services.challenge_service import run_user_code
+from services.ai_service import ask_gemma
 import json
 import os
 

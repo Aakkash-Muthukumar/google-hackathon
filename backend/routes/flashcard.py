@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Any, Dict
-from backend.services.flashcard_service import (
+from services.flashcard_service import (
     get_all_flashcards, add_flashcard, update_flashcard, delete_flashcard
 )
 

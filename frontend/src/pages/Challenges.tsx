@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Challenge } from '@/lib/types';
+import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 async function verifyChallenge(challengeId: number | string, userCode: string) {
-  const response = await fetch(`${apiUrl}/challenge/verify`, {
+  const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/verify`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -21,13 +21,13 @@ async function verifyChallenge(challengeId: number | string, userCode: string) {
 }
 
 async function fetchChallenges() {
-  const response = await fetch(`${apiUrl}/challenge/all`);
+  const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/all`));
   if (!response.ok) throw new Error('Failed to fetch challenges');
   return response.json();
 }
 
 async function fetchSolution(challengeId: number | string) {
-  const response = await fetch(`${apiUrl}/challenge/solution`, {
+  const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/solution`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ challenge_id: Number(challengeId) }),
@@ -37,7 +37,7 @@ async function fetchSolution(challengeId: number | string) {
 }
 
 async function fetchHints(challengeId: number | string) {
-  const response = await fetch(`${apiUrl}/challenge/hints`, {
+  const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/hints`), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ challenge_id: Number(challengeId) }),
@@ -184,7 +184,7 @@ export default function Challenges() {
 
   async function fetchCongratsFeedback(challengeTitle: string, userCode: string) {
     // Call backend to get model-based feedback (implement endpoint if needed)
-    const response = await fetch(`${apiUrl}/challenge/congrats`, {
+    const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/congrats`), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from backend.services.ai_service import ask_gemma
+from services.ai_service import ask_gemma
 
 router = APIRouter()
 

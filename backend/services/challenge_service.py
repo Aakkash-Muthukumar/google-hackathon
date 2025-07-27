@@ -1,6 +1,6 @@
 import sys
 import subprocess
-from backend.services.ai_service import ask_gemma
+from services.ai_service import ask_gemma
 import json
 
 # 1. Format a prompt for the model

@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes import ask
-from backend.routes import subject
-from backend.routes import challenge
-from backend.routes import flashcard
+from routes import ask
+from routes import subject
+from routes import challenge
+from routes import flashcard
 
 app = FastAPI()
 
@@ -22,4 +22,4 @@ app.include_router(flashcard.router)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True) 
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True) 

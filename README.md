@@ -1,73 +1,191 @@
-# Welcome to your Lovable project
+# Programming Learning Platform
 
-## Project info
+A comprehensive platform for learning programming through interactive challenges, flashcards, and AI-powered tutoring.
 
-**URL**: https://lovable.dev/projects/9b703055-d7da-49fd-a69a-1a5b2f48da4a
+## Project Structure
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/9b703055-d7da-49fd-a69a-1a5b2f48da4a) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+programming-learning-platform/
+├── frontend/               # React frontend application
+│   ├── src/               # Source code
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/         # Page components
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── lib/           # Utilities and configurations
+│   │   │   ├── config.ts  # API configuration
+│   │   │   ├── api.ts     # API service layer
+│   │   │   ├── storage.ts # Local storage utilities
+│   │   │   ├── types.ts   # TypeScript type definitions
+│   │   │   └── utils.ts   # Utility functions
+│   │   └── main.tsx       # React app entry point
+│   ├── public/            # Static assets
+│   ├── package.json       # Frontend dependencies
+│   ├── vite.config.ts     # Vite configuration
+│   ├── tailwind.config.ts # Tailwind CSS configuration
+│   ├── tsconfig.json      # TypeScript configuration
+│   └── index.html         # HTML entry point
+├── backend/               # FastAPI backend application
+│   ├── main.py            # FastAPI application entry point
+│   ├── requirements.txt   # Python dependencies
+│   ├── routes/            # API route handlers
+│   │   ├── ask.py        # AI tutoring endpoints
+│   │   ├── challenge.py  # Coding challenges endpoints
+│   │   ├── flashcard.py  # Flashcards endpoints
+│   │   └── subject.py    # Subject management endpoints
+│   ├── services/         # Business logic services
+│   │   ├── ai_service.py
+│   │   ├── challenge_service.py
+│   │   ├── flashcard_service.py
+│   │   └── subject_service.py
+│   └── data/             # JSON data files
+│       ├── challenges.json
+│       ├── flashcards.json
+│       ├── progress.json
+│       ├── settings.json
+│       └── submission_history.json
+├── package.json           # Root project configuration
+├── start.sh              # Development startup script
+├── setup.sh              # Initial setup script
+└── README.md             # This file
 ```
 
-**Edit a file directly in GitHub**
+## Features
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **Interactive Coding Challenges**: Practice with real programming problems
+- **Flashcards**: Learn programming concepts with spaced repetition
+- **AI Tutor**: Get help from an AI-powered programming tutor
+- **Progress Tracking**: Monitor your learning progress and earn XP
+- **Offline Support**: Work offline with local storage
+- **Multi-language Support**: Support for Python, JavaScript, C++, and Java
 
-**Use GitHub Codespaces**
+## Setup Instructions
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Prerequisites
 
-## What technologies are used for this project?
+- Node.js (v18 or higher)
+- Python (v3.8 or higher)
+- Ollama (for AI tutoring)
 
-This project is built with:
+### Quick Setup
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Run the setup script to install all dependencies:
+   ```bash
+   ./setup.sh
+   ```
 
-## How can I deploy this project?
+   This will:
+   - Install Node.js dependencies in the frontend
+   - Install Python dependencies in the backend
+   - Set up Ollama for AI tutoring
+   - Create environment configuration
 
-Simply open [Lovable](https://lovable.dev/projects/9b703055-d7da-49fd-a69a-1a5b2f48da4a) and click on Share -> Publish.
+### Manual Setup
 
-## Can I connect a custom domain to my Lovable project?
+#### Backend Setup
 
-Yes, you can!
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+2. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+3. Install and start Ollama (for AI tutoring):
+   ```bash
+   # Install Ollama from https://ollama.ai
+   ollama pull gemma3n
+   ```
+
+#### Frontend Setup
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install Node.js dependencies:
+   ```bash
+   npm install
+   ```
+
+### Development
+
+1. Start both servers with the provided script:
+   ```bash
+   ./start.sh
+   ```
+
+   This will start:
+   - FastAPI backend on http://localhost:8000
+   - Vite frontend on http://localhost:5173
+
+2. Or start them separately:
+   ```bash
+   # Backend
+   cd backend && uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+   
+   # Frontend
+   cd frontend && npm run dev
+   ```
+
+3. Or use npm scripts:
+   ```bash
+   # Start both servers
+   npm run start
+   
+   # Start only frontend
+   npm run frontend
+   
+   # Start only backend
+   npm run backend
+   ```
+
+## API Configuration
+
+The frontend uses a centralized configuration system in `src/lib/config.ts`:
+
+- `API_CONFIG.BASE_URL`: Backend API base URL (default: http://localhost:8000)
+- `API_CONFIG.FRONTEND_URL`: Frontend URL (default: http://localhost:5173)
+- `API_ENDPOINTS`: Centralized API endpoint definitions
+
+## Environment Variables
+
+Create a `.env.local` file in the root directory to override defaults:
+
+```env
+VITE_API_URL=http://localhost:8000
+VITE_FRONTEND_URL=http://localhost:5173
+VITE_DEV_MODE=true
+```
+
+## Technologies Used
+
+### Backend
+- FastAPI - Modern Python web framework
+- Uvicorn - ASGI server
+- Pydantic - Data validation
+- Ollama - Local AI models
+
+### Frontend
+- React 18 - UI framework
+- TypeScript - Type safety
+- Vite - Build tool and dev server
+- Tailwind CSS - Styling
+- shadcn/ui - Component library
+- React Router - Navigation
+- React Query - Data fetching
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.
