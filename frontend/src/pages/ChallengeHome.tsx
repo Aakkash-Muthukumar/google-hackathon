@@ -110,15 +110,15 @@ const ChallengeHome: React.FC = () => {
           {/* Progress Overview */}
           <div className="lg:col-span-3">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card className="glass-effect">
+              <Card className="bg-gradient-card shadow-card hover:shadow-glow hover:scale-105 transition-all duration-300">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center">
+                  <CardTitle className="text-sm font-medium flex items-center text-foreground">
                     <Trophy className="h-4 w-4 mr-2 text-primary" />
                     {t('progress.level')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{progress.level}</div>
+                  <div className="text-2xl font-bold text-primary">{progress.level}</div>
                   <div className="flex items-center space-x-2 mt-2">
                     <ProgressBar value={progressPercentage} className="flex-1" />
                     <span className="text-xs text-muted-foreground">
@@ -128,9 +128,9 @@ const ChallengeHome: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Card className="glass-effect">
+              <Card className="bg-gradient-card shadow-card hover:shadow-glow hover:scale-105 transition-all duration-300">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center">
+                  <CardTitle className="text-sm font-medium flex items-center text-foreground">
                     <Star className="h-4 w-4 mr-2 text-primary" />
                     {t('progress.totalXP')}
                   </CardTitle>
@@ -140,27 +140,27 @@ const ChallengeHome: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Card className="glass-effect">
+              <Card className="bg-gradient-card shadow-card hover:shadow-glow hover:scale-105 transition-all duration-300">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center">
+                  <CardTitle className="text-sm font-medium flex items-center text-foreground">
                     <Target className="h-4 w-4 mr-2 text-primary" />
                     {t('progress.completed')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{progress.challenges.length}</div>
+                  <div className="text-2xl font-bold text-success">{progress.challenges.length}</div>
                 </CardContent>
               </Card>
 
-              <Card className="glass-effect">
+              <Card className="bg-gradient-card shadow-card hover:shadow-glow hover:scale-105 transition-all duration-300">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center">
+                  <CardTitle className="text-sm font-medium flex items-center text-foreground">
                     <Clock className="h-4 w-4 mr-2 text-primary" />
                     {t('progress.streak')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{progress.streak}</div>
+                  <div className="text-2xl font-bold text-warning">{progress.streak}</div>
                   <div className="text-xs text-muted-foreground">{t('progress.days')}</div>
                 </CardContent>
               </Card>
@@ -169,10 +169,13 @@ const ChallengeHome: React.FC = () => {
 
           {/* Recent Challenges */}
           <div className="lg:col-span-3">
-            <Card>
+            <Card className="bg-gradient-card shadow-card hover:shadow-glow transition-all duration-300">
               <CardHeader>
-                <CardTitle>{t('challenges.recent')}</CardTitle>
-                <CardDescription>
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Clock className="h-5 w-5 text-primary" />
+                  {t('challenges.recent')}
+                </CardTitle>
+                <CardDescription className="text-muted-foreground">
                   {progress.challenges.length === 0 
                     ? t('challenges.noRecent') 
                     : t('challenges.recentDescription')}

@@ -20,7 +20,10 @@ export default function Tutor() {
   const [renamingChatId, setRenamingChatId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('chatSidebarCollapsed');
+    return saved === 'true';
+  });
 
   // Helper to create a new chat session
   const createNewChatSession = () => {
@@ -75,6 +78,22 @@ export default function Tutor() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Auto-expand sidebar when returning to tutor page
+  useEffect(() => {
+    const handlePageFocus = () => {
+      setSidebarCollapsed(false);
+      localStorage.setItem('chatSidebarCollapsed', 'false');
+    };
+    
+    window.addEventListener('focus', handlePageFocus);
+    return () => window.removeEventListener('focus', handlePageFocus);
+  }, []);
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem('chatSidebarCollapsed', sidebarCollapsed.toString());
+  }, [sidebarCollapsed]);
 
   // Select a chat session
   const selectChat = (id: string) => {
@@ -232,38 +251,38 @@ export default function Tutor() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto h-[calc(100vh-12rem)] flex animate-fade-in">
+    <div className="w-full mx-auto min-h-[calc(100vh-12rem)] flex animate-fade-in">
       {/* Collapsible Chats Sidebar */}
       {sidebarCollapsed ? (
-        <div className="flex flex-col items-center justify-center w-10 bg-white dark:bg-zinc-900 border-r shadow-lg">
-          <Button variant="ghost" size="icon" className="mt-4" onClick={() => setSidebarCollapsed(false)}>
-            <ChevronRight className="w-5 h-5" />
+        <div className="flex flex-col items-center justify-center w-12 bg-gradient-card border-r shadow-glow animate-slide-in-right">
+          <Button variant="ghost" size="icon" className="mt-4 hover:bg-primary/10" onClick={() => setSidebarCollapsed(false)}>
+            <ChevronRight className="w-5 h-5 text-primary" />
           </Button>
         </div>
       ) : (
-        <div className="w-80 bg-white dark:bg-zinc-900 shadow-lg h-full flex flex-col border-r transition-all">
-          <div className="flex items-center justify-between p-4 border-b">
-            <span className="font-bold text-lg">Chats</span>
+        <div className="w-80 bg-gradient-card shadow-glow h-full flex flex-col border-r transition-all duration-300 animate-slide-in-right">
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <span className="font-bold text-lg text-foreground">Chats</span>
             <div className="flex items-center gap-2">
-              <Button className="gap-2" variant="outline" onClick={createNewChatSession}>
+              <Button className="gap-2 shadow-card hover:shadow-glow transition-all" variant="outline" onClick={createNewChatSession}>
                 <Plus className="w-4 h-4" /> New Chat
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => setSidebarCollapsed(true)}>
-                <ChevronLeft className="w-5 h-5" />
+              <Button variant="ghost" size="icon" className="hover:bg-primary/10" onClick={() => setSidebarCollapsed(true)}>
+                <ChevronLeft className="w-5 h-5 text-primary" />
               </Button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {chats.length === 0 && <div className="p-4 text-muted-foreground">No chats yet.</div>}
+            {chats.length === 0 && <div className="p-4 text-muted-foreground">No chats yet. Create your first chat!</div>}
             {chats.map(chat => (
               <div key={chat.id}
-                className={`flex items-center px-4 py-3 cursor-pointer hover:bg-muted/50 transition-colors ${chat.id === currentChatId ? 'bg-primary/10 border-l-4 border-primary' : ''}`}
+                className={`flex items-center px-4 py-3 cursor-pointer hover:bg-accent/50 transition-all duration-200 hover:scale-[1.02] ${chat.id === currentChatId ? 'bg-primary/10 border-l-4 border-primary shadow-inner' : ''}`}
                 onClick={() => selectChat(chat.id)}>
                 <div className="flex-1">
                   {renamingChatId === chat.id ? (
                     <form onSubmit={e => { e.preventDefault(); saveRename(chat.id); }}>
                       <input
-                        className="w-full bg-transparent border-b border-primary focus:outline-none"
+                        className="w-full bg-transparent border-b border-primary focus:outline-none text-foreground"
                         value={renameValue}
                         onChange={e => setRenameValue(e.target.value)}
                         autoFocus
@@ -272,12 +291,12 @@ export default function Tutor() {
                     </form>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className={`font-medium truncate ${chat.id === currentChatId ? 'text-primary' : ''}`}>{chat.name}</span>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 p-0" onClick={e => { e.stopPropagation(); startRenaming(chat.id, chat.name); }}>
-                        <Pencil className="w-4 h-4" />
+                      <span className={`font-medium truncate ${chat.id === currentChatId ? 'text-primary' : 'text-foreground'}`}>{chat.name}</span>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:bg-primary/10" onClick={e => { e.stopPropagation(); startRenaming(chat.id, chat.name); }}>
+                        <Pencil className="w-3 h-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 p-0 text-destructive" onClick={e => { e.stopPropagation(); deleteChat(chat.id); }}>
-                        <Trash2 className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10" onClick={e => { e.stopPropagation(); deleteChat(chat.id); }}>
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   )}
@@ -311,7 +330,7 @@ export default function Tutor() {
         </div>
 
         {/* Chat Container */}
-        <Card className="flex-1 flex flex-col bg-gradient-card shadow-card">
+        <Card className="flex-1 flex flex-col bg-gradient-card shadow-glow hover:shadow-primary transition-all duration-300">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-3">
               <MessageCircle className="w-5 h-5 text-primary" />

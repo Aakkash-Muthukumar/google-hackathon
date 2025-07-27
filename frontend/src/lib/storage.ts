@@ -101,7 +101,7 @@ class LocalStorage {
 
   // Utilities
   clearAllData(): void {
-    const keys = ['user', 'flashcards', 'challenges', 'chatMessages', 'progress'];
+    const keys = ['user', 'flashcards', 'challenges', 'chats', 'currentChatId', 'progress'];
     keys.forEach(key => localStorage.removeItem(key));
   }
 }

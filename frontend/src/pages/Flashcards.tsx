@@ -261,16 +261,16 @@ export default function Flashcards() {
           <form onSubmit={handleFormSubmit} className="bg-muted p-6 rounded-lg space-y-4 mt-8 inline-block text-left">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="term">Term</Label>
-                <Input id="term" name="term" value={form.term} onChange={handleFormChange} required />
+                <Label htmlFor="term" className="text-foreground">Term</Label>
+                <Input id="term" name="term" value={form.term} onChange={handleFormChange} required className="bg-background text-foreground border-border" />
               </div>
               <div>
-                <Label htmlFor="definition">Definition</Label>
-                <Textarea id="definition" name="definition" value={form.definition} onChange={handleFormChange} required />
+                <Label htmlFor="definition" className="text-foreground">Definition</Label>
+                <Textarea id="definition" name="definition" value={form.definition} onChange={handleFormChange} required className="bg-background text-foreground border-border" />
               </div>
               <div>
-                <Label htmlFor="language">Language</Label>
-                <select id="language" name="language" value={form.language} onChange={handleFormChange} className="w-full h-10 rounded-md border px-3 py-2">
+                <Label htmlFor="language" className="text-foreground">Language</Label>
+                <select id="language" name="language" value={form.language} onChange={handleFormChange} className="w-full h-10 rounded-md border border-border bg-background text-foreground px-3 py-2">
                   <option value="python">Python</option>
                   <option value="javascript">JavaScript</option>
                   <option value="cpp">C++</option>
@@ -278,12 +278,12 @@ export default function Flashcards() {
                 </select>
               </div>
               <div>
-                <Label htmlFor="topic">Topic</Label>
-                <Input id="topic" name="topic" value={form.topic} onChange={handleFormChange} required />
+                <Label htmlFor="topic" className="text-foreground">Topic</Label>
+                <Input id="topic" name="topic" value={form.topic} onChange={handleFormChange} required className="bg-background text-foreground border-border" />
               </div>
               <div>
-                <Label htmlFor="difficulty">Difficulty</Label>
-                <select id="difficulty" name="difficulty" value={form.difficulty} onChange={handleFormChange} className="w-full h-10 rounded-md border px-3 py-2">
+                <Label htmlFor="difficulty" className="text-foreground">Difficulty</Label>
+                <select id="difficulty" name="difficulty" value={form.difficulty} onChange={handleFormChange} className="w-full h-10 rounded-md border border-border bg-background text-foreground px-3 py-2">
                   <option value="easy">Easy</option>
                   <option value="medium">Medium</option>
                   <option value="hard">Hard</option>
@@ -311,16 +311,16 @@ export default function Flashcards() {
         <form onSubmit={handleFormSubmit} className="bg-muted p-6 rounded-lg space-y-4 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="term">Term</Label>
-              <Input id="term" name="term" value={form.term} onChange={handleFormChange} required />
+              <Label htmlFor="term" className="text-foreground">Term</Label>
+              <Input id="term" name="term" value={form.term} onChange={handleFormChange} required className="bg-background text-foreground border-border" />
             </div>
             <div>
-              <Label htmlFor="definition">Definition</Label>
-              <Textarea id="definition" name="definition" value={form.definition} onChange={handleFormChange} required />
+              <Label htmlFor="definition" className="text-foreground">Definition</Label>
+              <Textarea id="definition" name="definition" value={form.definition} onChange={handleFormChange} required className="bg-background text-foreground border-border" />
             </div>
             <div>
-              <Label htmlFor="language">Language</Label>
-              <select id="language" name="language" value={form.language} onChange={handleFormChange} className="w-full h-10 rounded-md border px-3 py-2">
+              <Label htmlFor="language" className="text-foreground">Language</Label>
+              <select id="language" name="language" value={form.language} onChange={handleFormChange} className="w-full h-10 rounded-md border border-border bg-background text-foreground px-3 py-2">
                 <option value="python">Python</option>
                 <option value="javascript">JavaScript</option>
                 <option value="cpp">C++</option>
@@ -328,12 +328,12 @@ export default function Flashcards() {
               </select>
             </div>
             <div>
-              <Label htmlFor="topic">Topic</Label>
-              <Input id="topic" name="topic" value={form.topic} onChange={handleFormChange} required />
+              <Label htmlFor="topic" className="text-foreground">Topic</Label>
+              <Input id="topic" name="topic" value={form.topic} onChange={handleFormChange} required className="bg-background text-foreground border-border" />
             </div>
             <div>
-              <Label htmlFor="difficulty">Difficulty</Label>
-              <select id="difficulty" name="difficulty" value={form.difficulty} onChange={handleFormChange} className="w-full h-10 rounded-md border px-3 py-2">
+              <Label htmlFor="difficulty" className="text-foreground">Difficulty</Label>
+              <select id="difficulty" name="difficulty" value={form.difficulty} onChange={handleFormChange} className="w-full h-10 rounded-md border border-border bg-background text-foreground px-3 py-2">
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>

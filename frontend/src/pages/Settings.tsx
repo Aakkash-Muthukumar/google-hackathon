@@ -48,7 +48,7 @@ export default function Settings() {
       user: storage.getUser(),
       flashcards: storage.getFlashCards(),
       challenges: storage.getChallenges(),
-      chatMessages: storage.getChatMessages(),
+      chats: storage.getChats(),
       progress: storage.getProgress(),
       exportDate: new Date().toISOString()
     };
