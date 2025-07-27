@@ -195,6 +195,11 @@ export default function Dashboard() {
                         {card.completed} challenges completed
                       </p>
                     )}
+                    {card.title === 'Ask Tutor' && (
+                      <p className="text-sm text-success font-medium">
+                        Ask your first question
+                      </p>
+                    )}
                     <Button 
                       variant="outline" 
                       className="mt-4 group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
@@ -246,11 +251,13 @@ export default function Dashboard() {
               </span>
               <span className="text-sm text-muted-foreground">+50 XP</span>
             </div>
-            <Link to="/challenges">
-              <Button variant="success" className="w-full sm:w-auto">
-                Start Challenge
-              </Button>
-            </Link>
+            <div className="mt-6">
+              <Link to="/challenges">
+                <Button variant="success" className="w-full sm:w-auto">
+                  Start Challenge
+                </Button>
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

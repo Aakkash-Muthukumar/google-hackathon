@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, RotateCcw, Check, Clock, Filter, Shuffle, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Check, Clock, Filter, Shuffle, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +15,7 @@ export default function Flashcards() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [user, setUser] = useState<User>(storage.getUser());
+  const [progress, setProgress] = useState(storage.getProgress());
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     term: '',
@@ -33,14 +34,29 @@ export default function Flashcards() {
       setLoading(true);
       setError(null);
       try {
+        // First load from local storage
+        const localCards = storage.getFlashCards();
+        setFlashcards(localCards);
+
+        // Then fetch from API and merge
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
         const res = await fetch(`${apiUrl}/flashcard/`);
         if (!res.ok) throw new Error('Failed to fetch flashcards');
-        const data = await res.json();
-        setFlashcards(data);
-        storage.saveFlashCards(data); // Optionally cache to local storage
+        const apiData = await res.json();
+        
+        // Merge API data with local data, preserving local known/review states
+        const mergedCards = apiData.map(apiCard => {
+          const localCard = localCards.find(local => local.id === apiCard.id);
+          return localCard ? { ...apiCard, known: localCard.known, reviewLater: localCard.reviewLater } : apiCard;
+        });
+        
+        setFlashcards(mergedCards);
+        storage.saveFlashCards(mergedCards);
       } catch (err: any) {
         setError('Could not load flashcards.');
+        // If API fails, still show local cards
+        const localCards = storage.getFlashCards();
+        setFlashcards(localCards);
       }
       setLoading(false);
     };
@@ -81,7 +97,7 @@ export default function Flashcards() {
     setIsFlipped(false);
   };
 
-  const markAsKnown = () => {
+  const markAsKnown = async () => {
     if (!currentCard) return;
     
     const updatedCards = flashcards.map(card =>
@@ -93,13 +109,66 @@ export default function Flashcards() {
     setFlashcards(updatedCards);
     storage.saveFlashCards(updatedCards);
     
+    // Update progress
+    const knownCount = updatedCards.filter(card => card.known).length;
+    const updatedProgress = { ...progress, flashcardsLearned: knownCount };
+    setProgress(updatedProgress);
+    storage.saveProgress(updatedProgress);
+    
+    // Update the backend
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      await fetch(`${apiUrl}/flashcard/${currentCard.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ known: true, lastReviewed: new Date() }),
+      });
+    } catch (err) {
+      console.error('Failed to update flashcard on server:', err);
+    }
+    
     // Award XP
     const newXP = user.xp + 10;
     const updatedUser = { ...user, xp: newXP };
     setUser(updatedUser);
     storage.saveUser(updatedUser);
+  };
+
+  const markAsUnknown = async () => {
+    if (!currentCard) return;
     
-    handleNext();
+    const updatedCards = flashcards.map(card =>
+      card.id === currentCard.id 
+        ? { ...card, known: false, lastReviewed: new Date() }
+        : card
+    );
+    
+    setFlashcards(updatedCards);
+    storage.saveFlashCards(updatedCards);
+    
+    // Update progress
+    const knownCount = updatedCards.filter(card => card.known).length;
+    const updatedProgress = { ...progress, flashcardsLearned: knownCount };
+    setProgress(updatedProgress);
+    storage.saveProgress(updatedProgress);
+    
+    // Update the backend
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      await fetch(`${apiUrl}/flashcard/${currentCard.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ known: false, lastReviewed: new Date() }),
+      });
+    } catch (err) {
+      console.error('Failed to update flashcard on server:', err);
+    }
+    
+    // Deduct XP
+    const newXP = Math.max(0, user.xp - 10); // Ensure XP doesn't go below 0
+    const updatedUser = { ...user, xp: newXP };
+    setUser(updatedUser);
+    storage.saveUser(updatedUser);
   };
 
   const markForReview = () => {
@@ -167,6 +236,15 @@ export default function Flashcards() {
       alert('Error deleting flashcard.');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-20">
+        <h1 className="text-3xl font-bold mb-4">Loading Flashcards...</h1>
+        <p className="text-muted-foreground mb-8">Please wait while we load your flashcards.</p>
+      </div>
+    );
+  }
 
   if (!currentCard) {
     return (
@@ -395,14 +473,25 @@ export default function Flashcards() {
       {/* Action Buttons */}
       {isFlipped && (
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up">
-          <Button 
-            variant="success" 
-            onClick={markAsKnown}
-            className="w-full sm:w-auto"
-          >
-            <Check className="w-4 h-4 mr-2" />
-            I Know This (+10 XP)
-          </Button>
+          {currentCard.known ? (
+            <Button 
+              variant="destructive" 
+              onClick={markAsUnknown}
+              className="w-full sm:w-auto"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Forget (-10 XP)
+            </Button>
+          ) : (
+            <Button 
+              variant="success" 
+              onClick={markAsKnown}
+              className="w-full sm:w-auto"
+            >
+              <Check className="w-4 h-4 mr-2" />
+              I Know This (+10 XP)
+            </Button>
+          )}
           
           <Button 
             variant="outline" 
