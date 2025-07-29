@@ -5,14 +5,35 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Shuffle, Target, ArrowLeft, Zap } from 'lucide-react';
-import { mockChallenges } from '@/lib/mockData';
 import { storage } from '@/lib/storage';
 import { useLanguage } from '@/hooks/useLanguage';
+import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 
 const topics = [
   'arrays', 'strings', 'linked-list', 'math', 'recursion', 'dynamic-programming', 'trees', 'graphs'
 ];
 const difficulties = ['easy', 'medium', 'hard'];
+
+async function generateNewChallenge(difficulty: string = "easy", topic: string = "algorithms", language: string = "python") {
+  const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/generate`), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      difficulty,
+      topic,
+      language,
+    }),
+  });
+  if (!response.ok) throw new Error('Failed to generate challenge');
+  return response.json();
+}
+
+async function fetchChallenges() {
+  const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/all`));
+  if (!response.ok) throw new Error('Failed to fetch challenges');
+  const data = await response.json();
+  return data.challenges || [];
+}
 
 const ChallengeSelector: React.FC = () => {
   const [difficulty, setDifficulty] = useState<string>('');
@@ -21,50 +42,58 @@ const ChallengeSelector: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const generateChallenge = (selectedDifficulty?: string, selectedTopic?: string) => {
-    // Treat "any" as no filter
-    const effectiveDifficulty = selectedDifficulty === "any" ? "" : selectedDifficulty;
-    const effectiveTopic = selectedTopic === "any" ? "" : selectedTopic;
-    // For now, use mock data. In the future, this will call backend API
-    const filteredChallenges = mockChallenges.filter(challenge => {
-      const difficultyMatch = !effectiveDifficulty || challenge.difficulty === effectiveDifficulty;
-      const topicMatch = !effectiveTopic || challenge.topic === effectiveTopic;
-      return difficultyMatch && topicMatch;
-    });
-
-    const randomChallenge = filteredChallenges[Math.floor(Math.random() * filteredChallenges.length)] || mockChallenges[0];
-    
-    // Store the current challenge for the workspace
-    localStorage.setItem('currentChallenge', JSON.stringify(randomChallenge));
-    
-    return randomChallenge;
+  const generateChallenge = async (selectedDifficulty?: string, selectedTopic?: string) => {
+    try {
+      // Always generate a new challenge with the specified parameters
+      const challenge = await generateNewChallenge(
+        selectedDifficulty === "any" ? "easy" : selectedDifficulty || "easy",
+        selectedTopic === "any" ? "algorithms" : selectedTopic || "algorithms",
+        "python"
+      );
+      return challenge.challenge;
+    } catch (error) {
+      console.error('Error generating challenge:', error);
+      throw error;
+    }
   };
 
   const handleGetChallenge = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsGenerating(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const challenge = generateChallenge(difficulty, topic);
-    console.log('Generated challenge:', challenge);
-    
-    setIsGenerating(false);
-    navigate('/challenges/workspace');
+    try {
+      const challenge = await generateChallenge(difficulty, topic);
+      console.log('Generated challenge:', challenge);
+      
+      // Store the current challenge for the workspace
+      localStorage.setItem('currentChallenge', JSON.stringify(challenge));
+      
+      navigate('/challenges/workspace');
+    } catch (error) {
+      console.error('Failed to generate challenge:', error);
+      // You could show an error message to the user here
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleSurpriseMe = async () => {
     setIsGenerating(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const challenge = generateChallenge(); // Random challenge
-    console.log('Surprise challenge:', challenge);
-    
-    setIsGenerating(false);
-    navigate('/challenges/workspace');
+    try {
+      const challenge = await generateChallenge(); // Random challenge
+      console.log('Surprise challenge:', challenge);
+      
+      // Store the current challenge for the workspace
+      localStorage.setItem('currentChallenge', JSON.stringify(challenge));
+      
+      navigate('/challenges/workspace');
+    } catch (error) {
+      console.error('Failed to generate surprise challenge:', error);
+      // You could show an error message to the user here
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (

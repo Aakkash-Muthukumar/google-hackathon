@@ -7,42 +7,36 @@ import { Progress } from '@/components/ui/progress';
 import { storage } from '@/lib/storage';
 import { motivationalQuotes } from '@/lib/mockData';
 import { User, Progress as ProgressType } from '@/lib/types';
+import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 
 export default function Dashboard() {
   const [user, setUser] = useState<User>(storage.getUser());
   const [progress, setProgress] = useState<ProgressType>(storage.getProgress());
+  const [backendProgress, setBackendProgress] = useState<any>(null);
   const [dailyQuote] = useState(() => 
     motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]
   );
 
-  useEffect(() => {
-    // Update daily streak if it's a new day
-    const now = new Date();
-    const lastActive = new Date(progress.lastActiveDate);
-    const isNewDay = now.toDateString() !== lastActive.toDateString();
-    
-    if (isNewDay) {
-      const timeDiff = now.getTime() - lastActive.getTime();
-      const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+  // Load progress from backend
+  const loadBackendProgress = async () => {
+    try {
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/progress`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: "default_user" })
+      });
       
-      if (daysDiff === 1) {
-        // Consecutive day - increase streak
-        const newStreak = user.streak + 1;
-        const updatedUser = { ...user, streak: newStreak };
-        setUser(updatedUser);
-        storage.saveUser(updatedUser);
-      } else if (daysDiff > 1) {
-        // Missed days - reset streak
-        const updatedUser = { ...user, streak: 0 };
-        setUser(updatedUser);
-        storage.saveUser(updatedUser);
+      if (response.ok) {
+        const data = await response.json();
+        setBackendProgress(data);
       }
-      
-      // Update last active date
-      const updatedProgress = { ...progress, lastActiveDate: now };
-      setProgress(updatedProgress);
-      storage.saveProgress(updatedProgress);
+    } catch (error) {
+      console.error('Error loading backend progress:', error);
     }
+  };
+
+  useEffect(() => {
+    loadBackendProgress();
   }, []);
 
   const getGreeting = () => {
@@ -53,7 +47,11 @@ export default function Dashboard() {
   };
 
   const getXPPercentage = () => {
-    return (user.xp / user.xpToNextLevel) * 100;
+    const currentXP = backendProgress?.total_xp || 0;
+    const currentLevel = backendProgress?.level || 1;
+    const xpToNextLevel = currentLevel * 100; // Simple calculation: each level requires level * 100 XP
+    const xpInCurrentLevel = currentXP % xpToNextLevel;
+    return (xpInCurrentLevel / xpToNextLevel) * 100;
   };
 
   const quickAccessCards = [
@@ -71,7 +69,7 @@ export default function Dashboard() {
       icon: Code,
       link: '/challenges',
       color: 'bg-gradient-to-br from-green-500 to-green-600',
-      completed: progress.challengesCompleted
+      completed: backendProgress?.completed_challenges?.length || 0
     },
     {
       title: 'Ask Tutor',
@@ -105,9 +103,9 @@ export default function Dashboard() {
                 <Trophy className="w-6 h-6 text-white" />
               </div>
               <div>
-                <CardTitle className="text-lg">Level {user.level}</CardTitle>
+                <CardTitle className="text-lg">Level {backendProgress?.level || 1}</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  {user.xp}/{user.xpToNextLevel} XP
+                  {backendProgress?.total_xp || 0} XP
                 </p>
               </div>
             </div>
@@ -142,7 +140,7 @@ export default function Dashboard() {
                 <Star className="w-6 h-6 text-white" />
               </div>
               <div>
-                <CardTitle className="text-lg">{progress.totalXP} XP</CardTitle>
+                <CardTitle className="text-lg">{backendProgress?.total_xp || 0} XP</CardTitle>
                 <p className="text-sm text-muted-foreground">Total earned</p>
               </div>
             </div>

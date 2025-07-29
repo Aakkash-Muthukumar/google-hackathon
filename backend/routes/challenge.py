@@ -1,117 +1,145 @@
 from fastapi import APIRouter, HTTPException, Body
 from pydantic import BaseModel
-from services.challenge_service import run_user_code
-from services.ai_service import ask_gemma
+from typing import List, Optional
+from services.challenge_service import (
+    load_challenges, save_challenges, generate_challenge, verify_with_model,
+    get_solution, get_hints, get_congrats_feedback, update_user_progress, get_user_progress
+)
 import json
-import os
 
 router = APIRouter(prefix="/challenge")
 
-# Path to challenges.json
-data_path = os.path.join(os.path.dirname(__file__), '../data/challenges.json')
-
-def load_challenges():
-    if not os.path.exists(data_path):
-        with open(data_path, 'w') as f:
-            json.dump([], f)
-    with open(data_path, 'r') as f:
-        return json.load(f)
+class ChallengeIdRequest(BaseModel):
+    challenge_id: int
 
 class VerifyRequest(BaseModel):
     challenge_id: int
     user_code: str
+    user_id: str = "default_user"  # Default user ID for now
 
-class ChallengeIdRequest(BaseModel):
-    challenge_id: int
+class GenerateRequest(BaseModel):
+    difficulty: str = "easy"
+    topic: str = "algorithms"
+    language: str = "python"
 
 class CongratsRequest(BaseModel):
     title: str
     user_code: str
 
+class ProgressRequest(BaseModel):
+    user_id: str = "default_user"
+
 @router.get("/all")
 def get_all_challenges():
-    """Return all coding challenges for the frontend."""
-    return load_challenges()
+    """Get all available challenges"""
+    try:
+        challenges = load_challenges()
+        return {"challenges": challenges}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load challenges: {str(e)}")
 
-@router.post("/solution")
-def get_solution(request: ChallengeIdRequest):
-    challenges = load_challenges()
-    challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
-    if not challenge:
-        raise HTTPException(status_code=404, detail="Challenge not found.")
-    prompt = f"""
-You are an expert coding tutor. Provide a clean, idiomatic solution in Python for the following problem, and explain the solution at the end:
-
-Title: {challenge['title']}
-Description: {challenge['description']}
-Input Format: {challenge.get('input_format', '')}
-Output Format: {challenge.get('output_format', '')}
-"""
-    solution = ask_gemma(prompt)
-    return {"solution": solution}
-
-@router.post("/hints")
-def get_hints(request: ChallengeIdRequest):
-    challenges = load_challenges()
-    challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
-    if not challenge:
-        raise HTTPException(status_code=404, detail="Challenge not found.")
-    prompt = f"""
-You are an expert coding tutor. Provide 3 helpful hints for solving the following problem. Do not give away the full solution.
-
-Title: {challenge['title']}
-Description: {challenge['description']}
-Input Format: {challenge.get('input_format', '')}
-Output Format: {challenge.get('output_format', '')}
-"""
-    hints = ask_gemma(prompt)
-    return {"hints": hints}
+@router.post("/generate")
+def generate_new_challenge(request: GenerateRequest):
+    """Generate a new challenge using AI"""
+    try:
+        challenge = generate_challenge(
+            difficulty=request.difficulty,
+            topic=request.topic,
+            language=request.language
+        )
+        
+        # Save the new challenge
+        challenges = load_challenges()
+        challenges.append(challenge)
+        save_challenges(challenges)
+        
+        return {"challenge": challenge, "message": "Challenge generated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate challenge: {str(e)}")
 
 @router.post("/verify")
-def verify_challenge(request: VerifyRequest):
-    challenges = load_challenges()
-    challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
-    if not challenge:
-        raise HTTPException(status_code=404, detail="Challenge not found.")
-    test_cases = challenge.get("examples", [])
-    results = []
-    for case in test_cases:
-        input_data = json.dumps(case["input"]) if isinstance(case["input"], dict) else str(case["input"])
-        expected_output = case["output"]
-        output, error = run_user_code(request.user_code, input_data)
-        results.append({
-            "input": input_data,
-            "expected_output": expected_output,
-            "output": output.strip(),
-            "error": error.strip(),
-            "pass": output.strip() == str(expected_output) and not error
-        })
-    return {"results": results}
+def verify_solution(request: VerifyRequest):
+    """Verify user solution using AI model"""
+    try:
+        challenges = load_challenges()
+        challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
+        
+        if not challenge:
+            raise HTTPException(status_code=404, detail="Challenge not found")
+        
+        # Use AI model to verify the solution
+        result = verify_with_model(challenge, request.user_code, challenge.get('examples', []))
+        
+        # If solution is correct, update user progress
+        if result.get('correct', False):
+            xp_earned = challenge.get('xpReward', 50)
+            user_progress = update_user_progress(request.user_id, request.challenge_id, xp_earned)
+            result['xp_earned'] = xp_earned
+            result['user_progress'] = user_progress
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to verify solution: {str(e)}")
+
+@router.post("/solution")
+def get_solution_endpoint(request: ChallengeIdRequest):
+    """Get AI-generated solution for a challenge"""
+    try:
+        challenges = load_challenges()
+        challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
+        
+        if not challenge:
+            raise HTTPException(status_code=404, detail="Challenge not found")
+        
+        solution = get_solution(challenge)
+        return {"solution": solution}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get solution: {str(e)}")
+
+@router.post("/hints")
+def get_hints_endpoint(request: ChallengeIdRequest):
+    """Get AI-generated hints for a challenge"""
+    try:
+        challenges = load_challenges()
+        challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
+        
+        if not challenge:
+            raise HTTPException(status_code=404, detail="Challenge not found")
+        
+        hints = get_hints(challenge)
+        return {"hints": hints}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get hints: {str(e)}")
 
 @router.post("/congrats")
 def congrats_feedback(request: CongratsRequest):
-    prompt = f"""
-You are an expert coding tutor. The user has just solved the following challenge:
+    """Get congratulatory feedback when user solves a challenge"""
+    try:
+        feedback = get_congrats_feedback(request.title, request.user_code)
+        return {"feedback": feedback}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get feedback: {str(e)}")
 
-Title: {request.title}
+@router.post("/progress")
+def get_progress(request: ProgressRequest):
+    """Get user progress information"""
+    try:
+        progress = get_user_progress(request.user_id)
+        return progress
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get progress: {str(e)}")
 
-Here is their solution:
-{request.user_code}
-
-Congratulate the user, and provide a brief, constructive review of their code style, efficiency, and any suggestions for improvement. Be positive and encouraging!"""
-    feedback = ask_gemma(prompt)
-    return {"feedback": feedback}
-
-progress_path = os.path.join(os.path.dirname(__file__), '../data/progress.json')
-
-def load_progress():
-    if not os.path.exists(progress_path):
-        with open(progress_path, 'w') as f:
-            json.dump({}, f)
-    with open(progress_path, 'r') as f:
-        return json.load(f)
-
-@router.get("/progress")
-def get_progress():
-    """Return user progress (past challenges, XP, etc.)."""
-    return load_progress() 
+@router.post("/test")
+def test_challenge_generation():
+    """Test endpoint to generate a sample challenge"""
+    try:
+        challenge = generate_challenge("easy", "arrays", "python")
+        return {"challenge": challenge, "message": "Test challenge generated"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate test challenge: {str(e)}") 

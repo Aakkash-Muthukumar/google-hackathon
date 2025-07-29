@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Trophy, Target, Clock, Star } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { useLanguage } from '@/hooks/useLanguage';
+import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 
 type PastChallenge = {
   id: string;
@@ -36,36 +37,77 @@ const ChallengeHome: React.FC = () => {
     streak: 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
   const navigate = useNavigate();
   const { t } = useLanguage();
 
   useEffect(() => {
-    // Load from localStorage instead of API for offline-first approach
-    const storedProgress = storage.getProgress();
-    const storedChallenges = storage.getChallenges();
-    const user = storage.getUser();
-    
-    const completedChallenges = storedChallenges
-      .filter(challenge => challenge.completed)
-      .map(challenge => ({
-        id: challenge.id,
-        title: challenge.title,
-        difficulty: challenge.difficulty,
-        topic: challenge.topic,
-        xp: challenge.xpReward,
-        completed: challenge.completed,
-        date: new Date().toISOString().split('T')[0], // Mock date
-        completedAt: new Date().toLocaleString()
-      }));
+    const loadData = async () => {
+      try {
+        // Load user progress from backend
+        const progressResponse = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/progress`), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: "default_user" }),
+        });
+        
+        let userProgress = null;
+        if (progressResponse.ok) {
+          userProgress = await progressResponse.json();
+        }
+        
+        // Load challenges from backend
+        const challengesResponse = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/all`));
+        let challenges = [];
+        if (challengesResponse.ok) {
+          const data = await challengesResponse.json();
+          challenges = data.challenges || [];
+        }
+        
+        // Get user data from storage as fallback
+        const user = storage.getUser();
+        
+        // Map completed challenges
+        const completedChallenges = challenges
+          .filter((challenge: any) => userProgress?.completed_challenges?.includes(challenge.id))
+          .map((challenge: any) => ({
+            id: String(challenge.id),
+            title: challenge.title,
+            difficulty: challenge.difficulty?.toLowerCase() as 'easy' | 'medium' | 'hard',
+            topic: challenge.topic || '',
+            xp: challenge.xpReward || 50,
+            completed: true,
+            date: new Date().toISOString().split('T')[0],
+            completedAt: new Date().toLocaleString()
+          }));
 
-    setProgress({
-      challenges: completedChallenges,
-      totalXP: user.xp,
-      level: user.level,
-      xpToNextLevel: user.xpToNextLevel,
-      streak: user.streak
-    });
-    setLoading(false);
+        setProgress({
+          challenges: completedChallenges,
+          totalXP: userProgress?.total_xp || user.xp || 0,
+          level: userProgress?.level || user.level || 1,
+          xpToNextLevel: 100, // Fixed value for now
+          streak: user.streak || 0
+        });
+        
+      } catch (error) {
+        console.error('Error loading challenge data:', error);
+        setError('Failed to load challenge data');
+        
+        // Fallback to storage data
+        const user = storage.getUser();
+        setProgress({
+          challenges: [],
+          totalXP: user.xp || 0,
+          level: user.level || 1,
+          xpToNextLevel: 100,
+          streak: user.streak || 0
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
   const getDifficultyColor = (difficulty: string) => {
@@ -79,6 +121,25 @@ const ChallengeHome: React.FC = () => {
 
   const progressPercentage = progress.totalXP > 0 ? 
     ((progress.totalXP % progress.xpToNextLevel) / progress.xpToNextLevel) * 100 : 0;
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4 text-destructive">Error Loading Challenges</h1>
+          <p className="text-lg text-muted-foreground mb-6">{error}</p>
+          <Button 
+            size="lg" 
+            className="shadow-glow"
+            onClick={() => navigate('/challenges/new')}
+          >
+            <Target className="mr-2 h-5 w-5" />
+            Start New Challenge
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">

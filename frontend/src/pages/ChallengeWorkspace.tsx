@@ -10,12 +10,29 @@ import { Challenge } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { useLanguage } from '@/hooks/useLanguage';
 import { toast } from 'sonner';
+import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 
 interface TestResult {
   input: string;
   expectedOutput: string;
   actualOutput: string;
   passed: boolean;
+}
+
+// Interface for backend-generated challenge format
+interface BackendChallenge {
+  id: number;
+  title: string;
+  description: string;
+  difficulty: string;
+  language: string;
+  topic: string;
+  xpReward: number;
+  input_format: string;
+  output_format: string;
+  template: string;
+  examples: Array<{input: string; output: string}>;
+  hints: string[];
 }
 
 const ChallengeWorkspace: React.FC = () => {
@@ -27,6 +44,11 @@ const ChallengeWorkspace: React.FC = () => {
   const [showHints, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [solution, setSolution] = useState<string>('');
+  const [loadingSolution, setLoadingSolution] = useState(false);
+  const [aiHints, setAiHints] = useState<string>('');
+  const [loadingHints, setLoadingHints] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -34,11 +56,43 @@ const ChallengeWorkspace: React.FC = () => {
     // Load current challenge from localStorage or navigate back if none
     const storedChallenge = localStorage.getItem('currentChallenge');
     if (storedChallenge) {
-      const parsedChallenge = JSON.parse(storedChallenge);
-      setChallenge(parsedChallenge);
-      setCode(parsedChallenge.template || '');
+      try {
+        const parsedChallenge: BackendChallenge = JSON.parse(storedChallenge);
+        console.log('Loaded challenge from localStorage:', parsedChallenge);
+        
+        // Convert backend format to frontend format
+        const frontendChallenge: Challenge = {
+          id: String(parsedChallenge.id),
+          title: parsedChallenge.title,
+          description: parsedChallenge.description,
+          difficulty: parsedChallenge.difficulty as "easy" | "medium" | "hard",
+          language: parsedChallenge.language,
+          topic: parsedChallenge.topic,
+          xpReward: parsedChallenge.xpReward,
+          completed: false,
+          template: parsedChallenge.template,
+          hints: parsedChallenge.hints || [], // These are the pre-generated hints
+          testCases: parsedChallenge.examples ? parsedChallenge.examples.map(ex => ({
+            input: Array.isArray(ex.input) ? ex.input.join(' ') : String(ex.input),
+            expectedOutput: String(ex.output)
+          })) : [],
+          solution: undefined // Will be loaded separately if needed
+        };
+        
+        setChallenge(frontendChallenge);
+        setCode(parsedChallenge.template || '');
+      } catch (error) {
+        console.error('Error parsing stored challenge:', error);
+        toast.error('Error loading challenge', {
+          description: 'Please try selecting a challenge again'
+        });
+        navigate('/challenges');
+      }
     } else {
-      navigate('/challenges/new');
+      toast.error('No challenge selected', {
+        description: 'Please select a challenge to start'
+      });
+      navigate('/challenges');
     }
   }, [navigate]);
 
@@ -47,58 +101,151 @@ const ChallengeWorkspace: React.FC = () => {
     
     setIsRunning(true);
     
-    // Simulate test execution (in real app, this would call backend)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const results: TestResult[] = challenge.testCases.map(testCase => ({
-      input: testCase.input,
-      expectedOutput: testCase.expectedOutput,
-      actualOutput: testCase.expectedOutput, // Mock: assume correct for demo
-      passed: true // Mock: assume all pass for demo
-    }));
-    
-    setTestResults(results);
-    setIsRunning(false);
+    try {
+      // Call backend to verify solution
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/verify`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          challenge_id: Number(challenge.id),
+          user_code: code,
+          user_id: "default_user"
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to verify solution');
+      }
+      
+      const result = await response.json();
+      console.log('Verification result:', result);
+      
+      // Convert backend test results to frontend format
+      const results: TestResult[] = (result.test_results || []).map((testResult: any) => ({
+        input: testResult.input || '',
+        expectedOutput: testResult.expected_output || '',
+        actualOutput: testResult.actual_output || '',
+        passed: testResult.pass || false
+      }));
+      
+      setTestResults(results);
+      
+      if (result.correct) {
+        toast.success('All tests passed!', {
+          description: `Earned ${result.xp_earned || challenge.xpReward} XP!`
+        });
+      } else {
+        toast.error('Some tests failed', {
+          description: result.feedback || 'Please check your solution'
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error running tests:', error);
+      toast.error('Error running tests', {
+        description: 'Please try again'
+      });
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   const submitSolution = async () => {
     if (!challenge) return;
     
     setIsSubmitting(true);
+    setSubmitMessage(null); // Clear any previous message
     
-    // Simulate submission (in real app, this would call backend)
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const allTestsPassed = testResults.length > 0 && testResults.every(result => result.passed);
-    
-    if (allTestsPassed) {
-      // Update user progress
-      const user = storage.getUser();
-      const updatedUser = {
-        ...user,
-        xp: user.xp + challenge.xpReward,
-        level: Math.floor((user.xp + challenge.xpReward) / 100) + 1,
-      };
-      storage.saveUser(updatedUser);
-      
-      // Mark challenge as completed
-      const challenges = storage.getChallenges();
-      const updatedChallenges = challenges.map(c => 
-        c.id === challenge.id ? { ...c, completed: true } : c
-      );
-      storage.saveChallenges(updatedChallenges);
-      
-      setIsCompleted(true);
-      toast.success(t('challenges.success'), {
-        description: `${t('challenges.earned')} ${challenge.xpReward} XP!`
+    try {
+      // Call backend to verify solution
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/verify`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          challenge_id: Number(challenge.id),
+          user_code: code,
+          user_id: "default_user"
+        }),
       });
-    } else {
-      toast.error(t('challenges.failed'), {
-        description: t('challenges.tryAgain')
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit solution');
+      }
+      
+      const result = await response.json();
+      
+      if (result.correct) {
+        setIsCompleted(true);
+        setSubmitMessage({
+          type: 'success',
+          message: `🎉 Challenge completed! Earned ${result.xp_earned || challenge.xpReward} XP!`
+        });
+      } else {
+        setSubmitMessage({
+          type: 'error',
+          message: result.feedback || 'Solution incorrect. Please try again.'
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error submitting solution:', error);
+      setSubmitMessage({
+        type: 'error',
+        message: 'Error submitting solution. Please try again.'
       });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const loadSolution = async () => {
+    if (!challenge || solution) return;
     
-    setIsSubmitting(false);
+    setLoadingSolution(true);
+    try {
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/solution`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challenge_id: Number(challenge.id) }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load solution');
+      }
+      
+      const result = await response.json();
+      setSolution(result.solution || 'No solution available');
+    } catch (error) {
+      console.error('Error loading solution:', error);
+      setSolution('Error loading solution');
+    } finally {
+      setLoadingSolution(false);
+    }
+  };
+
+  const loadAiHints = async () => {
+    if (!challenge || aiHints) return;
+    
+    setLoadingHints(true);
+    try {
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/hints`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challenge_id: Number(challenge.id) }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load hints');
+      }
+      
+      const result = await response.json();
+      setAiHints(result.hints || 'No hints available');
+    } catch (error) {
+      console.error('Error loading hints:', error);
+      setAiHints('Error loading hints');
+    } finally {
+      setLoadingHints(false);
+    }
   };
 
   if (!challenge) {
@@ -200,7 +347,12 @@ const ChallengeWorkspace: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowHints(!showHints)}
+                onClick={() => {
+                  if (!showHints) {
+                    loadAiHints();
+                  }
+                  setShowHints(!showHints);
+                }}
               >
                 <Lightbulb className="h-4 w-4 mr-2" />
                 {showHints ? t('challenges.hideHints') : t('challenges.showHints')}
@@ -208,17 +360,23 @@ const ChallengeWorkspace: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowSolution(!showSolution)}
+                onClick={() => {
+                  if (!showSolution) {
+                    loadSolution();
+                  }
+                  setShowSolution(!showSolution);
+                }}
               >
                 <Eye className="h-4 w-4 mr-2" />
                 {showSolution ? t('challenges.hideSolution') : t('challenges.showSolution')}
               </Button>
             </div>
 
-            {showHints && (
+            {/* Pre-generated hints from challenge */}
+            {showHints && challenge.hints && challenge.hints.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">{t('challenges.hints')}</CardTitle>
+                  <CardTitle className="text-lg">Quick Hints</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
@@ -232,15 +390,43 @@ const ChallengeWorkspace: React.FC = () => {
               </Card>
             )}
 
-            {showSolution && challenge.solution && (
+            {/* AI-generated hints */}
+            {showHints && aiHints && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">AI Hints</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loadingHints ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Generating hints...</p>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                      {aiHints}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {showSolution && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">{t('challenges.solution')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-                    <code>{challenge.solution}</code>
-                  </pre>
+                  {loadingSolution ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Generating solution...</p>
+                    </div>
+                  ) : (
+                    <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
+                      <code>{solution}</code>
+                    </pre>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -278,7 +464,7 @@ const ChallengeWorkspace: React.FC = () => {
                 </Button>
                 <Button
                   onClick={submitSolution}
-                  disabled={isSubmitting || testResults.length === 0 || !code.trim()}
+                  disabled={isSubmitting || !code.trim()}
                   className="shadow-glow"
                 >
                   {isSubmitting ? (
@@ -289,6 +475,24 @@ const ChallengeWorkspace: React.FC = () => {
                   {t('challenges.submit')}
                 </Button>
               </div>
+              
+              {/* Persistent Submit Message */}
+              {submitMessage && (
+                <div className={`mt-4 p-4 rounded-lg border ${
+                  submitMessage.type === 'success' 
+                    ? 'bg-success/10 border-success/20 text-success-foreground' 
+                    : 'bg-destructive/10 border-destructive/20 text-destructive-foreground'
+                }`}>
+                  <div className="flex items-center">
+                    {submitMessage.type === 'success' ? (
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                    ) : (
+                      <XCircle className="h-5 w-5 mr-2" />
+                    )}
+                    <span className="font-medium">{submitMessage.message}</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
