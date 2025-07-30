@@ -17,6 +17,7 @@ def ask_gemma(prompt: str):
         stream=True
     )
     for chunk in response:
-        content = chunk.get("message", {}).get("content", "")
-        if content:
-            yield content 
+        if chunk and isinstance(chunk, dict):
+            content = chunk.get("message", {}).get("content", "")
+            if content:
+                yield content 

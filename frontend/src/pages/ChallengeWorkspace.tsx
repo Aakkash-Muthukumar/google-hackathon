@@ -73,7 +73,7 @@ const ChallengeWorkspace: React.FC = () => {
           template: parsedChallenge.template,
           hints: parsedChallenge.hints || [], // These are the pre-generated hints
           testCases: parsedChallenge.examples ? parsedChallenge.examples.map(ex => ({
-            input: Array.isArray(ex.input) ? ex.input.join(' ') : String(ex.input),
+            input: Array.isArray(ex.input) ? JSON.stringify(ex.input) : String(ex.input),
             expectedOutput: String(ex.output)
           })) : [],
           solution: undefined // Will be loaded separately if needed
@@ -201,19 +201,28 @@ const ChallengeWorkspace: React.FC = () => {
   const loadSolution = async () => {
     if (!challenge || solution) return;
     
+    console.log('Loading solution for challenge:', challenge.id, challenge.title);
     setLoadingSolution(true);
     try {
+      const requestBody = { challenge_id: Number(challenge.id) };
+      console.log('Request body:', requestBody);
+      
       const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/solution`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ challenge_id: Number(challenge.id) }),
+        body: JSON.stringify(requestBody),
       });
       
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
         throw new Error('Failed to load solution');
       }
       
       const result = await response.json();
+      console.log('Solution result:', result);
       setSolution(result.solution || 'No solution available');
     } catch (error) {
       console.error('Error loading solution:', error);
@@ -226,19 +235,28 @@ const ChallengeWorkspace: React.FC = () => {
   const loadAiHints = async () => {
     if (!challenge || aiHints) return;
     
+    console.log('Loading hints for challenge:', challenge.id, challenge.title);
     setLoadingHints(true);
     try {
+      const requestBody = { challenge_id: Number(challenge.id) };
+      console.log('Hints request body:', requestBody);
+      
       const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/hints`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ challenge_id: Number(challenge.id) }),
+        body: JSON.stringify(requestBody),
       });
       
+      console.log('Hints response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Hints response error:', errorText);
         throw new Error('Failed to load hints');
       }
       
       const result = await response.json();
+      console.log('Hints result:', result);
       setAiHints(result.hints || 'No hints available');
     } catch (error) {
       console.error('Error loading hints:', error);
@@ -353,9 +371,10 @@ const ChallengeWorkspace: React.FC = () => {
                   }
                   setShowHints(!showHints);
                 }}
+                disabled={loadingHints}
               >
                 <Lightbulb className="h-4 w-4 mr-2" />
-                {showHints ? t('challenges.hideHints') : t('challenges.showHints')}
+                {loadingHints ? 'Loading...' : 'Generate AI Hint'}
               </Button>
               <Button
                 variant="outline"
@@ -366,35 +385,18 @@ const ChallengeWorkspace: React.FC = () => {
                   }
                   setShowSolution(!showSolution);
                 }}
+                disabled={loadingSolution}
               >
                 <Eye className="h-4 w-4 mr-2" />
-                {showSolution ? t('challenges.hideSolution') : t('challenges.showSolution')}
+                {loadingSolution ? 'Loading...' : 'Generate Solution'}
               </Button>
             </div>
 
-            {/* Pre-generated hints from challenge */}
-            {showHints && challenge.hints && challenge.hints.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Quick Hints</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {challenge.hints.map((hint, idx) => (
-                      <li key={idx} className="text-sm text-muted-foreground">
-                        {idx + 1}. {hint}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
-
             {/* AI-generated hints */}
-            {showHints && aiHints && (
+            {showHints && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">AI Hints</CardTitle>
+                  <CardTitle className="text-lg">Hints</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {loadingHints ? (
@@ -402,9 +404,13 @@ const ChallengeWorkspace: React.FC = () => {
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
                       <p className="text-sm text-muted-foreground">Generating hints...</p>
                     </div>
-                  ) : (
+                  ) : aiHints ? (
                     <div className="text-sm text-muted-foreground whitespace-pre-wrap">
                       {aiHints}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      Click "Generate AI Hint" to get helpful hints for this challenge.
                     </div>
                   )}
                 </CardContent>

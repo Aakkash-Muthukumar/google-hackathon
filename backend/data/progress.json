@@ -1,9 +1,10 @@
 {
   "default_user": {
-    "total_xp": 90,
+    "total_xp": 485,
     "completed_challenges": [
-      1
+      1,
+      3
     ],
-    "level": 1
+    "level": 5
   }
 }

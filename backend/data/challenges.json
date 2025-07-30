@@ -1,294 +1,144 @@
 [
   {
-    "title": "Finding the Largest Number in a List",
-    "description": "Write a Python function to find the largest number in a list of integers. The function should take a list of integers as input and return the largest integer in the list. If the list is empty, it should return None.  Assume the input list will always contain at least one number.",
+    "title": "Array Transformation Challenge",
+    "description": "Given an array of positive integers, transform the array into a new array where each element is the sum of the elements at the same index in the original array and the element at the (index + 1) in the original array. If the index is out of bounds, treat the element at the next index as 0.  The transformed array should be sorted in ascending order.  Return the transformed array.",
     "difficulty": "easy",
     "language": "python",
-    "topic": "algorithms",
-    "xpReward": 45,
-    "input_format": "A list of integers, separated by spaces, on a single line.",
-    "output_format": "An integer representing the largest number in the input list. If the list is empty, return None.",
-    "template": "def find_largest_number(numbers):\n    \"\"\"Finds the largest number in a list of integers.\"\"\"\n    # Your code here\n    pass",
-    "examples": [
-      {
-        "input": "1 5 2 8 3",
-        "output": "8"
-      },
-      {
-        "input": "10 20 5 15",
-        "output": "20"
-      },
-      {
-        "input": "-1 0 1 2",
-        "output": "2"
-      },
-      {
-        "input": "5",
-        "output": "5"
-      }
-    ],
-    "hints": [
-      "You can use the built-in `max()` function to find the largest number in a list.",
-      "If the list is empty, you need to handle that case to avoid errors.",
-      "Consider using a loop to iterate through the list and compare each element with the current largest number."
-    ],
-    "id": 1
-  },
-  {
-    "title": "String Palindrome Checker",
-    "description": "Write a Python function to determine if a given string is a palindrome. A palindrome is a string that reads the same forwards and backward, ignoring case and non-alphanumeric characters. For example, 'Racecar' and 'A man, a plan, a canal: Panama' are palindromes.",
-    "difficulty": "medium",
-    "language": "python",
-    "topic": "strings",
+    "topic": "arrays",
     "xpReward": 65,
-    "input_format": "The input is a single string.",
-    "output_format": "The output is a boolean value (True if the string is a palindrome, False otherwise).",
-    "template": "def is_palindrome(text):\n    # Your code here\n    pass",
+    "input_format": "A list of positive integers.",
+    "output_format": "A sorted list of integers representing the transformed array.",
+    "template": "def transform_array(arr):\n    \"\"\"Transforms an array based on the specified rule and sorts the result. \n\n    Args:\n        arr: A list of positive integers.\n\n    Returns:\n        A sorted list of integers representing the transformed array.\n    \"\"\"\n    # Your code here\n    pass",
     "examples": [
       {
-        "input": "Racecar",
-        "output": true
-      },
-      {
-        "input": "A man, a plan, a canal: Panama",
-        "output": true
-      },
-      {
-        "input": "hello",
-        "output": false
-      },
-      {
-        "input": "Madam",
-        "output": true
-      },
-      {
-        "input": "Was it a car or a cat I saw?",
-        "output": true
-      }
-    ],
-    "hints": [
-      "Consider removing non-alphanumeric characters and converting the string to lowercase for accurate palindrome checking.",
-      "You can use string slicing to reverse the string.",
-      "The `lower()` method can be used to convert the string to lowercase."
-    ],
-    "id": 2
-  },
-  {
-    "title": "Finding the Largest Number in a List",
-    "description": "Write a Python function to find the largest number in a list of numbers. The function should take a list of integers as input and return the largest integer in the list. If the list is empty, it should return None.  Assume the input list will always contain at least one number.",
-    "difficulty": "easy",
-    "language": "python",
-    "topic": "algorithms",
-    "xpReward": 45,
-    "input_format": "A list of integers, separated by spaces.",
-    "output_format": "An integer representing the largest number in the input list.",
-    "template": "def find_largest_number(numbers):\n    \"\"\"Finds the largest number in a list of integers.\"\"\"\n    # Your code here\n    pass",
-    "examples": [
-      {
-        "input": "1 5 2 8 3",
-        "output": "8"
-      },
-      {
-        "input": "10 20 5 15",
-        "output": "20"
-      },
-      {
-        "input": "-1 0 1 2",
-        "output": "2"
-      },
-      {
-        "input": "5",
-        "output": "5"
-      }
-    ],
-    "hints": [
-      "You can use the built-in `max()` function for this.",
-      "Make sure to handle the case where the list is empty (although the problem states it won't be empty).",
-      "Consider iterating through the list and comparing each element with the current largest number."
-    ],
-    "id": 3
-  },
-  {
-    "title": "Finding the Largest Number in a List",
-    "description": "Write a Python function to find the largest number in a given list of integers. The function should take a list of integers as input and return the largest integer found in the list. If the list is empty, return None.  Assume the input list will always contain at least one number.",
-    "difficulty": "easy",
-    "language": "python",
-    "topic": "algorithms",
-    "xpReward": 45,
-    "input_format": "The input is a list of integers, separated by spaces.  The list can contain positive, negative, and zero values.",
-    "output_format": "The output is an integer representing the largest number in the input list. If the list is empty, the output is None.",
-    "template": "def find_largest_number(numbers):\n    \"\"\"Finds the largest number in a list of integers.\n\n    Args:\n        numbers: A list of integers.\n\n    Returns:\n        The largest integer in the list, or None if the list is empty.\n    \"\"\"\n    if not numbers:\n        return None\n\n    # Your code here\n    largest_number = numbers[0]\n    for number in numbers:\n        if number > largest_number:\n            largest_number = number\n    return largest_number",
-    "examples": [
-      {
-        "input": "1 5 2 8 3",
-        "output": "8"
-      },
-      {
-        "input": "-1 0 5 -2 10",
-        "output": "10"
-      },
-      {
-        "input": "0 0 0 0 0",
-        "output": "0"
-      },
-      {
-        "input": "100",
-        "output": "100"
-      },
-      {
-        "input": "1 2 3 4 5",
-        "output": "5"
-      }
-    ],
-    "hints": [
-      "You can initialize a variable to store the largest number and then iterate through the list, updating the variable if you find a larger number.",
-      "Consider using the built-in `max()` function for a more concise solution (though the prompt asks for a solution using basic algorithms).",
-      "Remember to handle the case where the input list is empty."
-    ],
-    "id": 4
-  },
-  {
-    "title": "Find the Largest Number in a List",
-    "description": "Write a Python function to find the largest number in a list of integers. The function should take a list of integers as input and return the largest integer in the list. If the list is empty, return None.  Ensure the code handles potential negative numbers correctly.",
-    "difficulty": "easy",
-    "language": "python",
-    "topic": "algorithms",
-    "xpReward": 45,
-    "input_format": "A list of integers, separated by spaces, on a single line.",
-    "output_format": "An integer representing the largest number in the input list. If the list is empty, print None.",
-    "template": "def find_largest_number(numbers):\n    \"\"\"Finds the largest number in a list of integers.\"\"\"\n    if not numbers:\n        return None\n\n    largest_number = numbers[0]\n    for number in numbers:\n        if number > largest_number:\n            largest_number = number\n\n    return largest_number",
-    "examples": [
-      {
-        "input": "1 5 2 8 3",
-        "output": "8"
-      },
-      {
-        "input": "-1 0 5 -2 10",
-        "output": "10"
-      },
-      {
-        "input": "5",
-        "output": "5"
-      },
-      {
-        "input": "10 10 10 10",
-        "output": "10"
-      },
-      {
-        "input": "",
-        "output": "None"
-      }
-    ],
-    "hints": [
-      "Initialize a variable to store the largest number found so far.",
-      "Iterate through the list of numbers.",
-      "If a number is greater than the current largest number, update the largest number.",
-      "Handle the case where the input list is empty."
-    ],
-    "id": 5
-  },
-  {
-    "title": "Fractal Number Generation",
-    "description": "Write a Python function that generates a fractal number sequence. A fractal number is a number that can be expressed as the sum of two or more positive integers, each of which is a power of 2.  The sequence starts with 1.  The function should recursively generate the next fractal number by summing the smallest possible powers of 2 that add up to the current fractal number.  The function should return a list of fractal numbers generated up to a specified limit.  The limit should be an integer.  If the limit is less than 1, return an empty list.",
-    "difficulty": "hard",
-    "language": "python",
-    "topic": "recursion",
-    "xpReward": 85,
-    "input_format": "The input is an integer `limit` representing the upper bound of the fractal number sequence.  If `limit` is less than 1, an empty list is returned.",
-    "output_format": "The output is a list of integers, where each integer is a fractal number generated up to the `limit`. The list is returned in ascending order.",
-    "template": "def generate_fractal_numbers(limit):\n    fractal_numbers = []\n    if limit < 1:\n        return []\n\n    def find_next_fractal(current_number):\n        if current_number == 1:\n            return 1\n        else:\n            # Find the smallest powers of 2 that sum to current_number\n            powers_of_2 = []\n            power = 1\n            while power <= current_number:\n                if current_number % power == 0:\n                    powers_of_2.append(power)\n                    current_number //= power\n                power *= 2\n            \n            if not powers_of_2:\n                return None #Shouldn't happen, but handle for robustness\n            \n            # Find the smallest power of 2 that adds up to the remaining amount\n            remaining = current_number\n            best_power = 1\n            best_sum = 0\n            for p in powers_of_2:\n                if remaining <= 0:\n                    break\n                if best_sum + p <= remaining:\n                    best_sum += p\n                    best_power = p\n                else:\n                    break\n            \n            if best_sum == remaining:\n                return current_number + best_power\n            else:\n                return None #Shouldn't happen, but handle for robustness\n\n    current_number = 1\n    while current_number <= limit:\n        next_fractal = find_next_fractal(current_number)\n        if next_fractal is not None:\n            fractal_numbers.append(next_fractal)\n        current_number = next_fractal\n    return fractal_numbers",
-    "examples": [
-      {
-        "input": 10,
-        "output": [
+        "input": [
           1,
           2,
+          3,
           4,
-          8,
-          16
+          5
+        ],
+        "output": [
+          3,
+          5,
+          7,
+          9,
+          11
         ]
       },
       {
-        "input": 5,
+        "input": [
+          10,
+          20,
+          30
+        ],
         "output": [
+          30,
+          50,
+          70
+        ]
+      },
+      {
+        "input": [
           1,
-          2,
+          2
+        ],
+        "output": [
+          3,
           4
         ]
       },
       {
-        "input": 1,
+        "input": [
+          5
+        ],
         "output": [
-          1
+          10
         ]
       },
       {
-        "input": 0,
-        "output": []
-      },
-      {
-        "input": 20,
-        "output": [
+        "input": [
           1,
+          1,
+          1,
+          1
+        ],
+        "output": [
           2,
-          4,
-          8,
-          16
+          2,
+          2,
+          2
         ]
       }
     ],
-    "hints": [
-      "Consider how to define a fractal number in terms of powers of 2.",
-      "The `find_next_fractal` function is the core of the recursion. It needs to find the smallest powers of 2 that add up to the current number.",
-      "Handle the base case where the limit is less than 1.  Return an empty list in this case."
-    ],
-    "id": 6
+    "id": 1
   },
   {
-    "title": "The Collator's Algorithm",
-    "description": "A collator is a function that takes a list of integers and returns a new list with the integers sorted in ascending order.  However, this collator uses recursion in a non-trivial way.  The collator function is defined as follows: \n\n collator(list): If the list is empty, return an empty list. Otherwise, find the minimum element in the list. Remove the minimum element from the list and recursively call collator on the remaining list.  Return the list with the minimum element prepended to the result of the recursive call.\n\n Write a Python function `collator(numbers)` that implements this collator algorithm.  Your function should handle various input scenarios, including empty lists and lists with duplicate numbers.  Ensure your solution is efficient and clearly demonstrates the recursive approach.",
-    "difficulty": "hard",
+    "title": "String Transformation with Character Counts",
+    "description": "Given a string, implement a function to transform it into a new string where each character is replaced by a character that represents the frequency of the character in the original string. If a character appears 0 times, it should be replaced with a space. The transformation should be done in place, modifying the original string.  The frequency of a character is calculated by counting how many times it appears in the string.  The new string should be formed by iterating through the original string and replacing each character with its frequency.  If the frequency is 0, a space is used.",
+    "difficulty": "easy",
     "language": "python",
-    "topic": "recursion",
-    "xpReward": 75,
-    "input_format": "The input is a list of integers, represented as a single line of space-separated integers.  The integers can be positive, negative, or zero.  The list can be empty.",
-    "output_format": "The output is a list of integers, representing the sorted list returned by the collator function. The list will be in ascending order.",
-    "template": "def collator(numbers):\n    if not numbers:\n        return []\n    # Find the minimum element\n    min_val = min(numbers)\n    # Remove the minimum element\n    numbers.remove(min_val)\n    # Recursive call\n    result = collator(numbers)\n    # Prepend the minimum element to the result\n    result.insert(0, min_val)\n    return result",
+    "topic": "strings",
+    "xpReward": 65,
+    "input_format": "A single string as a string.",
+    "output_format": "The transformed string, where each character is replaced by its frequency in the original string.  Characters appearing 0 times are replaced with spaces.",
+    "template": "def transform_string(input_string):\n    \"\"\"Transforms a string into a new string based on character frequencies.\n\n    Args:\n        input_string: The input string to transform.\n\n    Returns:\n        The transformed string.\n    \"\"\"\n    # Your code here\n    pass",
     "examples": [
       {
-        "input": "5 2 8 1 9",
-        "output": "1 2 5 8 9"
+        "input": "hello",
+        "output": "h e l l o"
       },
       {
-        "input": "3 1 4 1 5 9 2 6",
-        "output": "1 1 2 3 4 5 6 9"
+        "input": "banana",
+        "output": "b a n a n a"
       },
       {
-        "input": "10 5 20 15",
-        "output": "5 10 15 20"
+        "input": "abc",
+        "output": "a b c"
       },
       {
-        "input": "1",
-        "output": "1"
+        "input": "aabbcc",
+        "output": "a a b b c c"
       },
       {
-        "input": "1 2 3 4 5",
-        "output": "1 2 3 4 5"
-      },
-      {
-        "input": "5 5 5 5 5",
-        "output": "5 5 5 5 5"
-      },
-      {
-        "input": "",
-        "output": "[]"
+        "input": "xyz",
+        "output": "x y z"
       }
     ],
-    "hints": [
-      "The `min()` function is useful for finding the minimum element in a list.",
-      "Use `numbers.remove(min_val)` to remove the minimum element from the list. Be aware that this modifies the original list.",
-      "Remember to prepend the minimum element to the result of the recursive call using `result.insert(0, min_val)`."
+    "id": 2
+  },
+  {
+    "title": "String Cipher Decrypter",
+    "description": "You are given a string and a key. The key is a sequence of characters that, when applied to the string, performs a specific cipher. The cipher involves shifting each character in the string by a certain amount based on its position in the alphabet (a=1, b=2, etc.). The key dictates the shift amount for each character.  Your task is to write a function that decrypts the string using the provided key. The decryption should be performed character by character, applying the shift value to each character's position in the alphabet. If a character is not a letter, it should remain unchanged. The function should return the decrypted string.",
+    "difficulty": "easy",
+    "language": "python",
+    "topic": "strings",
+    "xpReward": 65,
+    "input_format": "A string (the text to be decrypted) and a string (the key, representing the shift amount for each character).",
+    "output_format": "A string (the decrypted text).",
+    "template": "def decrypt_string(grid):\n    \"\"\"Calculates the perimeter of the islands in a 2D grid.\"\"\"\n    # Your code here\n    pass",
+    "examples": [
+      {
+        "input": "hello",
+        "output": "khoor",
+        "output_description": "The key 'abc' shifts each character by 1. 'h' becomes 'i', 'e' becomes 'f', 'l' becomes 'm', 'l' becomes 'm', 'o' becomes 'p'."
+      },
+      {
+        "input": "xyz",
+        "output": "abc",
+        "output_description": "The key 'abc' shifts each character by 1. 'x' becomes 'a', 'y' becomes 'b', 'z' becomes 'c'."
+      },
+      {
+        "input": "ABC",
+        "output": "DEF",
+        "output_description": "The key 'abc' shifts each character by 1. 'A' becomes 'D', 'B' becomes 'E', 'C' becomes 'F'."
+      },
+      {
+        "input": "Hello World!",
+        "output": "Khoor Zruog!",
+        "output_description": "The key 'abc' shifts each character by 1. Spaces and punctuation remain unchanged."
+      }
     ],
-    "id": 7
+    "id": 3
   }
 ]

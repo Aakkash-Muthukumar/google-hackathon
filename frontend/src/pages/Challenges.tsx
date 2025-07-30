@@ -120,8 +120,8 @@ export default function Challenges() {
         template: challenge.template || '',
         hints: challenge.hints || [],
         testCases: challenge.examples ? challenge.examples.map((ex: any) => ({
-          input: ex.input || '',
-          expectedOutput: ex.output || ''
+          input: Array.isArray(ex.input) ? JSON.stringify(ex.input) : String(ex.input || ''),
+          expectedOutput: String(ex.output || '')
         })) : [],
         solution: undefined
       }));

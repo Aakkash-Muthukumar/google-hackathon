@@ -1,8 +1,8 @@
 import sys
-import subprocess
 import json
 import os
 from services.ai_service import ask_gemma
+from services.verification_service import verify_code_with_ai
 from typing import Dict, List, Any
 
 # Path to data files
@@ -40,18 +40,61 @@ def collect_ai_response(generator) -> str:
     """Collect all chunks from the AI generator into a single string"""
     response = ""
     for chunk in generator:
-        response += chunk
+        if isinstance(chunk, str):
+            response += chunk
+        else:
+            # Handle case where chunk might be a dict (fallback)
+            response += str(chunk)
     return response
 
 def generate_challenge(difficulty: str = "easy", topic: str = "algorithms", language: str = "python") -> Dict[str, Any]:
     """
     Generate a new coding challenge using the AI model
     """
+    # Load existing challenges to prevent duplicates
+    existing_challenges = load_challenges()
+    existing_titles = [challenge.get('title', '').lower() for challenge in existing_challenges]
+    
+    # Create a more specific prompt to avoid similar challenges
+    similar_challenges = []
+    for title in existing_titles:
+        if any(keyword in title for keyword in ['largest', 'find', 'number', 'list', 'palindrome', 'string', 'sort', 'algorithm']):
+            similar_challenges.append(title)
+    
     prompt = f"""
 Generate a coding challenge with the following specifications:
 - Difficulty: {difficulty}
 - Topic: {topic}
 - Language: {language}
+
+IMPORTANT: Do NOT generate any of these existing challenges or anything too similar:
+{', '.join(existing_titles)}
+
+Especially avoid these types of challenges that already exist:
+{', '.join(similar_challenges)}
+
+Generate a completely different and unique challenge. Be creative and avoid common patterns like:
+- Finding largest/smallest numbers in lists
+- Palindrome checks
+- Basic sorting algorithms
+- Simple string manipulations
+
+Instead, consider challenges like:
+- Array manipulation with specific conditions
+- Mathematical sequences or patterns
+- Data structure operations
+- Algorithmic puzzles
+- String processing with complex rules
+- Number theory problems
+- Recursive patterns
+- Optimization problems
+
+CRITICAL: The template should ONLY contain:
+- Function signature with proper parameters
+- Docstring explaining the function
+- Placeholder comment like "# Your code here" or "pass"
+- NO complete solution or implementation
+- NO working code - only the function signature and docstring
 
 Return a JSON object with the following structure:
 {{
@@ -63,17 +106,12 @@ Return a JSON object with the following structure:
     "xpReward": <number between 30-100 based on difficulty>,
     "input_format": "Description of input format",
     "output_format": "Description of output format",
-    "template": "Code template for the user to start with",
+    "template": "def function_name(params):\n    \"\"\"Docstring\"\"\"\n    # Your code here\n    pass",
     "examples": [
         {{
             "input": <input value>,
             "output": <expected output>
         }}
-    ],
-    "hints": [
-        "Hint 1",
-        "Hint 2",
-        "Hint 3"
     ]
 }}
 
@@ -90,14 +128,24 @@ Make sure the challenge is appropriate for the specified difficulty level and in
             challenge = json.loads(json_str)
             
             # Add an ID
-            challenges = load_challenges()
-            challenge['id'] = max([c.get('id', 0) for c in challenges], default=0) + 1
+            challenge['id'] = max([c.get('id', 0) for c in existing_challenges], default=0) + 1
             
             # Validate required fields
-            required_fields = ['title', 'description', 'difficulty', 'language', 'topic', 'xpReward', 'input_format', 'output_format', 'template', 'examples', 'hints']
+            required_fields = ['title', 'description', 'difficulty', 'language', 'topic', 'xpReward', 'input_format', 'output_format', 'template', 'examples']
             for field in required_fields:
                 if field not in challenge:
                     raise ValueError(f"Missing required field: {field}")
+            
+            # Ensure template doesn't contain a complete solution
+            template = challenge['template']
+            if 'return ' in template and not template.strip().endswith('pass'):
+                # If there's a return statement and it's not just "pass", it might be a solution
+                lines = template.split('\n')
+                code_lines = [line.strip() for line in lines if line.strip() and not line.strip().startswith('#') and not line.strip().startswith('"""') and not line.strip().startswith("'''")]
+                if len(code_lines) > 3:  # More than just function signature and pass
+                    # Replace with a proper template
+                    function_name = code_lines[0].split('def ')[1].split('(')[0]
+                    challenge['template'] = f"def {function_name}(grid):\n    \"\"\"Calculates the perimeter of the islands in a 2D grid.\"\"\"\n    # Your code here\n    pass"
             
             return challenge
         else:
@@ -105,24 +153,22 @@ Make sure the challenge is appropriate for the specified difficulty level and in
     except Exception as e:
         # Return a fallback challenge if AI generation fails
         return {
-            "id": len(load_challenges()) + 1,
-            "title": f"Sample {difficulty.title()} Challenge",
-            "description": f"This is a sample {difficulty} challenge about {topic}.",
+            "id": len(existing_challenges) + 1,
+            "title": f"String Character Counter",
+            "description": f"Write a function that counts the frequency of each character in a string and returns the character that appears most frequently. If there's a tie, return the character that appears first in the string.",
             "difficulty": difficulty,
             "language": language,
             "topic": topic,
             "xpReward": 50 if difficulty == "easy" else 75 if difficulty == "medium" else 100,
-            "input_format": "Input format description",
-            "output_format": "Output format description",
-            "template": f"def solve_problem(input_data):\n    # Write your solution here\n    pass",
+            "input_format": "A string containing alphanumeric characters",
+            "output_format": "A single character (the most frequent one)",
+            "template": f"def most_frequent_char(text):\n    \"\"\"Returns the most frequent character in the given string.\"\"\"\n    # Your code here\n    pass",
             "examples": [
-                {"input": "sample_input", "output": "sample_output"}
+                {"input": "hello", "output": "l"},
+                {"input": "programming", "output": "g"},
+                {"input": "aabbcc", "output": "a"}
             ],
-            "hints": [
-                "Think about the problem step by step",
-                "Consider edge cases",
-                "Test your solution with the examples"
-            ]
+            "hints": []  # Hints will be generated dynamically when requested
         }
 
 def format_verification_prompt(problem: Dict[str, Any], user_code: str, test_cases: List[Dict[str, Any]]) -> str:
@@ -130,105 +176,44 @@ def format_verification_prompt(problem: Dict[str, Any], user_code: str, test_cas
     Build a prompt for the model to verify user code against the problem and test cases.
     """
     prompt = f"""
-You are an expert coding tutor and code evaluator. Your job is to strictly evaluate the user's code against the given problem and test cases.
-
-IMPORTANT EVALUATION RULES:
-1. If the code is empty, incomplete, or contains only placeholder text (like "pass" or comments), mark ALL tests as FAILED
-2. The code must be a complete, runnable solution that handles all test cases
-3. Check that the function signature matches the expected input/output format
-4. Verify that the code would produce the correct output for each test case
-5. Be strict - only mark tests as PASSED if the code would actually work correctly
-
-Return a JSON object with these fields:
-- 'correct': true or false (whether ALL test cases pass)
-- 'feedback': a short explanation or suggestion for the user
-- 'test_results': array of test results with 'input', 'expected_output', 'actual_output', 'pass' fields
+You are a code evaluator. Analyze the given code and test cases to determine if the code is correct.
 
 Problem: {problem['description']}
-Input Format: {problem['input_format']}
-Output Format: {problem['output_format']}
-Test Cases: {json.dumps(test_cases, indent=2)}
 
 User Code:
 {user_code}
 
-Analyze the code carefully and return the JSON response. If the code is incomplete or empty, mark all tests as failed.
+Test Cases:
+{json.dumps(test_cases, indent=2)}
+
+For each test case, determine:
+1. What the code would output given the input
+2. Whether that output matches the expected output
+
+Return a JSON response with this exact structure:
+{{
+    "correct": true/false,
+    "feedback": "brief explanation",
+    "test_results": [
+        {{
+            "input": "input value",
+            "expected_output": "expected output", 
+            "actual_output": "what the code would produce",
+            "pass": true/false
+        }}
+    ]
+}}
+
+Be strict. If the code is incomplete, has errors, or won't produce the expected output, mark it as failed.
 """
     return prompt
 
 def verify_with_model(problem: Dict[str, Any], user_code: str, test_cases: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Use the AI model to verify user code against the problem and test cases.
+    Use AI model to verify user code against the problem and test cases.
     Returns a dict with 'correct', 'feedback', and 'test_results'.
     """
-    # For now, always use execution-based verification for more reliable results
-    # The AI model was not being strict enough with incomplete code
-    return verify_with_execution(problem, user_code, test_cases)
-
-def verify_with_execution(problem: Dict[str, Any], user_code: str, test_cases: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Fallback verification method that actually executes the user code.
-    """
-    test_results = []
-    all_passed = True
-    
-    for i, test_case in enumerate(test_cases):
-        try:
-            # Prepare input data
-            input_data = test_case['input']
-            expected_output = test_case['output']  # Changed from 'expected_output' to 'output'
-            
-            # Execute the code
-            stdout, stderr = run_user_code(user_code, input_data)
-            
-            # Clean up output
-            actual_output = stdout.strip() if stdout else ""
-            
-            # Check if output matches expected
-            passed = actual_output == expected_output
-            
-            test_results.append({
-                'input': input_data,
-                'expected_output': expected_output,
-                'actual_output': actual_output,
-                'pass': passed
-            })
-            
-            if not passed:
-                all_passed = False
-                
-        except Exception as e:
-            test_results.append({
-                'input': test_case['input'],
-                'expected_output': test_case['output'],  # Changed from 'expected_output' to 'output'
-                'actual_output': f"Error: {str(e)}",
-                'pass': False
-            })
-            all_passed = False
-    
-    return {
-        'correct': all_passed,
-        'feedback': 'Code execution verification completed.',
-        'test_results': test_results
-    }
-
-def run_user_code(code: str, input_data: str) -> tuple[str, str]:
-    """
-    Run user code in a subprocess for isolation.
-    Returns (stdout, stderr).
-    """
-    try:
-        result = subprocess.run(
-            [sys.executable, "-c", code],
-            input=input_data.encode(),
-            capture_output=True,
-            timeout=5,  # Increased timeout for more complex solutions
-        )
-        return result.stdout.decode(), result.stderr.decode()
-    except subprocess.TimeoutExpired:
-        return "", "Time Limit Exceeded"
-    except Exception as e:
-        return "", str(e)
+    return verify_code_with_ai(problem, user_code, test_cases)
 
 def get_solution(problem: Dict[str, Any]) -> str:
     """
