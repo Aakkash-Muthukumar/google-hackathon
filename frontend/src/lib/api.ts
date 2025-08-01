@@ -89,6 +89,37 @@ export const tutorAPI = {
   },
 };
 
+// Course API
+export const courseAPI = {
+  getAll: () => apiRequest(API_ENDPOINTS.COURSES),
+  
+  getById: (id: string) => apiRequest(`${API_ENDPOINTS.COURSES}/${id}`),
+  
+  create: (data: any) => apiRequest(API_ENDPOINTS.COURSES, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
+  update: (id: string, data: any) => apiRequest(`${API_ENDPOINTS.COURSES}/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  
+  delete: (id: string) => apiRequest(`${API_ENDPOINTS.COURSES}/${id}`, {
+    method: 'DELETE',
+  }),
+
+  generateLesson: (data: {
+    lesson_title: string;
+    lesson_description: string;
+    programming_language: string;
+    difficulty?: string;
+  }) => apiRequest(`${API_ENDPOINTS.COURSES}/generate-lesson`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+};
+
 // Subject API
 export const subjectAPI = {
   getAll: () => apiRequest(API_ENDPOINTS.SUBJECTS),

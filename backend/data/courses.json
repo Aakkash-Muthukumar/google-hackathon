@@ -135,5 +135,63 @@
     ],
     "createdAt": "2025-07-31T21:34:40.169332",
     "updatedAt": "2025-07-31T21:34:40.169404"
+  },
+  {
+    "id": "dec816c2-8b75-40b6-8e9e-a032e03ad8e2",
+    "title": "Java - OOPs",
+    "description": "Learn Object Oriented Programming in Java after basic lessons.",
+    "difficulty": "beginner",
+    "language": "java",
+    "topics": [],
+    "estimatedHours": 10,
+    "lessons": [
+      {
+        "id": null,
+        "title": "Primitive Data Types",
+        "description": "Learn about the basic data types and what they do.",
+        "order": 1,
+        "xpReward": 100,
+        "content": null
+      },
+      {
+        "id": null,
+        "title": "Learn about Classes.",
+        "description": "How do classes work?",
+        "order": 2,
+        "xpReward": 100,
+        "content": null
+      }
+    ],
+    "createdAt": "2025-07-31 22:45:49.306481",
+    "updatedAt": "2025-07-31 22:45:49.306481"
+  },
+  {
+    "id": "6fb3707f-a565-46b2-85de-04dd1a3a1e78",
+    "title": "Python - basics",
+    "description": "Learn simple data structures after building foundation.",
+    "difficulty": "beginner",
+    "language": "python",
+    "topics": [],
+    "estimatedHours": 10,
+    "lessons": [
+      {
+        "id": null,
+        "title": "Primitive data types",
+        "description": "Learn the primitive data types and how they work.",
+        "order": 1,
+        "xpReward": 100,
+        "content": null
+      },
+      {
+        "id": null,
+        "title": "Arrays",
+        "description": "What are arrays, learn it, and how to use them for problem solving.",
+        "order": 2,
+        "xpReward": 100,
+        "content": null
+      }
+    ],
+    "createdAt": "2025-07-31 22:54:09.061016",
+    "updatedAt": "2025-07-31 22:54:09.061016"
   }
 ]

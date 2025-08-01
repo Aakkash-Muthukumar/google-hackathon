@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CheckCircle, Circle, Zap, Play } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle, Circle, Zap, Play, Wand2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -14,6 +14,7 @@ export default function CourseDetail() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [generatingLessons, setGeneratingLessons] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -41,6 +42,47 @@ export default function CourseDetail() {
 
   const handleLessonClick = (lesson: Lesson) => {
     navigate(`/course/${courseId}/lesson/${lesson.id}`);
+  };
+
+  const handleGenerateLessonContent = async (lesson: Lesson) => {
+    if (!course) return;
+    
+    try {
+      setGeneratingLessons(prev => new Set(prev).add(lesson.id));
+      
+      const response = await courseAPI.generateLesson({
+        lesson_title: lesson.title,
+        lesson_description: lesson.description,
+        programming_language: course.language,
+        difficulty: course.difficulty
+      });
+      
+      if (response.success && response.content) {
+        // Update the lesson with generated content
+        const updatedLesson = { ...lesson, content: response.content };
+        
+        // Update the course's lessons array
+        const updatedCourse = {
+          ...course,
+          lessons: course.lessons?.map(l => 
+            l.id === lesson.id ? updatedLesson : l
+          ) || []
+        };
+        setCourse(updatedCourse);
+        
+        // Save the updated course to the backend
+        await courseAPI.update(courseId!, updatedCourse);
+      }
+    } catch (err) {
+      console.error('Error generating lesson content:', err);
+      setError('Failed to generate lesson content');
+    } finally {
+      setGeneratingLessons(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(lesson.id);
+        return newSet;
+      });
+    }
   };
 
   const getProgressColor = (progress: number) => {
@@ -169,9 +211,35 @@ export default function CourseDetail() {
                     </div>
                   </div>
                   
-                  <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Play className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {!lesson.content && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGenerateLessonContent(lesson);
+                        }}
+                        disabled={generatingLessons.has(lesson.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        {generatingLessons.has(lesson.id) ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Wand2 className="w-4 h-4" />
+                            Generate
+                          </>
+                        )}
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Play className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -187,6 +255,13 @@ export default function CourseDetail() {
           <p className="text-muted-foreground">
             This course doesn't have any lessons yet. Check back later!
           </p>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
     </div>
