@@ -14,5 +14,21 @@
     "topic": "African",
     "difficulty": "easy",
     "id": 2
+  },
+  {
+    "term": "Dhanush",
+    "definition": "Sped",
+    "language": "python",
+    "topic": "Moose",
+    "difficulty": "easy",
+    "id": 3
+  },
+  {
+    "term": "Test1",
+    "definition": "I don't know",
+    "language": "python",
+    "topic": "Sample",
+    "difficulty": "hard",
+    "id": 4
   }
 ]

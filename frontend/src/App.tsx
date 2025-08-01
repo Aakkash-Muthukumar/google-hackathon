@@ -10,6 +10,9 @@ import Challenges from "./pages/Challenges";
 import ChallengeHome from "./pages/ChallengeHome";
 import ChallengeSelector from "./pages/ChallengeSelector";
 import ChallengeWorkspace from "./pages/ChallengeWorkspace";
+import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
+import LessonDetail from "./pages/LessonDetail";
 import Tutor from "./pages/Tutor";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -30,6 +33,9 @@ const App = () => (
             <Route path="challenges/home" element={<ChallengeHome />} />
             <Route path="challenges/new" element={<ChallengeSelector />} />
             <Route path="challenges/workspace" element={<ChallengeWorkspace />} />
+            <Route path="courses" element={<Courses />} />
+            <Route path="course/:courseId" element={<CourseDetail />} />
+            <Route path="course/:courseId/lesson/:lessonId" element={<LessonDetail />} />
             <Route path="tutor" element={<Tutor />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />

@@ -14,6 +14,7 @@ export default function Layout() {
     { to: '/', icon: Home, label: t('nav.dashboard') },
     { to: '/flashcards', icon: BookOpen, label: t('nav.flashcards') },
     { to: '/challenges', icon: Code, label: t('nav.challenges') },
+    { to: '/courses', icon: BookOpen, label: t('nav.courses') },
     { to: '/tutor', icon: Bot, label: t('nav.tutor') },
     { to: '/settings', icon: Settings, label: t('nav.settings') },
   ];

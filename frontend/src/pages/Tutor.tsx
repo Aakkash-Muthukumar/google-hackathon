@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, MessageCircle, Loader, AlertCircle, Menu, X, Pencil, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Send, Bot, User, MessageCircle, Loader, AlertCircle, Menu, X, Pencil, Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,10 +20,80 @@ export default function Tutor() {
   const [renamingChatId, setRenamingChatId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem('chatSidebarCollapsed');
     return saved === 'true';
   });
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+  const autoScrollEnabledRef = useRef(true);
+
+  // Auto-scroll to bottom function
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior });
+    }
+  }, []);
+
+  // Check if user is near bottom of chat
+  const isNearBottom = useCallback(() => {
+    if (!scrollRef.current) return true;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    const threshold = 100; // pixels from bottom
+    return scrollHeight - scrollTop - clientHeight < threshold;
+  }, []);
+
+  // Auto-scroll when new messages are added
+  useEffect(() => {
+    if (messages.length > 0 && autoScrollEnabledRef.current) {
+      // Always scroll to bottom for new messages, but use smooth animation
+      scrollToBottom('smooth');
+    }
+  }, [messages, scrollToBottom]);
+
+  // Auto-scroll during streaming responses
+  useEffect(() => {
+    if (isLoading && autoScrollEnabledRef.current) {
+      // Use instant scroll during loading to keep up with streaming
+      scrollToBottom('auto');
+    }
+  }, [isLoading, scrollToBottom]);
+
+  // Handle scroll events to show/hide scroll button and manage auto-scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+        const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+        setShowScrollButton(!isAtBottom);
+        
+        // Re-enable auto-scroll when user scrolls to bottom
+        if (isAtBottom && !autoScrollEnabledRef.current) {
+          autoScrollEnabledRef.current = true;
+          setAutoScrollEnabled(true);
+        }
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      // Disable auto-scroll when user manually scrolls
+      if (e.deltaY !== 0) {
+        autoScrollEnabledRef.current = false;
+        setAutoScrollEnabled(false);
+      }
+    };
+
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', handleScroll);
+      scrollElement.addEventListener('wheel', handleWheel);
+      return () => {
+        scrollElement.removeEventListener('scroll', handleScroll);
+        scrollElement.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, []);
 
   // Helper to create a new chat session
   const createNewChatSession = () => {
@@ -44,29 +114,133 @@ export default function Tutor() {
     return newSession;
   };
 
+  // Helper function to send message with content (defined before useEffect)
+  const sendMessageWithContent = async (content: string) => {
+    if (!content.trim() || isLoading || !currentChatId) return;
+    const userMessage: ChatMessageType = {
+      id: Date.now().toString(),
+      content: content,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    setIsLoading(true);
+    let tutorMessageId = (Date.now() + 1).toString();
+    let tutorMessage: ChatMessageType = {
+      id: tutorMessageId,
+      content: '',
+      sender: 'tutor',
+      timestamp: new Date()
+    };
+    setMessages([...updatedMessages, tutorMessage]);
+    
+    // Auto-scroll to show the new tutor message
+    setTimeout(() => scrollToBottom('smooth'), 100);
+    
+    try {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.ASK), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: content }),
+      });
+      if (!response.ok || !response.body) {
+        throw new Error('Failed to get response from tutor');
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let fullText = '';
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunk = decoder.decode(value);
+          fullText += chunk;
+          tutorMessage = {
+            ...tutorMessage,
+            content: fullText
+          };
+          setMessages([...updatedMessages, { ...tutorMessage }]);
+          
+          // Auto-scroll during streaming to keep up with new content
+          if (isNearBottom() && autoScrollEnabledRef.current) {
+            scrollToBottom('auto');
+          }
+        }
+      }
+      // Save to current chat session
+      const chats = storage.getChats();
+      const idx = chats.findIndex(c => c.id === currentChatId);
+      if (idx !== -1) {
+        chats[idx] = {
+          ...chats[idx],
+          messages: [...updatedMessages, { ...tutorMessage }],
+          updatedAt: new Date(),
+        };
+        storage.saveChats(chats);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const fallbackMessage: ChatMessageType = {
+        id: (Date.now() + 1).toString(),
+        content: isOnline 
+          ? `I'm sorry, but I'm having trouble connecting to the tutoring service right now. Please make sure the local server is running on ${API_CONFIG.BASE_URL}. In the meantime, try reviewing your flashcards or working on coding challenges!`
+          : "I'm currently offline, but I'd love to help when you're back online! In the meantime, you can practice with flashcards and coding challenges that work offline.",
+        sender: 'tutor',
+        timestamp: new Date()
+      };
+      const finalMessages = [...updatedMessages, fallbackMessage];
+      setMessages(finalMessages);
+      // Save to current chat session
+      const chats = storage.getChats();
+      const idx = chats.findIndex(c => c.id === currentChatId);
+      if (idx !== -1) {
+        chats[idx] = {
+          ...chats[idx],
+          messages: finalMessages,
+          updatedAt: new Date(),
+        };
+        storage.saveChats(chats);
+      }
+    }
+    setIsLoading(false);
+  };
+
   // Load or create chat session on mount
   useEffect(() => {
+    // Check for URL parameters first
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get('q');
+    
     let loadedChats = storage.getChats();
-    let chatId = storage.getCurrentChatId();
+    let currentChatId = storage.getCurrentChatId();
     let session: ChatSession | undefined;
-    if (chatId) {
-      session = loadedChats.find(c => c.id === chatId);
+    
+    if (currentChatId) {
+      session = loadedChats.find(c => c.id === currentChatId);
     }
     if (!session) {
       session = createNewChatSession();
       loadedChats = storage.getChats();
-      chatId = session.id;
+      currentChatId = session.id;
     }
-    setChats(loadedChats);
-    setCurrentChatId(chatId);
+    
+    setCurrentChatId(currentChatId);
     setMessages(session.messages);
+    setChats(loadedChats);
+    
+    // If there's a query parameter, pre-fill the input and clear the URL
+    if (query) {
+      setInputMessage(query);
+      // Clear the URL parameters to prevent issues on subsequent uses
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -147,88 +321,8 @@ export default function Tutor() {
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading || !currentChatId) return;
-    const userMessage: ChatMessageType = {
-      id: Date.now().toString(),
-      content: inputMessage,
-      sender: 'user',
-      timestamp: new Date()
-    };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    await sendMessageWithContent(inputMessage);
     setInputMessage('');
-    setIsLoading(true);
-    let tutorMessageId = (Date.now() + 1).toString();
-    let tutorMessage: ChatMessageType = {
-      id: tutorMessageId,
-      content: '',
-      sender: 'tutor',
-      timestamp: new Date()
-    };
-    setMessages([...updatedMessages, tutorMessage]);
-    try {
-      const response = await fetch(buildApiUrl(API_ENDPOINTS.ASK), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: inputMessage }),
-      });
-      if (!response.ok || !response.body) {
-        throw new Error('Failed to get response from tutor');
-      }
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-      let fullText = '';
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        if (value) {
-          const chunk = decoder.decode(value);
-          fullText += chunk;
-          tutorMessage = {
-            ...tutorMessage,
-            content: fullText
-          };
-          setMessages([...updatedMessages, { ...tutorMessage }]);
-        }
-      }
-      // Save to current chat session
-      const chats = storage.getChats();
-      const idx = chats.findIndex(c => c.id === currentChatId);
-      if (idx !== -1) {
-        chats[idx] = {
-          ...chats[idx],
-          messages: [...updatedMessages, { ...tutorMessage }],
-          updatedAt: new Date(),
-        };
-        storage.saveChats(chats);
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      const fallbackMessage: ChatMessageType = {
-        id: (Date.now() + 1).toString(),
-        content: isOnline 
-          ? `I'm sorry, but I'm having trouble connecting to the tutoring service right now. Please make sure the local server is running on ${API_CONFIG.BASE_URL}. In the meantime, try reviewing your flashcards or working on coding challenges!`
-          : "I'm currently offline, but I'd love to help when you're back online! In the meantime, you can practice with flashcards and coding challenges that work offline.",
-        sender: 'tutor',
-        timestamp: new Date()
-      };
-      const finalMessages = [...updatedMessages, fallbackMessage];
-      setMessages(finalMessages);
-      // Save to current chat session
-      const chats = storage.getChats();
-      const idx = chats.findIndex(c => c.id === currentChatId);
-      if (idx !== -1) {
-        chats[idx] = {
-          ...chats[idx],
-          messages: finalMessages,
-          updatedAt: new Date(),
-        };
-        storage.saveChats(chats);
-      }
-    }
-    setIsLoading(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -340,7 +434,29 @@ export default function Tutor() {
           <CardContent className="flex-1 flex flex-col p-0">
             {/* Messages */}
             <ScrollArea className="flex-1 px-6" ref={scrollRef}>
-              <div className="space-y-4 pb-4">
+              <div className="space-y-4 pb-4 relative">
+                {/* Scroll to bottom button */}
+                {showScrollButton && (
+                  <Button
+                    onClick={() => {
+                      scrollToBottom('smooth');
+                      autoScrollEnabledRef.current = true;
+                      setAutoScrollEnabled(true);
+                    }}
+                    size="sm"
+                    className="fixed bottom-20 right-8 z-10 rounded-full shadow-lg bg-primary hover:bg-primary/90 transition-all duration-200 animate-bounce"
+                    title="Scroll to bottom and resume auto-scroll"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                )}
+                
+                {/* Auto-scroll status indicator */}
+                {!autoScrollEnabled && (
+                  <div className="fixed bottom-20 right-20 z-10 bg-muted/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-muted-foreground border shadow-sm">
+                    Auto-scroll paused
+                  </div>
+                )}
                 {messages.length === 0 && (
                   <div className="text-center py-8 space-y-6">
                     <div className="text-6xl">🤖</div>
@@ -427,6 +543,9 @@ export default function Tutor() {
                     </div>
                   </div>
                 )}
+                
+                {/* Invisible element for auto-scroll target */}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
             

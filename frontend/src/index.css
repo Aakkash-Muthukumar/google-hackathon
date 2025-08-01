@@ -17,126 +17,122 @@
 
 @layer base {
   :root {
-    /* Primary learning theme - vibrant purple/blue */
-    --background: 240 10% 98%;
-    --foreground: 240 15% 8%;
+    /* Primary learning theme - more vibrant purple/blue */
+    --background: 240 15% 97%;
+    --foreground: 240 20% 5%;
 
-    --card: 240 20% 99%;
-    --card-foreground: 240 15% 8%;
+    --card: 240 25% 98%;
+    --card-foreground: 240 20% 5%;
 
-    --popover: 240 20% 99%;
-    --popover-foreground: 240 15% 8%;
+    --popover: 240 25% 98%;
+    --popover-foreground: 240 20% 5%;
 
-    --primary: 262 83% 58%;
+    --primary: 262 90% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 262 100% 78%;
+    --primary-glow: 262 100% 75%;
 
-    --secondary: 250 25% 95%;
-    --secondary-foreground: 262 83% 58%;
+    --secondary: 250 30% 93%;
+    --secondary-foreground: 262 90% 55%;
 
-    --muted: 250 20% 96%;
-    --muted-foreground: 240 8% 46%;
+    --muted: 250 25% 94%;
+    --muted-foreground: 240 12% 42%;
 
-    --accent: 142 76% 36%;
+    --accent: 142 85% 35%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
+    --success: 142 85% 35%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 38 95% 48%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 90% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 20% 88%;
-    --input: 240 20% 92%;
-    --ring: 262 83% 58%;
+    --border: 240 25% 85%;
+    --input: 240 25% 90%;
+    --ring: 262 90% 55%;
 
-    /* Gamification colors */
-    --xp-gold: 43 96% 56%;
-    --streak-fire: 14 91% 54%;
-    --achievement: 262 83% 58%;
+    /* Enhanced gamification colors */
+    --xp-gold: 43 98% 54%;
+    --streak-fire: 14 95% 52%;
+    --achievement: 262 90% 55%;
 
-    /* Learning progress gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(262 100% 78%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 50%));
-    --gradient-background: linear-gradient(180deg, hsl(240 10% 98%), hsl(250 20% 96%));
-    --gradient-card: linear-gradient(145deg, hsl(240 20% 99%), hsl(250 25% 97%));
+    /* More vibrant gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 90% 55%), hsl(262 100% 75%));
+    --gradient-success: linear-gradient(135deg, hsl(142 85% 35%), hsl(142 85% 48%));
+    --gradient-background: linear-gradient(180deg, hsl(240 15% 97%), hsl(250 25% 94%));
+    --gradient-card: linear-gradient(145deg, hsl(240 25% 98%), hsl(250 30% 95%));
 
-    /* Shadows and effects */
-    --shadow-card: 0 4px 24px -2px hsl(262 83% 58% / 0.08);
-    --shadow-primary: 0 8px 32px -4px hsl(262 83% 58% / 0.25);
-    --shadow-success: 0 8px 32px -4px hsl(142 76% 36% / 0.25);
-    --shadow-glow: 0 0 40px hsl(262 100% 78% / 0.4);
+    /* Enhanced shadows and effects */
+    --shadow-card: 0 6px 28px -4px hsl(262 90% 55% / 0.12);
+    --shadow-primary: 0 10px 36px -6px hsl(262 90% 55% / 0.3);
+    --shadow-success: 0 10px 36px -6px hsl(142 85% 35% / 0.3);
+    --shadow-glow: 0 0 48px hsl(262 100% 75% / 0.5);
+    --shadow-elegant: 0 8px 32px -8px hsl(262 90% 55% / 0.15);
 
     --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* Dark mode for programming tutor */
-    --background: 240 10% 4%;
-    --foreground: 240 20% 95%;
+    /* Enhanced dark mode for programming tutor */
+    --background: 240 15% 3%;
+    --foreground: 240 25% 96%;
 
-    --card: 240 10% 6%;
-    --card-foreground: 240 20% 95%;
+    --card: 240 15% 5%;
+    --card-foreground: 240 25% 96%;
 
-    --popover: 240 10% 6%;
-    --popover-foreground: 240 20% 95%;
+    --popover: 240 15% 5%;
+    --popover-foreground: 240 25% 96%;
 
-    --primary: 262 83% 58%;
+    --primary: 262 90% 58%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 262 100% 78%;
 
-    --secondary: 240 10% 12%;
-    --secondary-foreground: 240 20% 85%;
+    --secondary: 240 15% 11%;
+    --secondary-foreground: 240 25% 88%;
 
-    --muted: 240 10% 8%;
-    --muted-foreground: 240 10% 65%;
+    --muted: 240 15% 7%;
+    --muted-foreground: 240 15% 68%;
 
-    --accent: 142 76% 36%;
+    --accent: 142 85% 38%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
+    --success: 142 85% 38%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 38 95% 52%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 90% 62%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 15%;
-    --input: 240 10% 12%;
-    --ring: 262 83% 58%;
+    --border: 240 15% 16%;
+    --input: 240 15% 11%;
+    --ring: 262 90% 58%;
 
-    /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(262 100% 78%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 50%));
-    --gradient-background: linear-gradient(180deg, hsl(240 10% 4%), hsl(240 10% 8%));
-    --gradient-card: linear-gradient(145deg, hsl(240 10% 6%), hsl(240 10% 10%));
+    /* Enhanced dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 90% 58%), hsl(262 100% 78%));
+    --gradient-success: linear-gradient(135deg, hsl(142 85% 38%), hsl(142 85% 52%));
+    --gradient-background: linear-gradient(180deg, hsl(240 15% 3%), hsl(240 15% 7%));
+    --gradient-card: linear-gradient(145deg, hsl(240 15% 5%), hsl(240 15% 9%));
 
-    /* Dark mode shadows */
-    --shadow-card: 0 4px 24px -2px hsl(0 0% 0% / 0.3);
-    --shadow-primary: 0 8px 32px -4px hsl(262 83% 58% / 0.4);
-    --shadow-success: 0 8px 32px -4px hsl(142 76% 36% / 0.4);
-    --shadow-glow: 0 0 40px hsl(262 100% 78% / 0.3);
+    /* Enhanced dark mode shadows */
+    --shadow-card: 0 6px 28px -4px hsl(0 0% 0% / 0.4);
+    --shadow-primary: 0 10px 36px -6px hsl(262 90% 58% / 0.5);
+    --shadow-success: 0 10px 36px -6px hsl(142 85% 38% / 0.5);
+    --shadow-glow: 0 0 48px hsl(262 100% 78% / 0.4);
+    --shadow-elegant: 0 8px 32px -8px hsl(262 90% 58% / 0.25);
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

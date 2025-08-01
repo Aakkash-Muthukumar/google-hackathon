@@ -3,7 +3,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 from services.challenge_service import (
     load_challenges, save_challenges, generate_challenge, verify_with_model,
-    get_solution, get_hints, get_congrats_feedback, update_user_progress, get_user_progress
+    get_solution, get_hints, get_congrats_feedback, update_user_progress, get_user_progress,
+    mark_challenge_completed, reset_completed_challenges
 )
 import json
 
@@ -38,6 +39,18 @@ def get_all_challenges():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load challenges: {str(e)}")
 
+@router.post("/all-with-progress")
+def get_challenges_with_progress(request: ProgressRequest):
+    """Get all challenges with completion status for a specific user"""
+    try:
+        from services.challenge_service import update_challenge_completion_status
+        challenges = load_challenges()
+        # Update completion status for the specific user
+        updated_challenges = update_challenge_completion_status(challenges, request.user_id)
+        return {"challenges": updated_challenges}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load challenges: {str(e)}")
+
 @router.post("/generate")
 def generate_new_challenge(request: GenerateRequest):
     """Generate a new challenge using AI"""
@@ -68,14 +81,42 @@ def verify_solution(request: VerifyRequest):
             raise HTTPException(status_code=404, detail="Challenge not found")
         
         # Use AI model to verify the solution
+        print(f"Verifying challenge {request.challenge_id} with code length: {len(request.user_code)}")
         result = verify_with_model(challenge, request.user_code, challenge.get('examples', []))
+        print(f"AI verification result: {result.get('correct', 'unknown')}")
         
-        # If solution is correct, update user progress
-        if result.get('correct', False):
+        # Check if the code is actually complete before considering AI verification result
+        user_code_clean = request.user_code.strip()
+        is_complete_code = (
+            user_code_clean and 
+            not user_code_clean.endswith('pass') and
+            not '# Your code here' in user_code_clean and
+            'return ' in user_code_clean and  # Must have a return statement
+            len(user_code_clean.split('\n')) > 5  # Must have more than just template
+        )
+        
+        print(f"Code completeness check: {is_complete_code}")
+        # Only consider AI verification if code is actually complete
+        if is_complete_code and result.get('correct', False):
             xp_earned = challenge.get('xpReward', 50)
             user_progress = update_user_progress(request.user_id, request.challenge_id, xp_earned)
+            mark_challenge_completed(request.challenge_id)
             result['xp_earned'] = xp_earned
             result['user_progress'] = user_progress
+            
+            # Reload challenges with updated completion status
+            updated_challenges = load_challenges()
+            result['updated_challenges'] = updated_challenges
+        else:
+            # If code is incomplete, override AI result and mark as failed
+            result['correct'] = False
+            result['feedback'] = 'Code is incomplete. Please implement a complete solution.'
+            result['test_results'] = [{
+                'input': str(test_case['input']),
+                'expected_output': str(test_case['output']),
+                'actual_output': 'Code incomplete',
+                'pass': False
+            } for test_case in challenge.get('examples', [])]
         
         return result
     except HTTPException:
@@ -142,4 +183,16 @@ def test_challenge_generation():
         challenge = generate_challenge("easy", "arrays", "python")
         return {"challenge": challenge, "message": "Test challenge generated"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate test challenge: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Failed to generate test challenge: {str(e)}")
+
+@router.post("/reset-completed")
+def reset_completed():
+    """Reset all completed challenges when challenges.json is deleted"""
+    try:
+        success = reset_completed_challenges()
+        if success:
+            return {"message": "Completed challenges reset successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to reset completed challenges")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to reset completed challenges: {str(e)}") 

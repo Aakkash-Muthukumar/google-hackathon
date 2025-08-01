@@ -33,6 +33,7 @@ interface BackendChallenge {
   template: string;
   examples: Array<{input: string; output: string}>;
   hints: string[];
+  completed?: boolean;
 }
 
 const ChallengeWorkspace: React.FC = () => {
@@ -43,12 +44,14 @@ const ChallengeWorkspace: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
   const [solution, setSolution] = useState<string>('');
   const [loadingSolution, setLoadingSolution] = useState(false);
   const [aiHints, setAiHints] = useState<string>('');
   const [loadingHints, setLoadingHints] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [visibleHints, setVisibleHints] = useState<number>(0);
+  const [parsedHints, setParsedHints] = useState<string[]>([]);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -69,14 +72,13 @@ const ChallengeWorkspace: React.FC = () => {
           language: parsedChallenge.language,
           topic: parsedChallenge.topic,
           xpReward: parsedChallenge.xpReward,
-          completed: false,
-          template: parsedChallenge.template,
+          template: parsedChallenge.template || '',
           hints: parsedChallenge.hints || [], // These are the pre-generated hints
-          testCases: parsedChallenge.examples ? parsedChallenge.examples.map(ex => ({
-            input: Array.isArray(ex.input) ? JSON.stringify(ex.input) : String(ex.input),
-            expectedOutput: String(ex.output)
+          testCases: parsedChallenge.examples ? parsedChallenge.examples.map((ex: any) => ({
+            input: Array.isArray(ex.input) ? JSON.stringify(ex.input) : String(ex.input || ''),
+            expectedOutput: String(ex.output || '')
           })) : [],
-          solution: undefined // Will be loaded separately if needed
+          solution: undefined
         };
         
         setChallenge(frontendChallenge);
@@ -175,7 +177,6 @@ const ChallengeWorkspace: React.FC = () => {
       const result = await response.json();
       
       if (result.correct) {
-        setIsCompleted(true);
         setSubmitMessage({
           type: 'success',
           message: `🎉 Challenge completed! Earned ${result.xp_earned || challenge.xpReward} XP!`
@@ -257,12 +258,47 @@ const ChallengeWorkspace: React.FC = () => {
       
       const result = await response.json();
       console.log('Hints result:', result);
-      setAiHints(result.hints || 'No hints available');
+      
+      // Parse the structured hints response
+      const hintsText = result.hints || 'No hints available';
+      const hintsArray = parseHints(hintsText);
+      
+      setAiHints(hintsText);
+      setParsedHints(hintsArray);
+      setVisibleHints(1); // Show first hint immediately
     } catch (error) {
       console.error('Error loading hints:', error);
       setAiHints('Error loading hints');
+      setParsedHints(['Error loading hints']);
+      setVisibleHints(1);
     } finally {
       setLoadingHints(false);
+    }
+  };
+
+  const parseHints = (hintsText: string): string[] => {
+    const hints: string[] = [];
+    const lines = hintsText.split('\n');
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith('HINT 1:') || trimmedLine.startsWith('HINT 2:') || trimmedLine.startsWith('HINT 3:')) {
+        const hintContent = trimmedLine.replace(/^HINT \d+:\s*/, '');
+        hints.push(hintContent);
+      }
+    }
+    
+    // If parsing fails, return the original text as a single hint
+    if (hints.length === 0) {
+      return [hintsText];
+    }
+    
+    return hints;
+  };
+
+  const showNextHint = () => {
+    if (visibleHints < parsedHints.length) {
+      setVisibleHints(visibleHints + 1);
     }
   };
 
@@ -304,19 +340,14 @@ const ChallengeWorkspace: React.FC = () => {
                 {challenge.difficulty}
               </Badge>
               <Badge variant="outline">{challenge.topic}</Badge>
-              <span className="text-sm text-muted-foreground">
-                {challenge.xpReward} XP
-              </span>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Trophy className="h-4 w-4" />
+                <span>+{challenge.xpReward} XP</span>
+              </div>
             </div>
           </div>
         </div>
         
-        {isCompleted && (
-          <div className="flex items-center space-x-2 text-success">
-            <Trophy className="h-5 w-5" />
-            <span className="font-semibold">{t('common.completed')}</span>
-          </div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -374,7 +405,7 @@ const ChallengeWorkspace: React.FC = () => {
                 disabled={loadingHints}
               >
                 <Lightbulb className="h-4 w-4 mr-2" />
-                {loadingHints ? 'Loading...' : 'Generate AI Hint'}
+                {loadingHints ? 'Loading...' : parsedHints.length > 0 ? 'Show Hints' : 'Generate AI Hints'}
               </Button>
               <Button
                 variant="outline"
@@ -404,9 +435,34 @@ const ChallengeWorkspace: React.FC = () => {
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
                       <p className="text-sm text-muted-foreground">Generating hints...</p>
                     </div>
-                  ) : aiHints ? (
-                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                      {aiHints}
+                  ) : parsedHints.length > 0 ? (
+                    <div className="space-y-4">
+                      {parsedHints.slice(0, visibleHints).map((hint, index) => (
+                        <div key={index} className="p-3 bg-muted rounded-lg">
+                          <div className="flex items-start gap-2">
+                            <span className="text-sm font-semibold text-primary">Hint {index + 1}:</span>
+                            <span className="text-sm text-muted-foreground">{hint}</span>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {visibleHints < parsedHints.length && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={showNextHint}
+                          className="w-full"
+                        >
+                          <Lightbulb className="h-4 w-4 mr-2" />
+                          Show Next Hint ({visibleHints + 1}/{parsedHints.length})
+                        </Button>
+                      )}
+                      
+                      {visibleHints === parsedHints.length && (
+                        <div className="text-center py-2">
+                          <p className="text-sm text-muted-foreground">All hints revealed!</p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-sm text-muted-foreground">

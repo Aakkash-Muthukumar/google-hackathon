@@ -1,144 +1,138 @@
 [
   {
-    "title": "Array Transformation Challenge",
-    "description": "Given an array of positive integers, transform the array into a new array where each element is the sum of the elements at the same index in the original array and the element at the (index + 1) in the original array. If the index is out of bounds, treat the element at the next index as 0.  The transformed array should be sorted in ascending order.  Return the transformed array.",
+    "title": "Sequence Reconstruction",
+    "description": "You are given a sequence of integers that represents a partially corrupted mathematical sequence. The sequence is corrupted by missing numbers. You are also given the first few terms of the original, complete sequence and the rule that governs the sequence (e.g., arithmetic, geometric, Fibonacci). Your task is to reconstruct the missing numbers in the corrupted sequence based on the given rule and the initial terms. The input sequence will be a list of integers, and the rule will be represented as a string (e.g., 'arithmetic', 'geometric', 'fibonacci').\n\nFor arithmetic sequences, the rule string will be 'arithmetic' and a separate integer representing the common difference will be provided. For geometric sequences, the rule string will be 'geometric' and a separate integer representing the common ratio will be provided. For Fibonacci sequences, the rule string will be 'fibonacci'.\n\nIf the input sequence is impossible to reconstruct based on the given rule and initial terms, return an empty list.",
     "difficulty": "easy",
     "language": "python",
-    "topic": "arrays",
-    "xpReward": 65,
-    "input_format": "A list of positive integers.",
-    "output_format": "A sorted list of integers representing the transformed array.",
-    "template": "def transform_array(arr):\n    \"\"\"Transforms an array based on the specified rule and sorts the result. \n\n    Args:\n        arr: A list of positive integers.\n\n    Returns:\n        A sorted list of integers representing the transformed array.\n    \"\"\"\n    # Your code here\n    pass",
+    "topic": "algorithms",
+    "xpReward": 60,
+    "input_format": "A list of integers representing the corrupted sequence, followed by a string representing the sequence rule ('arithmetic', 'geometric', or 'fibonacci') and an integer representing the corresponding parameter (common difference for arithmetic, common ratio for geometric, or no parameter for Fibonacci).",
+    "output_format": "A list of integers representing the reconstructed sequence. If reconstruction is not possible, return an empty list.",
+    "template": "def reconstruct_sequence(corrupted_sequence, rule, parameter):\n    \"\"\"Reconstructs a corrupted sequence based on the given rule and initial terms.\n\n    Args:\n        corrupted_sequence (list of int): The corrupted sequence.\n        rule (str): The rule governing the sequence ('arithmetic', 'geometric', or 'fibonacci').\n        parameter (int): The parameter for the rule (common difference for arithmetic, common ratio for geometric).\n\n    Returns:\n        list of int: The reconstructed sequence, or an empty list if reconstruction is not possible.\n    \"\"\"\n    # Your code here\n    pass",
     "examples": [
       {
-        "input": [
-          1,
-          2,
-          3,
-          4,
-          5
-        ],
-        "output": [
-          3,
-          5,
-          7,
-          9,
-          11
-        ]
+        "input": "[2, 4, 8, 16]",
+        "output": "[2, 4, 8, 16]"
       },
       {
-        "input": [
-          10,
-          20,
-          30
-        ],
-        "output": [
-          30,
-          50,
-          70
-        ]
+        "input": "[1, 4, 7, 13]",
+        "output": "[1, 4, 7, 10, 13]"
       },
       {
-        "input": [
-          1,
-          2
-        ],
-        "output": [
-          3,
-          4
-        ]
+        "input": "[0, 1, 1, 2, 3, 5]",
+        "output": "[0, 1, 1, 2, 3, 5]"
       },
       {
-        "input": [
-          5
-        ],
-        "output": [
-          10
-        ]
+        "input": "[1, 2, 5, 10]",
+        "output": []
       },
       {
-        "input": [
-          1,
-          1,
-          1,
-          1
-        ],
-        "output": [
-          2,
-          2,
-          2,
-          2
-        ]
+        "input": "[1, 3, 7, 15]",
+        "output": []
       }
     ],
-    "id": 1
+    "id": 1,
+    "completed": true
   },
   {
-    "title": "String Transformation with Character Counts",
-    "description": "Given a string, implement a function to transform it into a new string where each character is replaced by a character that represents the frequency of the character in the original string. If a character appears 0 times, it should be replaced with a space. The transformation should be done in place, modifying the original string.  The frequency of a character is calculated by counting how many times it appears in the string.  The new string should be formed by iterating through the original string and replacing each character with its frequency.  If the frequency is 0, a space is used.",
+    "id": 2,
+    "title": "String Character Counter",
+    "description": "Write a function that counts the frequency of each character in a string and returns the character that appears most frequently. If there's a tie, return the character that appears first in the string.",
     "difficulty": "easy",
     "language": "python",
-    "topic": "strings",
-    "xpReward": 65,
-    "input_format": "A single string as a string.",
-    "output_format": "The transformed string, where each character is replaced by its frequency in the original string.  Characters appearing 0 times are replaced with spaces.",
-    "template": "def transform_string(input_string):\n    \"\"\"Transforms a string into a new string based on character frequencies.\n\n    Args:\n        input_string: The input string to transform.\n\n    Returns:\n        The transformed string.\n    \"\"\"\n    # Your code here\n    pass",
+    "topic": "algorithms",
+    "xpReward": 50,
+    "input_format": "A string containing alphanumeric characters",
+    "output_format": "A single character (the most frequent one)",
+    "template": "def most_frequent_char(text):\n    \"\"\"Returns the most frequent character in the given string.\"\"\"\n    # Your code here\n    pass",
     "examples": [
       {
         "input": "hello",
-        "output": "h e l l o"
+        "output": "l"
       },
       {
-        "input": "banana",
-        "output": "b a n a n a"
-      },
-      {
-        "input": "abc",
-        "output": "a b c"
+        "input": "programming",
+        "output": "g"
       },
       {
         "input": "aabbcc",
-        "output": "a a b b c c"
-      },
-      {
-        "input": "xyz",
-        "output": "x y z"
+        "output": "a"
       }
     ],
-    "id": 2
+    "hints": [],
+    "completed": true
   },
   {
-    "title": "String Cipher Decrypter",
-    "description": "You are given a string and a key. The key is a sequence of characters that, when applied to the string, performs a specific cipher. The cipher involves shifting each character in the string by a certain amount based on its position in the alphabet (a=1, b=2, etc.). The key dictates the shift amount for each character.  Your task is to write a function that decrypts the string using the provided key. The decryption should be performed character by character, applying the shift value to each character's position in the alphabet. If a character is not a letter, it should remain unchanged. The function should return the decrypted string.",
+    "title": "Island Perimeter",
+    "description": "Given a 2D grid representing a map where 1 represents land and 0 represents water, calculate the perimeter of the islands. An island is a group of connected 1s. The perimeter is the number of water cells (0s) that are adjacent to land cells (1s).  Assume the grid contains only land and water, and islands are completely surrounded by water.  The grid is rectangular.",
     "difficulty": "easy",
     "language": "python",
-    "topic": "strings",
-    "xpReward": 65,
-    "input_format": "A string (the text to be decrypted) and a string (the key, representing the shift amount for each character).",
-    "output_format": "A string (the decrypted text).",
-    "template": "def decrypt_string(grid):\n    \"\"\"Calculates the perimeter of the islands in a 2D grid.\"\"\"\n    # Your code here\n    pass",
+    "topic": "algorithms",
+    "xpReward": 60,
+    "input_format": "A 2D list (list of lists) representing the map. Each element in the inner lists is either 0 or 1.",
+    "output_format": "An integer representing the perimeter of the islands.",
+    "template": "def island_perimeter(grid):\n    \"\"\"Calculates the perimeter of the islands in a 2D grid.\n\n    Args:\n        grid: A 2D list representing the map.\n\n    Returns:\n        An integer representing the perimeter of the islands.\n    \"\"\"\n    # Your code here\n    pass",
     "examples": [
       {
-        "input": "hello",
-        "output": "khoor",
-        "output_description": "The key 'abc' shifts each character by 1. 'h' becomes 'i', 'e' becomes 'f', 'l' becomes 'm', 'l' becomes 'm', 'o' becomes 'p'."
+        "input": [
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0,
+            0
+          ]
+        ],
+        "output": 16
       },
       {
-        "input": "xyz",
-        "output": "abc",
-        "output_description": "The key 'abc' shifts each character by 1. 'x' becomes 'a', 'y' becomes 'b', 'z' becomes 'c'."
+        "input": [
+          [
+            1
+          ]
+        ],
+        "output": 4
       },
       {
-        "input": "ABC",
-        "output": "DEF",
-        "output_description": "The key 'abc' shifts each character by 1. 'A' becomes 'D', 'B' becomes 'E', 'C' becomes 'F'."
+        "input": [
+          [
+            0
+          ]
+        ],
+        "output": 0
       },
       {
-        "input": "Hello World!",
-        "output": "Khoor Zruog!",
-        "output_description": "The key 'abc' shifts each character by 1. Spaces and punctuation remain unchanged."
+        "input": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "output": 8
       }
     ],
-    "id": 3
+    "id": 3,
+    "completed": true
   }
 ]

@@ -69,3 +69,50 @@ export interface ChatSession {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  language: string;
+  progress: number; // percentage 0-100
+  totalXP: number;
+  dailyStreak: number;
+  topics: string[];
+  estimatedHours: number;
+  completed: boolean;
+  thumbnail?: string;
+  lessons: Lesson[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Lesson {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  order: number;
+  completed: boolean;
+  xpReward: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateCourseRequest {
+  title: string;
+  description: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  language: string;
+  topics: string[];
+  estimatedHours: number;
+  lessons: CreateLessonRequest[];
+}
+
+export interface CreateLessonRequest {
+  title: string;
+  description: string;
+  order: number;
+  xpReward: number;
+}

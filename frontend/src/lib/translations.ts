@@ -14,7 +14,8 @@ export const translations = {
     nav: {
       dashboard: "Dashboard",
       flashcards: "Flashcards",
-      challenges: "Challenges", 
+      challenges: "Challenges",
+      courses: "Courses",
       tutor: "AI Tutor",
       settings: "Settings"
     },

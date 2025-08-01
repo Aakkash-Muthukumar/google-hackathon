@@ -1,7 +1,7 @@
 import time
 from ollama import chat
 
-MODEL = "gemma3n:e2b-it-q4_K_M"
+MODEL = "gemma3n"
 
 def ask_gemma(prompt: str):
     response = chat(

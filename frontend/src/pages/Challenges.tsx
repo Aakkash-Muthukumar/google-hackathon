@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Play, Eye, Lightbulb, Trophy, Code, CheckCircle, AlertCircle, Plus } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Play, Eye, Lightbulb, Trophy, Code, AlertCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,19 +24,23 @@ async function verifyChallenge(challengeId: number | string, userCode: string, u
 
 async function fetchChallenges() {
   try {
-    const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/all`));
+    const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/all-with-progress`), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id: 'default_user' })
+    });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to fetch challenges: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
-    console.log('Fetch challenges response:', data);
     return data.challenges || [];
   } catch (error) {
-    console.error('Error in fetchChallenges:', error);
-    throw error;
+    console.error('Error fetching challenges:', error);
+    return [];
   }
 }
 
@@ -83,16 +87,18 @@ export default function Challenges() {
   const [hints, setHints] = useState('');
   const [loadingSolution, setLoadingSolution] = useState(false);
   const [loadingHints, setLoadingHints] = useState(false);
-  const [userProgress, setUserProgress] = useState<any>(null);
+  const [visibleHints, setVisibleHints] = useState<number>(0);
+  const [parsedHints, setParsedHints] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [generalMessage, setGeneralMessage] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Simple: Load data once on mount
   useEffect(() => {
     loadChallenges();
-    loadUserProgress();
   }, []);
 
   const loadChallenges = async () => {
@@ -116,7 +122,6 @@ export default function Challenges() {
         language: challenge.language || 'python',
         topic: challenge.topic || 'algorithms',
         xpReward: challenge.xpReward || 50,
-        completed: false, // Will be updated based on user progress
         template: challenge.template || '',
         hints: challenge.hints || [],
         testCases: challenge.examples ? challenge.examples.map((ex: any) => ({
@@ -138,23 +143,6 @@ export default function Challenges() {
     }
   };
 
-  const loadUserProgress = async () => {
-    try {
-      const progress = await fetchUserProgress();
-      setUserProgress(progress);
-      
-      // Update completed status for challenges
-      setChallenges(prevChallenges => 
-        prevChallenges.map(challenge => ({
-          ...challenge,
-          completed: progress.completed_challenges?.includes(Number(challenge.id)) || false
-        }))
-      );
-    } catch (error) {
-      console.error('Error loading user progress:', error);
-    }
-  };
-
   const runTests = async () => {
     if (!selectedChallenge || !userCode.trim()) return;
     
@@ -169,12 +157,8 @@ export default function Challenges() {
       
       if (result.correct) {
         setGeneralMessage(`✅ All tests passed! Earned ${result.xp_earned || selectedChallenge.xpReward} XP!`);
-        // Update user progress
-        setUserProgress(result.user_progress);
-        // Mark challenge as completed
-        setChallenges(prev => prev.map(c => 
-          c.id === selectedChallenge.id ? { ...c, completed: true } : c
-        ));
+        // Refresh challenges to get updated completion status
+        loadChallenges();
       } else {
         setGeneralMessage(`❌ Some tests failed. ${result.feedback || 'Please check your solution.'}`);
       }
@@ -201,12 +185,8 @@ export default function Challenges() {
       
       if (result.correct) {
         setGeneralMessage(`🎉 Challenge completed! Earned ${result.xp_earned || selectedChallenge.xpReward} XP!`);
-        // Update user progress
-        setUserProgress(result.user_progress);
-        // Mark challenge as completed
-        setChallenges(prev => prev.map(c => 
-          c.id === selectedChallenge.id ? { ...c, completed: true } : c
-        ));
+        // Refresh challenges to get updated completion status
+        loadChallenges();
       } else {
         setGeneralMessage(`❌ Solution incorrect. ${result.feedback || 'Please try again.'}`);
       }
@@ -246,14 +226,47 @@ export default function Challenges() {
     setLoadingHints(true);
     try {
       const result = await fetchHints(selectedChallenge.id);
-      setHints(result.hints || 'No hints available');
+      const hintsText = result.hints || 'No hints available';
+      const hintsArray = parseHints(hintsText);
+      
+      setHints(hintsText);
+      setParsedHints(hintsArray);
+      setVisibleHints(1); // Show first hint immediately
       setShowHints(true);
     } catch (error) {
       console.error('Error fetching hints:', error);
       setHints('Error loading hints');
+      setParsedHints(['Error loading hints']);
+      setVisibleHints(1);
       setShowHints(true);
     } finally {
       setLoadingHints(false);
+    }
+  };
+
+  const parseHints = (hintsText: string): string[] => {
+    const hints: string[] = [];
+    const lines = hintsText.split('\n');
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith('HINT 1:') || trimmedLine.startsWith('HINT 2:') || trimmedLine.startsWith('HINT 3:')) {
+        const hintContent = trimmedLine.replace(/^HINT \d+:\s*/, '');
+        hints.push(hintContent);
+      }
+    }
+    
+    // If parsing fails, return the original text as a single hint
+    if (hints.length === 0) {
+      return [hintsText];
+    }
+    
+    return hints;
+  };
+
+  const showNextHint = () => {
+    if (visibleHints < parsedHints.length) {
+      setVisibleHints(visibleHints + 1);
     }
   };
 
@@ -375,7 +388,7 @@ export default function Challenges() {
                     disabled={loadingHints}
                   >
                     <Lightbulb className="h-4 w-4 mr-2" />
-                    {loadingHints ? 'Loading...' : 'Generate Hint'}
+                    {loadingHints ? 'Loading...' : parsedHints.length > 0 ? 'Show Hints' : 'Generate AI Hints'}
                   </Button>
                   <Button
                     variant="outline"
@@ -388,14 +401,39 @@ export default function Challenges() {
                   </Button>
                 </div>
 
-                {showHints && hints && (
+                {showHints && parsedHints.length > 0 && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">Hints</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {hints}
+                      <div className="space-y-4">
+                        {parsedHints.slice(0, visibleHints).map((hint, index) => (
+                          <div key={index} className="p-3 bg-muted rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <span className="text-sm font-semibold text-primary">Hint {index + 1}:</span>
+                              <span className="text-sm text-muted-foreground">{hint}</span>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {visibleHints < parsedHints.length && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={showNextHint}
+                            className="w-full"
+                          >
+                            <Lightbulb className="h-4 w-4 mr-2" />
+                            Show Next Hint ({visibleHints + 1}/{parsedHints.length})
+                          </Button>
+                        )}
+                        
+                        {visibleHints === parsedHints.length && (
+                          <div className="text-center py-2">
+                            <p className="text-sm text-muted-foreground">All hints revealed!</p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -599,17 +637,7 @@ export default function Challenges() {
       </div>
 
       {/* Progress Summary */}
-      {userProgress && (
-        <Card className="bg-gradient-card shadow-card">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="font-mono text-sm">
-                Total XP: {userProgress.total_xp || 0} | Level: {userProgress.level || 1} | Completed: {userProgress.completed_challenges?.length || 0}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Removed userProgress and its display */}
 
       {/* General Message */}
       {generalMessage && (
@@ -653,12 +681,14 @@ export default function Challenges() {
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <CardTitle className="text-lg leading-tight">
-                    {challenge.title}
-                  </CardTitle>
-                  <Badge className={getDifficultyColor(challenge.difficulty)}>
-                    {challenge.difficulty}
-                  </Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <CardTitle className="text-lg font-semibold">
+                      {challenge.title}
+                    </CardTitle>
+                    <Badge className={getDifficultyColor(challenge.difficulty)}>
+                      {challenge.difficulty}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Code className="h-4 w-4" />
@@ -667,18 +697,19 @@ export default function Challenges() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground line-clamp-3">
-                  {challenge.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-xs">
-                    {challenge.topic}
-                  </Badge>
-                  <span className="text-sm font-semibold text-primary">
-                    +{challenge.xpReward} XP
-                  </span>
-                </div>
-                <Button 
-                  className="w-full shadow-glow"
+                    {challenge.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-xs">
+                      {challenge.topic}
+                    </Badge>
+                    <span className="text-sm font-semibold text-primary">
+                      +{challenge.xpReward} XP
+                    </span>
+                  </div>
+                <Button
+                  className="w-full"
+                  variant="default"
                   onClick={() => handleStartChallenge(challenge)}
                 >
                   <Play className="mr-2 h-4 w-4" />

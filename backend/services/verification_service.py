@@ -20,8 +20,26 @@ def verify_code_with_ai(problem: dict, user_code: str, test_cases: list) -> dict
     Use AI model to verify user code against the problem and test cases.
     Returns a dict with 'correct', 'feedback', and 'test_results'.
     """
+    # Pre-check: If code is clearly incomplete, don't even ask AI
+    user_code_clean = user_code.strip()
+    if (not user_code_clean or 
+        user_code_clean.endswith('pass') or 
+        '# Your code here' in user_code_clean or
+        'return ' not in user_code_clean or
+        len(user_code_clean.split('\n')) <= 5):
+        return {
+            'correct': False,
+            'feedback': 'Code is incomplete. Please implement a complete solution.',
+            'test_results': [{
+                'input': str(test_case['input']),
+                'expected_output': str(test_case['output']),
+                'actual_output': 'Code incomplete',
+                'pass': False
+            } for test_case in test_cases]
+        }
+    
     prompt = f"""
-You are an expert code evaluator. Your task is to analyze the given code and test cases to determine if the code is correct.
+You are an expert code evaluator. Carefully analyze the given code and test cases to determine if the code is correct.
 
 PROBLEM DESCRIPTION:
 {problem['description']}
@@ -58,6 +76,10 @@ IMPORTANT:
 - Be accurate in your analysis
 - If the code has syntax errors or won't run, mark all tests as failed
 - If the code is incomplete (has 'pass' or '# Your code here'), mark all tests as failed
+- If the code is just a template with no implementation, mark all tests as failed
+- Only mark as correct if the code actually implements a working solution
+- Take your time to carefully analyze the code logic and test cases
+- Be very strict - incomplete or template code should always fail
 """
     
     try:

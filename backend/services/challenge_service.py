@@ -11,11 +11,35 @@ CHALLENGES_FILE = os.path.join(DATA_DIR, 'challenges.json')
 PROGRESS_FILE = os.path.join(DATA_DIR, 'progress.json')
 
 def load_challenges() -> List[Dict[str, Any]]:
-    """Load challenges from JSON file"""
+    """Load challenges from JSON file and update completion status based on user progress"""
     if not os.path.exists(CHALLENGES_FILE):
         return []
     with open(CHALLENGES_FILE, 'r') as f:
-        return json.load(f)
+        challenges = json.load(f)
+    
+    # Update completion status based on user progress
+    return update_challenge_completion_status(challenges)
+
+def update_challenge_completion_status(challenges: List[Dict[str, Any]], user_id: str = "default_user") -> List[Dict[str, Any]]:
+    """Update the completed attribute for all challenges based on user progress"""
+    try:
+        progress = load_progress()
+        user_progress = progress.get(user_id, {
+            'completed_challenges': []
+        })
+        completed_challenge_ids = set(user_progress.get('completed_challenges', []))
+        
+        # Update each challenge's completed status
+        for challenge in challenges:
+            challenge['completed'] = challenge.get('id') in completed_challenge_ids
+        
+        return challenges
+    except Exception as e:
+        print(f"Error updating challenge completion status: {e}")
+        # Return challenges with default completed=False if there's an error
+        for challenge in challenges:
+            challenge['completed'] = False
+        return challenges
 
 def save_challenges(challenges: List[Dict[str, Any]]):
     """Save challenges to JSON file"""
@@ -130,6 +154,9 @@ Make sure the challenge is appropriate for the specified difficulty level and in
             # Add an ID
             challenge['id'] = max([c.get('id', 0) for c in existing_challenges], default=0) + 1
             
+            # Add completed attribute
+            challenge['completed'] = False
+            
             # Validate required fields
             required_fields = ['title', 'description', 'difficulty', 'language', 'topic', 'xpReward', 'input_format', 'output_format', 'template', 'examples']
             for field in required_fields:
@@ -168,7 +195,8 @@ Make sure the challenge is appropriate for the specified difficulty level and in
                 {"input": "programming", "output": "g"},
                 {"input": "aabbcc", "output": "a"}
             ],
-            "hints": []  # Hints will be generated dynamically when requested
+            "hints": [],  # Hints will be generated dynamically when requested
+            "completed": False
         }
 
 def format_verification_prompt(problem: Dict[str, Any], user_code: str, test_cases: List[Dict[str, Any]]) -> str:
@@ -220,20 +248,42 @@ def get_solution(problem: Dict[str, Any]) -> str:
     Generate a solution for the given problem using the AI model.
     """
     prompt = f"""
-You are an expert programming tutor. Provide a clean, idiomatic solution in {problem['language']} for the following problem:
+You are an expert programming tutor. Provide a clean, idiomatic, and CORRECT solution in {problem['language']} for the following problem.
 
+CRITICAL REQUIREMENTS:
+- The solution MUST pass all test cases exactly
+- The solution MUST be complete and runnable
+- The solution MUST handle edge cases properly
+- The solution MUST be efficient and well-structured
+- The solution MUST return the exact output format specified
+
+PROBLEM DETAILS:
 Title: {problem['title']}
 Description: {problem['description']}
 Input Format: {problem['input_format']}
 Output Format: {problem['output_format']}
 
-Provide a complete solution with explanation. Format your response as:
+TEST CASES:
+{json.dumps(problem.get('examples', []), indent=2)}
+
+INSTRUCTIONS:
+1. Analyze the problem carefully and understand the requirements
+2. Write a complete, working solution that handles ALL test cases
+3. Ensure the solution returns the EXACT expected output format (string, int, list, etc.)
+4. Test your logic step-by-step against each provided test case
+5. Include proper error handling and edge cases
+6. Make sure the solution is efficient and readable
+7. Double-check that your solution matches the expected outputs exactly
+
+RESPONSE FORMAT:
 ```{problem['language']}
-# Your solution code here
+# Complete solution code here
 ```
 
-Explanation:
-Your explanation here
+EXPLANATION:
+Provide a clear explanation of your approach, why it works, and how it handles the test cases.
+
+IMPORTANT: Your solution must be able to pass verification against ALL the test cases provided. Pay special attention to the exact output format expected.
 """
     
     try:
@@ -245,23 +295,31 @@ Your explanation here
 def get_hints(problem: Dict[str, Any]) -> str:
     """
     Generate hints for the given problem using the AI model.
+    Returns a structured response with 3 progressive hints.
     """
     prompt = f"""
-You are an expert programming tutor. Provide 3 helpful hints for solving the following problem. Do not give away the full solution.
+You are an expert programming tutor. Provide 3 progressive hints for solving the following problem. Do not give away the full solution.
 
 Title: {problem['title']}
 Description: {problem['description']}
 Input Format: {problem['input_format']}
 Output Format: {problem['output_format']}
 
-Provide 3 progressive hints that guide the user toward the solution without revealing it completely.
+Provide exactly 3 progressive hints that guide the user toward the solution without revealing it completely.
+
+IMPORTANT: Format your response exactly like this:
+HINT 1: [First hint here]
+HINT 2: [Second hint here]
+HINT 3: [Third hint here]
+
+Make sure each hint builds upon the previous one and helps the user understand the problem better.
 """
     
     try:
         response = collect_ai_response(ask_gemma(prompt))
         return response
     except Exception as e:
-        return f"Error generating hints: {str(e)}"
+        return f"HINT 1: Start by understanding the problem requirements.\nHINT 2: Break down the problem into smaller steps.\nHINT 3: Consider the edge cases and test your solution."
 
 def get_congrats_feedback(challenge_title: str, user_code: str) -> str:
     """
@@ -309,6 +367,39 @@ def update_user_progress(user_id: str, challenge_id: int, xp_earned: int):
     
     save_progress(progress)
     return progress[user_id]
+
+def mark_challenge_completed(challenge_id: int) -> bool:
+    """
+    Mark a challenge as completed in the challenges.json file.
+    """
+    try:
+        challenges = load_challenges()
+        challenge = next((c for c in challenges if c["id"] == challenge_id), None)
+        
+        if challenge:
+            challenge['completed'] = True
+            save_challenges(challenges)
+            return True
+        return False
+    except Exception as e:
+        print(f"Error marking challenge as completed: {e}")
+        return False
+
+def reset_completed_challenges() -> bool:
+    """
+    Reset all challenges to not completed when challenges.json is deleted and recreated.
+    """
+    try:
+        progress = load_progress()
+        # Reset completed challenges for all users
+        for user_id in progress:
+            if 'completed_challenges' in progress[user_id]:
+                progress[user_id]['completed_challenges'] = []
+        save_progress(progress)
+        return True
+    except Exception as e:
+        print(f"Error resetting completed challenges: {e}")
+        return False
 
 def get_user_progress(user_id: str) -> Dict[str, Any]:
     """

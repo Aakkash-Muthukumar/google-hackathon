@@ -11,6 +11,7 @@ export const API_ENDPOINTS = {
   FLASHCARDS: '/flashcard',
   CHALLENGES: '/challenge',
   SUBJECTS: '/subject',
+  COURSES: '/course',
   PROGRESS: '/progress',
   USER: '/user',
 } as const;

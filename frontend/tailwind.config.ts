@@ -90,7 +90,8 @@ export default {
 				'card': 'var(--shadow-card)',
 				'primary': 'var(--shadow-primary)',
 				'success': 'var(--shadow-success)',
-				'glow': 'var(--shadow-glow)'
+				'glow': 'var(--shadow-glow)',
+				'elegant': 'var(--shadow-elegant)'
 			},
 			keyframes: {
 				'accordion-down': {
