@@ -53,7 +53,6 @@ class CourseService:
             'title': course_data['title'],
             'description': course_data['description'],
             'difficulty': course_data['difficulty'],
-            'language': course_data['language'],
             'progress': 0,
             'totalXP': 0,
             'dailyStreak': 0,
@@ -78,6 +77,7 @@ class CourseService:
                 'content': '',  # Will be generated on-demand
                 'order': lesson_data['order'],
                 'completed': False,
+                'progress': 0,  # Initialize progress to 0
                 'xpReward': lesson_data['xpReward'],
                 'createdAt': datetime.now().isoformat(),
                 'updatedAt': datetime.now().isoformat()
@@ -103,6 +103,13 @@ class CourseService:
                     if key != 'id':  # Don't allow ID changes
                         course[key] = value
                 
+                # Recalculate course progress based on lesson progress
+                if course.get('lessons'):
+                    total_progress = sum(l.get('progress', 0) for l in course['lessons'])
+                    total_lessons = len(course['lessons'])
+                    course['progress'] = int(total_progress / total_lessons) if total_lessons > 0 else 0
+                    course['completed'] = course['progress'] == 100
+                
                 course['updatedAt'] = datetime.now().isoformat()
                 courses[i] = course
                 self._save_courses(courses)
@@ -122,21 +129,26 @@ class CourseService:
         
         return False
     
-    def update_lesson_progress(self, course_id: str, lesson_id: str, completed: bool) -> Optional[Dict[str, Any]]:
-        """Update lesson completion status"""
+    def update_lesson_progress(self, course_id: str, lesson_id: str, progress: int, completed: bool = None) -> Optional[Dict[str, Any]]:
+        """Update lesson progress and completion status"""
         course = self.get_course_by_id(course_id)
         if not course:
             return None
         
         for lesson in course['lessons']:
             if lesson['id'] == lesson_id:
-                lesson['completed'] = completed
+                # Update progress (0-100)
+                lesson['progress'] = max(0, min(100, progress))
                 lesson['updatedAt'] = datetime.now().isoformat()
                 
-                # Update course progress
-                completed_lessons = sum(1 for l in course['lessons'] if l['completed'])
+                # Update completion status if provided
+                if completed is not None:
+                    lesson['completed'] = completed
+                
+                # Update course progress based on average of all lesson progress
+                total_progress = sum(l.get('progress', 0) for l in course['lessons'])
                 total_lessons = len(course['lessons'])
-                course['progress'] = int((completed_lessons / total_lessons) * 100) if total_lessons > 0 else 0
+                course['progress'] = int(total_progress / total_lessons) if total_lessons > 0 else 0
                 course['completed'] = course['progress'] == 100
                 course['updatedAt'] = datetime.now().isoformat()
                 
@@ -153,13 +165,13 @@ class CourseService:
         
         for lesson in course['lessons']:
             if lesson['id'] == lesson_id:
-                # Generate content if it doesn't exist
+                                # Generate content if it doesn't exist
                 if not lesson.get('content'):
                     ai_prompt = f"""
                     Create comprehensive lesson content for a programming course.
                     
                     Course: {course['title']}
-                    Language: {course['language']}
+                    Language: {course.get('language', 'python')}
                     Difficulty: {course['difficulty']}
                     
                     Lesson: {lesson['title']}
@@ -204,7 +216,7 @@ class CourseService:
                 Create comprehensive lesson content for a programming course.
                 
                 Course: {course['title']}
-                Language: {course['language']}
+                Language: {course.get('language', 'python')}
                 Difficulty: {course['difficulty']}
                 
                 Lesson: {lesson['title']}

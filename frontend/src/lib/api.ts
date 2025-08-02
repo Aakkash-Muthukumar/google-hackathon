@@ -118,6 +118,11 @@ export const courseAPI = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+
+  generateLessonContent: (courseId: string, lessonId: string) => 
+    apiRequest(`${API_ENDPOINTS.COURSES}/${courseId}/lessons/${lessonId}/generate-content`, {
+      method: 'POST',
+    }),
 };
 
 // Subject API

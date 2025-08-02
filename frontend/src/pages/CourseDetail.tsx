@@ -1,20 +1,40 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CheckCircle, Circle, Zap, Play, Wand2, Loader2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle, Circle, Zap, Play, Wand2, Loader2, MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { Course, Lesson } from '@/lib/types';
 import { courseAPI } from '@/lib/api';
 
 export default function CourseDetail() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generatingLessons, setGeneratingLessons] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingCourse, setDeletingCourse] = useState(false);
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -24,8 +44,22 @@ export default function CourseDetail() {
         setLoading(true);
         setError(null);
         const response = await courseAPI.getById(courseId);
-        if (response && typeof response === 'object' && 'data' in response) {
-          setCourse(response.data);
+        if (response && typeof response === 'object' && 'id' in response) {
+          setCourse(response as Course);
+          
+          // Calculate overall course progress
+          const courseData = response as Course;
+          if (courseData.lessons && courseData.lessons.length > 0) {
+            const totalProgress = courseData.lessons.reduce((sum, lesson) => sum + (lesson.progress || 0), 0);
+            const averageProgress = Math.round(totalProgress / courseData.lessons.length);
+            
+            // Update course with calculated progress
+            const updatedCourse = {
+              ...courseData,
+              progress: averageProgress
+            };
+            setCourse(updatedCourse);
+          }
         } else {
           setError('Course not found');
         }
@@ -40,22 +74,50 @@ export default function CourseDetail() {
     loadCourse();
   }, [courseId]);
 
+  // Refresh course data when returning from lesson
+  useEffect(() => {
+    const handleFocus = () => {
+      if (courseId) {
+        const refreshCourse = async () => {
+          try {
+            const response = await courseAPI.getById(courseId);
+            if (response && typeof response === 'object' && 'id' in response) {
+              const courseData = response as Course;
+              if (courseData.lessons && courseData.lessons.length > 0) {
+                const totalProgress = courseData.lessons.reduce((sum, lesson) => sum + (lesson.progress || 0), 0);
+                const averageProgress = Math.round(totalProgress / courseData.lessons.length);
+                
+                const updatedCourse = {
+                  ...courseData,
+                  progress: averageProgress
+                };
+                setCourse(updatedCourse);
+              }
+            }
+          } catch (err) {
+            console.error('Error refreshing course:', err);
+          }
+        };
+        refreshCourse();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [courseId]);
+
   const handleLessonClick = (lesson: Lesson) => {
     navigate(`/course/${courseId}/lesson/${lesson.id}`);
   };
 
   const handleGenerateLessonContent = async (lesson: Lesson) => {
-    if (!course) return;
+    if (!course || !courseId) return;
     
     try {
       setGeneratingLessons(prev => new Set(prev).add(lesson.id));
       
-      const response = await courseAPI.generateLesson({
-        lesson_title: lesson.title,
-        lesson_description: lesson.description,
-        programming_language: course.language,
-        difficulty: course.difficulty
-      });
+      // Use the new on-demand content generation endpoint
+      const response = await courseAPI.generateLessonContent(courseId, lesson.id);
       
       if (response.success && response.content) {
         // Update the lesson with generated content
@@ -69,9 +131,6 @@ export default function CourseDetail() {
           ) || []
         };
         setCourse(updatedCourse);
-        
-        // Save the updated course to the backend
-        await courseAPI.update(courseId!, updatedCourse);
       }
     } catch (err) {
       console.error('Error generating lesson content:', err);
@@ -82,6 +141,34 @@ export default function CourseDetail() {
         newSet.delete(lesson.id);
         return newSet;
       });
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!course || !courseId) return;
+    
+    try {
+      setDeletingCourse(true);
+      await courseAPI.delete(courseId);
+      
+      toast({
+        title: "Course removed successfully",
+        description: `"${course.title}" has been removed from your learning path. You can always add it back later!`,
+      });
+      
+      // Navigate back to courses list
+      navigate('/courses');
+      
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      toast({
+        title: "Failed to remove course",
+        description: "There was an error removing the course. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingCourse(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -136,9 +223,30 @@ export default function CourseDetail() {
           <h1 className="text-3xl font-bold tracking-tight">{course.title}</h1>
           <p className="text-muted-foreground">{course.description}</p>
         </div>
-        <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-          {course.language}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {course.language && (
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+              {course.language}
+            </Badge>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem 
+                className="text-destructive focus:text-destructive cursor-pointer"
+                onClick={() => setShowDeleteDialog(true)}
+                disabled={deletingCourse}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Remove Course
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Course Progress */}
@@ -203,6 +311,17 @@ export default function CourseDetail() {
                         <Zap className="w-4 h-4 text-yellow-500" />
                         <span>{lesson.xpReward} XP</span>
                       </div>
+                      {lesson.progress > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-300 ${getProgressColor(lesson.progress || 0)}`}
+                              style={{ width: `${lesson.progress || 0}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground">{lesson.progress || 0}%</span>
+                        </div>
+                      )}
                       {lesson.completed && (
                         <Badge variant="secondary" className="bg-green-100 text-green-700">
                           Completed
@@ -264,6 +383,56 @@ export default function CourseDetail() {
           <p className="text-red-600 text-sm">{error}</p>
         </div>
       )}
+
+      {/* Delete Course Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-gradient-card border-primary/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">
+              Remove this course from your learning path?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground space-y-3">
+              <p>
+                You're about to remove <span className="font-semibold text-foreground">"{course?.title}"</span> from your courses.
+              </p>
+              <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 space-y-2">
+                <p className="text-sm font-medium text-warning-foreground">⚠️ This action will:</p>
+                <ul className="text-sm space-y-1 ml-4 list-disc text-warning-foreground">
+                  <li>Remove all course progress and data</li>
+                  <li>Delete all lesson completions</li>
+                  <li>Remove earned XP from this course</li>
+                </ul>
+              </div>
+              <p className="text-sm">
+                Don't worry though - you can always add the course back later and start fresh! 
+                Your overall learning progress in other courses won't be affected.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel 
+              className="hover:bg-muted transition-colors duration-200"
+              disabled={deletingCourse}
+            >
+              Keep Course
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-destructive hover:bg-destructive/90 transition-colors duration-200"
+              onClick={handleDeleteCourse}
+              disabled={deletingCourse}
+            >
+              {deletingCourse ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                'Remove Course'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-} 
+}

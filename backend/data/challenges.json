@@ -134,5 +134,75 @@
     ],
     "id": 3,
     "completed": true
+  },
+  {
+    "title": "Anagram Scramble",
+    "description": "Given a string, find the minimum number of character swaps required to make the string an anagram of a predefined target string. Character swaps involve exchanging two characters in the string. If the input string is already an anagram of the target string, the answer is 0. If the input string cannot be made an anagram of the target string, return -1.",
+    "difficulty": "easy",
+    "language": "python",
+    "topic": "strings",
+    "xpReward": 60,
+    "input_format": "A string representing the input string and another string representing the target string. Both strings contain only lowercase English letters.",
+    "output_format": "An integer representing the minimum number of swaps required. Return -1 if the input string cannot be an anagram of the target string.",
+    "template": "def min_anagram_swaps(input_string, target_string):\n    \"\"\"Calculates the minimum number of swaps to make input_string an anagram of target_string.\n\n    Args:\n        input_string: The string to be transformed.\n        target_string: The target anagram string.\n\n    Returns:\n        The minimum number of swaps required, or -1 if not possible.\n    \"\"\"\n    # Your code here\n    pass",
+    "examples": [
+      {
+        "input": "listen",
+        "output": 0
+      },
+      {
+        "input": "hello",
+        "output": 2
+      },
+      {
+        "input": "abc",
+        "output": -1
+      },
+      {
+        "input": "aabb",
+        "output": 2
+      },
+      {
+        "input": "anagram",
+        "output": 0
+      }
+    ],
+    "id": 4,
+    "completed": true
+  },
+  {
+    "title": "Prime Factor Sum",
+    "description": "Given a positive integer `n`, find the sum of its prime factors (including duplicates). For example, the prime factors of 12 are 2, 2, and 3, and their sum is 2 + 2 + 3 = 7.  The input integer `n` will be between 1 and 10000.",
+    "difficulty": "easy",
+    "language": "python",
+    "topic": "math",
+    "xpReward": 60,
+    "input_format": "An integer `n` (1 <= n <= 10000) as a single integer.",
+    "output_format": "An integer representing the sum of the prime factors of `n`.",
+    "template": "def prime_factor_sum(n):\n   \"\"\"Calculates the sum of the prime factors of a given integer.\n\n   Args:\n       n: A positive integer.\n\n   Returns:\n       The sum of the prime factors of n.\n   \"\"\"\n   # Your code here\n   pass",
+    "examples": [
+      {
+        "input": 12,
+        "output": 7
+      },
+      {
+        "input": 30,
+        "output": 10
+      },
+      {
+        "input": 2,
+        "output": 2
+      },
+      {
+        "input": 1,
+        "output": 0
+      },
+      {
+        "input": 100,
+        "output": 7
+      }
+    ],
+    "id": 5,
+    "completed": true
   }
 ]

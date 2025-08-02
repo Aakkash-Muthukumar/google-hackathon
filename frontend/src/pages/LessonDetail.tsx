@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Wand2, Loader2, CheckCircle, Circle } from 'lucide-react';
+import { ArrowLeft, BookOpen, Wand2, Loader2, CheckCircle, Circle, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ export default function LessonDetail() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lessonProgress, setLessonProgress] = useState(0);
 
   useEffect(() => {
     const loadCourseAndLesson = async () => {
@@ -29,13 +30,16 @@ export default function LessonDetail() {
         
         // Load course
         const courseResponse = await courseAPI.getById(courseId);
-        if (courseResponse && typeof courseResponse === 'object') {
-          setCourse(courseResponse);
+        if (courseResponse && typeof courseResponse === 'object' && 'id' in courseResponse) {
+          setCourse(courseResponse as Course);
           
           // Find the specific lesson
-          const foundLesson = courseResponse.lessons?.find(l => l.id === lessonId);
+          const foundLesson = (courseResponse as Course).lessons?.find(l => l.id === lessonId);
           if (foundLesson) {
             setLesson(foundLesson);
+            // Set initial progress from lesson data
+            setLessonProgress(foundLesson.progress || 0);
+            console.log('Lesson loaded:', foundLesson.title, 'Content length:', foundLesson.content?.length || 0);
           } else {
             setError('Lesson not found');
           }
@@ -54,36 +58,26 @@ export default function LessonDetail() {
   }, [courseId, lessonId]);
 
   const handleGenerateContent = async () => {
-    if (!lesson || !course) return;
+    if (!lesson || !course || !courseId || !lessonId) return;
     
     try {
       setGenerating(true);
       setError(null);
       
-      const response = await courseAPI.generateLesson({
-        lesson_title: lesson.title,
-        lesson_description: lesson.description,
-        programming_language: course.language,
-        difficulty: course.difficulty
-      });
+      // Use the new on-demand content generation endpoint
+      const response = await courseAPI.generateLessonContent(courseId, lessonId);
       
-      if (response.success && response.content) {
-        // Update the lesson with generated content
-        const updatedLesson = { ...lesson, content: response.content };
-        setLesson(updatedLesson);
-        
-        // Update the course's lessons array
-        if (course) {
-          const updatedCourse = {
-            ...course,
-            lessons: course.lessons?.map(l => 
-              l.id === lessonId ? updatedLesson : l
-            ) || []
-          };
-          setCourse(updatedCourse);
+      if (response && typeof response === 'object' && 'success' in response && response.success && 'content' in response) {
+        // The backend has already saved the content, so we need to refresh the course data
+        const refreshedCourse = await courseAPI.getById(courseId);
+        if (refreshedCourse && typeof refreshedCourse === 'object' && 'id' in refreshedCourse) {
+          setCourse(refreshedCourse as Course);
           
-          // Save the updated course to the backend
-          await courseAPI.update(courseId, updatedCourse);
+          // Find the updated lesson with the new content
+          const updatedLesson = (refreshedCourse as Course).lessons?.find(l => l.id === lessonId);
+          if (updatedLesson) {
+            setLesson(updatedLesson);
+          }
         }
       } else {
         setError('Failed to generate lesson content');
@@ -96,12 +90,13 @@ export default function LessonDetail() {
     }
   };
 
-  const markLessonAsCompleted = async () => {
-    if (!lesson || !course) return;
+  const updateLessonProgress = async (progress: number) => {
+    if (!lesson || !course || !courseId || !lessonId) return;
     
     try {
-      const updatedLesson = { ...lesson, completed: true };
+      const updatedLesson = { ...lesson, progress };
       setLesson(updatedLesson);
+      setLessonProgress(progress);
       
       // Update the course's lessons array
       const updatedCourse = {
@@ -115,9 +110,20 @@ export default function LessonDetail() {
       // Save the updated course to the backend
       await courseAPI.update(courseId, updatedCourse);
     } catch (err) {
-      console.error('Error marking lesson as completed:', err);
-      setError('Failed to mark lesson as completed');
+      console.error('Error updating lesson progress:', err);
+      setError('Failed to update lesson progress');
     }
+  };
+
+  const markLessonAsCompleted = async () => {
+    await updateLessonProgress(100);
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress === 100) return 'bg-gradient-to-r from-green-500 to-emerald-500';
+    if (progress >= 75) return 'bg-gradient-to-r from-blue-500 to-cyan-500';
+    if (progress >= 50) return 'bg-gradient-to-r from-yellow-500 to-orange-500';
+    return 'bg-gradient-to-r from-gray-400 to-gray-500';
   };
 
   if (loading) {
@@ -163,9 +169,11 @@ export default function LessonDetail() {
           <p className="text-muted-foreground">{lesson.description}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-            {course.language}
-          </Badge>
+          {course.language && (
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+              {course.language}
+            </Badge>
+          )}
           {lesson.completed ? (
             <Badge variant="secondary" className="bg-green-100 text-green-700">
               <CheckCircle className="w-3 h-3 mr-1" />
@@ -202,6 +210,77 @@ export default function LessonDetail() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Progress Checkpoints */}
+      {lesson.content && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Lesson Progress
+            </CardTitle>
+            <CardDescription>
+              Mark your progress as you work through this lesson
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Current Progress</span>
+                <span className="text-muted-foreground">{lessonProgress}%</span>
+              </div>
+              <Progress value={lessonProgress} className="h-2" />
+              <div 
+                className={`absolute top-0 left-0 h-2 rounded-full transition-all duration-500 ${getProgressColor(lessonProgress)}`}
+                style={{ width: `${lessonProgress}%` }}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => updateLessonProgress(25)}
+                disabled={lessonProgress >= 25}
+                className="justify-start"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                25% Done
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => updateLessonProgress(50)}
+                disabled={lessonProgress >= 50}
+                className="justify-start"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                50% Done
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => updateLessonProgress(75)}
+                disabled={lessonProgress >= 75}
+                className="justify-start"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                75% Done
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => updateLessonProgress(100)}
+                disabled={lessonProgress >= 100}
+                className="justify-start"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Complete
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Lesson Content */}
       <div className="space-y-4">

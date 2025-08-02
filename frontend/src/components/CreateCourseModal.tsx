@@ -21,7 +21,6 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
     title: '',
     description: '',
     difficulty: 'beginner',
-    language: 'python',
     topics: [],
     estimatedHours: 10,
     lessons: []
@@ -34,7 +33,6 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
     xpReward: 100
   });
 
-  const languages = ['python', 'javascript', 'cpp', 'java'];
   const difficulties = ['beginner', 'intermediate', 'advanced'];
 
   const addTopic = () => {
@@ -85,27 +83,69 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
   };
 
   const handleSubmit = async () => {
-    if (!courseData.title || !courseData.description || !courseData.lessons?.length) {
+    // Validate required fields
+    if (!courseData.title?.trim()) {
+      console.error('Course title is required');
       return;
+    }
+    
+    if (!courseData.description?.trim()) {
+      console.error('Course description is required');
+      return;
+    }
+    
+    if (!courseData.lessons || courseData.lessons.length === 0) {
+      console.error('At least one lesson is required');
+      return;
+    }
+
+    // Validate each lesson has required fields
+    for (let i = 0; i < courseData.lessons.length; i++) {
+      const lesson = courseData.lessons[i];
+      if (!lesson.title?.trim()) {
+        console.error(`Lesson ${i + 1} title is required`);
+        return;
+      }
     }
 
     try {
       setLoading(true);
-      await courseAPI.create(courseData as CreateCourseRequest);
+      
+      // Prepare course data with proper structure
+      const courseToCreate = {
+        title: courseData.title.trim(),
+        description: courseData.description.trim(),
+        difficulty: courseData.difficulty || 'beginner',
+        topics: courseData.topics || [],
+        estimatedHours: courseData.estimatedHours || 10,
+        lessons: courseData.lessons.map((lesson, index) => ({
+          title: lesson.title.trim(),
+          description: lesson.description?.trim() || '',
+          order: lesson.order || index + 1,
+          xpReward: lesson.xpReward || 100
+        }))
+      };
+
+      console.log('Creating course with data:', courseToCreate);
+      
+      const result = await courseAPI.create(courseToCreate);
+      console.log('Course created successfully:', result);
+      
       onCourseCreated();
       onClose();
+      
       // Reset form
       setCourseData({
         title: '',
         description: '',
         difficulty: 'beginner',
-        language: 'python',
         topics: [],
         estimatedHours: 10,
         lessons: []
       });
     } catch (error) {
       console.error('Error creating course:', error);
+      // You might want to show a toast notification here
     } finally {
       setLoading(false);
     }
@@ -136,17 +176,17 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">Language</label>
+              <label className="text-sm font-medium">Difficulty</label>
               <Select
-                value={courseData.language}
-                onValueChange={(value) => setCourseData(prev => ({ ...prev, language: value }))}
+                value={courseData.difficulty}
+                onValueChange={(value) => setCourseData(prev => ({ ...prev, difficulty: value as "beginner" | "intermediate" | "advanced" }))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {languages.map(lang => (
-                    <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                  {difficulties.map(diff => (
+                    <SelectItem key={diff} value={diff}>{diff}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -237,7 +277,12 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={loading || !courseData.title || !courseData.description || !courseData.lessons?.length}
+            disabled={loading || 
+              !courseData.title?.trim() || 
+              !courseData.description?.trim() || 
+              !courseData.lessons?.length ||
+              courseData.lessons.some(lesson => !lesson.title?.trim())
+            }
           >
             {loading ? 'Creating...' : 'Create Course'}
           </Button>

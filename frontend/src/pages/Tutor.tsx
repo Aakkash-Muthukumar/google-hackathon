@@ -1,9 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Bot, User, MessageCircle, Loader, AlertCircle, Menu, X, Pencil, Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { Send, Bot, User, MessageCircle, Loader, AlertCircle, Menu, X, Pencil, Plus, Trash2, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { storage } from '@/lib/storage';
 import { ChatMessage as ChatMessageType, ChatSession } from '@/lib/types';
 import { buildApiUrl, API_ENDPOINTS, API_CONFIG } from '@/lib/config';
@@ -28,6 +40,7 @@ export default function Tutor() {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
   const autoScrollEnabledRef = useRef(true);
+  const [collapsedChats, setCollapsedChats] = useState<Set<string>>(new Set());
 
   // Auto-scroll to bottom function
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
@@ -297,14 +310,27 @@ export default function Tutor() {
     setRenameValue('');
   };
 
-  // Delete a chat
-  const deleteChat = (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this chat?')) return;
-    const updatedChats = chats.filter(chat => chat.id !== id);
+  // Toggle chat collapse state
+  const toggleChatCollapse = (id: string) => {
+    setCollapsedChats(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  // Delete a chat with confirmation
+  const confirmDeleteChat = (chatId: string) => {
+    const updatedChats = chats.filter(chat => chat.id !== chatId);
     setChats(updatedChats);
     storage.saveChats(updatedChats);
+    
     // If the deleted chat was current, switch to next or create new
-    if (currentChatId === id) {
+    if (currentChatId === chatId) {
       if (updatedChats.length > 0) {
         const nextChat = updatedChats[0];
         setCurrentChatId(nextChat.id);
@@ -367,38 +393,134 @@ export default function Tutor() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {chats.length === 0 && <div className="p-4 text-muted-foreground">No chats yet. Create your first chat!</div>}
-            {chats.map(chat => (
-              <div key={chat.id}
-                className={`flex items-center px-4 py-3 cursor-pointer hover:bg-accent/50 transition-all duration-200 hover:scale-[1.02] ${chat.id === currentChatId ? 'bg-primary/10 border-l-4 border-primary shadow-inner' : ''}`}
-                onClick={() => selectChat(chat.id)}>
-                <div className="flex-1">
-                  {renamingChatId === chat.id ? (
-                    <form onSubmit={e => { e.preventDefault(); saveRename(chat.id); }}>
-                      <input
-                        className="w-full bg-transparent border-b border-primary focus:outline-none text-foreground"
-                        value={renameValue}
-                        onChange={e => setRenameValue(e.target.value)}
-                        autoFocus
-                        onBlur={() => saveRename(chat.id)}
-                      />
-                    </form>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium truncate ${chat.id === currentChatId ? 'text-primary' : 'text-foreground'}`}>{chat.name}</span>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 hover:bg-primary/10" onClick={e => { e.stopPropagation(); startRenaming(chat.id, chat.name); }}>
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10" onClick={e => { e.stopPropagation(); deleteChat(chat.id); }}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  )}
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(chat.updatedAt).toLocaleString()}
-                  </div>
-                </div>
+            {chats.length === 0 && (
+              <div className="p-6 text-center text-muted-foreground space-y-3">
+                <MessageCircle className="w-8 h-8 mx-auto opacity-50" />
+                <p>No conversations yet</p>
+                <p className="text-xs">Start your first chat to begin learning!</p>
               </div>
+            )}
+            {chats.map(chat => (
+              <Collapsible 
+                key={chat.id} 
+                open={!collapsedChats.has(chat.id)}
+                onOpenChange={() => toggleChatCollapse(chat.id)}
+              >
+                <div 
+                  className={`group transition-all duration-300 hover:shadow-card ${
+                    chat.id === currentChatId 
+                      ? 'bg-gradient-primary/10 border-l-4 border-primary shadow-inner animate-scale-in' 
+                      : 'hover:bg-accent/30'
+                  } ${!collapsedChats.has(chat.id) ? 'rounded-lg m-2' : 'm-1'}`}
+                >
+                  <div 
+                    className="flex items-center px-4 py-3 cursor-pointer"
+                    onClick={() => selectChat(chat.id)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      {renamingChatId === chat.id ? (
+                        <form onSubmit={e => { e.preventDefault(); saveRename(chat.id); }}>
+                          <input
+                            className="w-full bg-transparent border-b border-primary focus:outline-none text-foreground"
+                            value={renameValue}
+                            onChange={e => setRenameValue(e.target.value)}
+                            autoFocus
+                            onBlur={() => saveRename(chat.id)}
+                          />
+                        </form>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <CollapsibleTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-5 w-5 p-0 hover:bg-primary/10 transition-all duration-200"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {collapsedChats.has(chat.id) ? 
+                                <ChevronRight className="w-3 h-3" /> : 
+                                <ChevronDown className="w-3 h-3" />
+                              }
+                            </Button>
+                          </CollapsibleTrigger>
+                          <span className={`font-medium truncate flex-1 ${
+                            chat.id === currentChatId ? 'text-primary font-semibold' : 'text-foreground'
+                          }`}>
+                            {chat.name}
+                          </span>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6 p-0 hover:bg-primary/10 hover:scale-110 transition-all duration-200" 
+                              onClick={e => { e.stopPropagation(); startRenaming(chat.id, chat.name); }}
+                              title="Rename conversation"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10 hover:scale-110 transition-all duration-200" 
+                                  onClick={e => e.stopPropagation()}
+                                  title="Clear conversation"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-gradient-card border-primary/20">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="text-foreground">Clear this conversation?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-muted-foreground">
+                                    This will permanently remove all messages in "{chat.name}". 
+                                    Don't worry though - you can always start a fresh conversation to continue learning!
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="hover:bg-muted transition-colors duration-200">
+                                    Keep it
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    className="bg-destructive hover:bg-destructive/90 transition-colors duration-200"
+                                    onClick={() => confirmDeleteChat(chat.id)}
+                                  >
+                                    Clear conversation
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <CollapsibleContent className="px-4 pb-3 animate-accordion-down">
+                    <div className="space-y-2 pl-6 border-l-2 border-primary/20">
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <MessageCircle className="w-3 h-3" />
+                        {chat.messages.length} message{chat.messages.length !== 1 ? 's' : ''}
+                        <span>•</span>
+                        {new Date(chat.updatedAt).toLocaleString()}
+                      </div>
+                      
+                      {/* Preview of last message */}
+                      {chat.messages.length > 0 && (
+                        <div className="text-xs text-muted-foreground bg-muted/30 rounded-md p-2 line-clamp-2">
+                          <span className="font-medium">
+                            {chat.messages[chat.messages.length - 1].sender === 'user' ? 'You' : 'AI Tutor'}:
+                          </span>
+                          {' '}
+                          {chat.messages[chat.messages.length - 1].content.substring(0, 100)}
+                          {chat.messages[chat.messages.length - 1].content.length > 100 && '...'}
+                        </div>
+                      )}
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
             ))}
           </div>
         </div>

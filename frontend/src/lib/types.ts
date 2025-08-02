@@ -75,7 +75,7 @@ export interface Course {
   title: string;
   description: string;
   difficulty: "beginner" | "intermediate" | "advanced";
-  language: string;
+  language?: string;
   progress: number; // percentage 0-100
   totalXP: number;
   dailyStreak: number;
@@ -95,6 +95,7 @@ export interface Lesson {
   content: string;
   order: number;
   completed: boolean;
+  progress: number; // Add progress field (0-100)
   xpReward: number;
   createdAt: Date;
   updatedAt: Date;
@@ -104,7 +105,7 @@ export interface CreateCourseRequest {
   title: string;
   description: string;
   difficulty: "beginner" | "intermediate" | "advanced";
-  language: string;
+  language?: string;
   topics: string[];
   estimatedHours: number;
   lessons: CreateLessonRequest[];

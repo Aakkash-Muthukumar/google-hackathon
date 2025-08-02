@@ -1,10 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, BookOpen, Trophy, Zap, Calendar, Star } from 'lucide-react';
+import { Plus, BookOpen, Trophy, Zap, Calendar, Star, MoreVertical, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Course } from '@/lib/types';
 import { courseAPI } from '@/lib/api';
@@ -13,31 +30,47 @@ import CreateCourseModal from '@/components/CreateCourseModal';
 export default function Courses() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await courseAPI.getAll();
+      if (response && typeof response === 'object' && 'courses' in response && Array.isArray(response.courses)) {
+        // Calculate progress for each course
+        const coursesWithProgress = response.courses.map((course: any) => {
+          if (course.lessons && course.lessons.length > 0) {
+            const totalProgress = course.lessons.reduce((sum: number, lesson: any) => sum + (lesson.progress || 0), 0);
+            const averageProgress = Math.round(totalProgress / course.lessons.length);
+            return {
+              ...course,
+              progress: averageProgress
+            };
+          }
+          return course;
+        });
+        setCourses(coursesWithProgress);
+      } else {
+        setCourses([]);
+      }
+    } catch (err) {
+      console.error('Error loading courses:', err);
+      setError('Failed to load courses');
+      setCourses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await courseAPI.getAll();
-        if (response && typeof response === 'object' && 'data' in response && Array.isArray(response.data)) {
-          setCourses(response.data);
-        } else {
-          setCourses([]);
-        }
-      } catch (err) {
-        console.error('Error loading courses:', err);
-        setError('Failed to load courses');
-        setCourses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadCourses();
   }, []);
 
@@ -51,6 +84,40 @@ export default function Courses() {
         return 'bg-purple-500/10 text-purple-600 hover:bg-purple-500/20';
       default:
         return 'bg-gray-500/10 text-gray-600 hover:bg-gray-500/20';
+    }
+  };
+
+  const handleDeleteCourse = (course: Course) => {
+    setCourseToDelete(course);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteCourse = async () => {
+    if (!courseToDelete) return;
+    
+    try {
+      setDeletingCourseId(courseToDelete.id);
+      await courseAPI.delete(courseToDelete.id);
+      
+      // Update local state immediately
+      setCourses(prev => prev.filter(c => c.id !== courseToDelete.id));
+      
+      toast({
+        title: "Course removed successfully",
+        description: `"${courseToDelete.title}" has been removed from your learning path. You can always add it back later!`,
+      });
+      
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      toast({
+        title: "Failed to remove course",
+        description: "There was an error removing the course. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingCourseId(null);
+      setShowDeleteDialog(false);
+      setCourseToDelete(null);
     }
   };
 
@@ -116,9 +183,44 @@ export default function Courses() {
                     {course.difficulty}
                   </Badge>
                 </div>
-                {course.completed && (
-                  <Trophy className="w-5 h-5 text-yellow-500" />
-                )}
+                <div className="flex items-center gap-2">
+                  {course.completed && (
+                    <Trophy className="w-5 h-5 text-yellow-500" />
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-muted"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem 
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCourse(course);
+                        }}
+                        disabled={deletingCourseId === course.id}
+                      >
+                        {deletingCourseId === course.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Removing...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Remove Course
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -126,9 +228,11 @@ export default function Courses() {
                   <CardTitle className="text-xl group-hover:text-primary transition-colors">
                     {course.title}
                   </CardTitle>
-                  <Badge variant="secondary" className="text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200">
-                    {course.language}
-                  </Badge>
+                  {course.language && (
+                    <Badge variant="secondary" className="text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200">
+                      {course.language}
+                    </Badge>
+                  )}
                 </div>
                 <CardDescription className="line-clamp-2">
                   {course.description}
@@ -211,10 +315,60 @@ export default function Courses() {
         onClose={() => setShowCreateModal(false)}
         onCourseCreated={() => {
           setShowCreateModal(false);
-          // Reload courses
-          window.location.reload();
+          // Reload courses by calling the loadCourses function
+          loadCourses();
         }}
       />
+
+      {/* Delete Course Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="bg-gradient-card border-primary/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">
+              Remove this course from your learning path?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground space-y-3">
+              <p>
+                You're about to remove <span className="font-semibold text-foreground">"{courseToDelete?.title}"</span> from your courses.
+              </p>
+              <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 space-y-2">
+                <p className="text-sm font-medium text-warning-foreground">⚠️ This action will:</p>
+                <ul className="text-sm space-y-1 ml-4 list-disc text-warning-foreground">
+                  <li>Remove all course progress and data</li>
+                  <li>Delete all lesson completions</li>
+                  <li>Remove earned XP from this course</li>
+                </ul>
+              </div>
+              <p className="text-sm">
+                Don't worry though - you can always add the course back later and start fresh! 
+                Your overall learning progress in other courses won't be affected.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel 
+              className="hover:bg-muted transition-colors duration-200"
+              disabled={deletingCourseId === courseToDelete?.id}
+            >
+              Keep Course
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-destructive hover:bg-destructive/90 transition-colors duration-200"
+              onClick={confirmDeleteCourse}
+              disabled={deletingCourseId === courseToDelete?.id}
+            >
+              {deletingCourseId === courseToDelete?.id ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                'Remove Course'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
