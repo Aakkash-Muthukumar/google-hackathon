@@ -1,208 +1,37 @@
 [
   {
-    "title": "Sequence Reconstruction",
-    "description": "You are given a sequence of integers that represents a partially corrupted mathematical sequence. The sequence is corrupted by missing numbers. You are also given the first few terms of the original, complete sequence and the rule that governs the sequence (e.g., arithmetic, geometric, Fibonacci). Your task is to reconstruct the missing numbers in the corrupted sequence based on the given rule and the initial terms. The input sequence will be a list of integers, and the rule will be represented as a string (e.g., 'arithmetic', 'geometric', 'fibonacci').\n\nFor arithmetic sequences, the rule string will be 'arithmetic' and a separate integer representing the common difference will be provided. For geometric sequences, the rule string will be 'geometric' and a separate integer representing the common ratio will be provided. For Fibonacci sequences, the rule string will be 'fibonacci'.\n\nIf the input sequence is impossible to reconstruct based on the given rule and initial terms, return an empty list.",
+    "title": "Consecutive Sum Challenge",
+    "description": "Given a list of non-negative integers, find the largest sum of consecutive elements within the list that does not exceed a given threshold. The consecutive elements must be contiguous. If no such sequence exists, return 0. \n\nFor example, if the list is [1, 2, 3, 4, 5] and the threshold is 7, the largest sum of consecutive elements not exceeding 7 is 6 (2 + 4). If the list is [1, 2, 3] and the threshold is 0, the answer is 0.",
     "difficulty": "easy",
     "language": "python",
     "topic": "algorithms",
     "xpReward": 60,
-    "input_format": "A list of integers representing the corrupted sequence, followed by a string representing the sequence rule ('arithmetic', 'geometric', or 'fibonacci') and an integer representing the corresponding parameter (common difference for arithmetic, common ratio for geometric, or no parameter for Fibonacci).",
-    "output_format": "A list of integers representing the reconstructed sequence. If reconstruction is not possible, return an empty list.",
-    "template": "def reconstruct_sequence(corrupted_sequence, rule, parameter):\n    \"\"\"Reconstructs a corrupted sequence based on the given rule and initial terms.\n\n    Args:\n        corrupted_sequence (list of int): The corrupted sequence.\n        rule (str): The rule governing the sequence ('arithmetic', 'geometric', or 'fibonacci').\n        parameter (int): The parameter for the rule (common difference for arithmetic, common ratio for geometric).\n\n    Returns:\n        list of int: The reconstructed sequence, or an empty list if reconstruction is not possible.\n    \"\"\"\n    # Your code here\n    pass",
+    "input_format": "A list of non-negative integers and an integer representing the threshold. The list will contain between 1 and 100 integers. The threshold will be between 0 and 100.",
+    "output_format": "An integer representing the largest sum of consecutive elements that does not exceed the threshold. If no such sequence exists, return 0.",
+    "template": "def find_largest_consecutive_sum(numbers, threshold):\n    \"\"\"Finds the largest sum of consecutive elements in a list that does not exceed a given threshold.\n\n    Args:\n        numbers (list): A list of non-negative integers.\n        threshold (int): The maximum allowed sum.\n\n    Returns:\n        int: The largest sum of consecutive elements not exceeding the threshold, or 0 if no such sequence exists.\n    \"\"\"\n    # Your code here\n    pass",
     "examples": [
       {
-        "input": "[2, 4, 8, 16]",
-        "output": "[2, 4, 8, 16]"
+        "input": "[1, 2, 3, 4, 5]",
+        "output": 6
       },
       {
-        "input": "[1, 4, 7, 13]",
-        "output": "[1, 4, 7, 10, 13]"
-      },
-      {
-        "input": "[0, 1, 1, 2, 3, 5]",
-        "output": "[0, 1, 1, 2, 3, 5]"
-      },
-      {
-        "input": "[1, 2, 5, 10]",
-        "output": []
-      },
-      {
-        "input": "[1, 3, 7, 15]",
-        "output": []
-      }
-    ],
-    "id": 1,
-    "completed": true
-  },
-  {
-    "id": 2,
-    "title": "String Character Counter",
-    "description": "Write a function that counts the frequency of each character in a string and returns the character that appears most frequently. If there's a tie, return the character that appears first in the string.",
-    "difficulty": "easy",
-    "language": "python",
-    "topic": "algorithms",
-    "xpReward": 50,
-    "input_format": "A string containing alphanumeric characters",
-    "output_format": "A single character (the most frequent one)",
-    "template": "def most_frequent_char(text):\n    \"\"\"Returns the most frequent character in the given string.\"\"\"\n    # Your code here\n    pass",
-    "examples": [
-      {
-        "input": "hello",
-        "output": "l"
-      },
-      {
-        "input": "programming",
-        "output": "g"
-      },
-      {
-        "input": "aabbcc",
-        "output": "a"
-      }
-    ],
-    "hints": [],
-    "completed": true
-  },
-  {
-    "title": "Island Perimeter",
-    "description": "Given a 2D grid representing a map where 1 represents land and 0 represents water, calculate the perimeter of the islands. An island is a group of connected 1s. The perimeter is the number of water cells (0s) that are adjacent to land cells (1s).  Assume the grid contains only land and water, and islands are completely surrounded by water.  The grid is rectangular.",
-    "difficulty": "easy",
-    "language": "python",
-    "topic": "algorithms",
-    "xpReward": 60,
-    "input_format": "A 2D list (list of lists) representing the map. Each element in the inner lists is either 0 or 1.",
-    "output_format": "An integer representing the perimeter of the islands.",
-    "template": "def island_perimeter(grid):\n    \"\"\"Calculates the perimeter of the islands in a 2D grid.\n\n    Args:\n        grid: A 2D list representing the map.\n\n    Returns:\n        An integer representing the perimeter of the islands.\n    \"\"\"\n    # Your code here\n    pass",
-    "examples": [
-      {
-        "input": [
-          [
-            0,
-            1,
-            0,
-            0
-          ],
-          [
-            1,
-            1,
-            1,
-            0
-          ],
-          [
-            0,
-            1,
-            0,
-            0
-          ],
-          [
-            1,
-            1,
-            0,
-            0
-          ]
-        ],
-        "output": 16
-      },
-      {
-        "input": [
-          [
-            1
-          ]
-        ],
-        "output": 4
-      },
-      {
-        "input": [
-          [
-            0
-          ]
-        ],
+        "input": "[1, 2, 3]",
         "output": 0
       },
       {
-        "input": [
-          [
-            1,
-            0
-          ],
-          [
-            0,
-            1
-          ]
-        ],
-        "output": 8
-      }
-    ],
-    "id": 3,
-    "completed": true
-  },
-  {
-    "title": "Anagram Scramble",
-    "description": "Given a string, find the minimum number of character swaps required to make the string an anagram of a predefined target string. Character swaps involve exchanging two characters in the string. If the input string is already an anagram of the target string, the answer is 0. If the input string cannot be made an anagram of the target string, return -1.",
-    "difficulty": "easy",
-    "language": "python",
-    "topic": "strings",
-    "xpReward": 60,
-    "input_format": "A string representing the input string and another string representing the target string. Both strings contain only lowercase English letters.",
-    "output_format": "An integer representing the minimum number of swaps required. Return -1 if the input string cannot be an anagram of the target string.",
-    "template": "def min_anagram_swaps(input_string, target_string):\n    \"\"\"Calculates the minimum number of swaps to make input_string an anagram of target_string.\n\n    Args:\n        input_string: The string to be transformed.\n        target_string: The target anagram string.\n\n    Returns:\n        The minimum number of swaps required, or -1 if not possible.\n    \"\"\"\n    # Your code here\n    pass",
-    "examples": [
-      {
-        "input": "listen",
-        "output": 0
+        "input": "[5, 5, 5, 5]",
+        "output": 15
       },
       {
-        "input": "hello",
-        "output": 2
-      },
-      {
-        "input": "abc",
-        "output": -1
-      },
-      {
-        "input": "aabb",
-        "output": 2
-      },
-      {
-        "input": "anagram",
-        "output": 0
-      }
-    ],
-    "id": 4,
-    "completed": true
-  },
-  {
-    "title": "Prime Factor Sum",
-    "description": "Given a positive integer `n`, find the sum of its prime factors (including duplicates). For example, the prime factors of 12 are 2, 2, and 3, and their sum is 2 + 2 + 3 = 7.  The input integer `n` will be between 1 and 10000.",
-    "difficulty": "easy",
-    "language": "python",
-    "topic": "math",
-    "xpReward": 60,
-    "input_format": "An integer `n` (1 <= n <= 10000) as a single integer.",
-    "output_format": "An integer representing the sum of the prime factors of `n`.",
-    "template": "def prime_factor_sum(n):\n   \"\"\"Calculates the sum of the prime factors of a given integer.\n\n   Args:\n       n: A positive integer.\n\n   Returns:\n       The sum of the prime factors of n.\n   \"\"\"\n   # Your code here\n   pass",
-    "examples": [
-      {
-        "input": 12,
-        "output": 7
-      },
-      {
-        "input": 30,
+        "input": "[10, 2, -5, 1, 8]",
         "output": 10
       },
       {
-        "input": 2,
-        "output": 2
-      },
-      {
-        "input": 1,
-        "output": 0
-      },
-      {
-        "input": 100,
-        "output": 7
+        "input": "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]",
+        "output": 15
       }
     ],
-    "id": 5,
-    "completed": true
+    "id": 1,
+    "completed": false
   }
 ]

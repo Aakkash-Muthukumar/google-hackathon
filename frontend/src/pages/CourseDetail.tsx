@@ -35,6 +35,9 @@ export default function CourseDetail() {
   const [generatingLessons, setGeneratingLessons] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deletingCourse, setDeletingCourse] = useState(false);
+  const [showDeleteLessonDialog, setShowDeleteLessonDialog] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState<Lesson | null>(null);
+  const [deletingLessonId, setDeletingLessonId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadCourse = async () => {
@@ -169,6 +172,43 @@ export default function CourseDetail() {
     } finally {
       setDeletingCourse(false);
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleDeleteLesson = async (lesson: Lesson) => {
+    if (!course || !courseId) return;
+    
+    try {
+      setDeletingLessonId(lesson.id);
+      await courseAPI.deleteLesson(courseId, lesson.id);
+      
+      // Remove the lesson from local state
+      const updatedCourse = {
+        ...course,
+        lessons: course.lessons?.filter(l => l.id !== lesson.id) || []
+      };
+      
+      // Recalculate total XP
+      updatedCourse.totalXP = updatedCourse.lessons.reduce((sum, l) => sum + (l.xpReward || 0), 0);
+      
+      setCourse(updatedCourse);
+      
+      toast({
+        title: "Lesson removed successfully",
+        description: `"${lesson.title}" has been removed from the course.`,
+      });
+      
+    } catch (err) {
+      console.error('Error deleting lesson:', err);
+      toast({
+        title: "Failed to remove lesson",
+        description: "There was an error removing the lesson. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingLessonId(null);
+      setShowDeleteLessonDialog(false);
+      setLessonToDelete(null);
     }
   };
 
@@ -355,6 +395,34 @@ export default function CourseDetail() {
                         )}
                       </Button>
                     )}
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLessonToDelete(lesson);
+                            setShowDeleteLessonDialog(true);
+                          }}
+                          disabled={deletingLessonId === lesson.id}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove Lesson
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    
                     <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <Play className="w-4 h-4" />
                     </Button>
@@ -428,6 +496,55 @@ export default function CourseDetail() {
                 </>
               ) : (
                 'Remove Course'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Lesson Confirmation Dialog */}
+      <AlertDialog open={showDeleteLessonDialog} onOpenChange={setShowDeleteLessonDialog}>
+        <AlertDialogContent className="bg-gradient-card border-primary/20">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">
+              Remove this lesson?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground space-y-3">
+              <p>
+                You're about to remove <span className="font-semibold text-foreground">"{lessonToDelete?.title}"</span> from this course.
+              </p>
+              <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 space-y-2">
+                <p className="text-sm font-medium text-warning-foreground">⚠️ This action will:</p>
+                <ul className="text-sm space-y-1 ml-4 list-disc text-warning-foreground">
+                  <li>Remove the lesson and all its content</li>
+                  <li>Delete any progress data for this lesson</li>
+                  <li>Reduce the course's total XP</li>
+                </ul>
+              </div>
+              <p className="text-sm">
+                This action cannot be undone, but you can always create a new lesson later.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel 
+              className="hover:bg-muted transition-colors duration-200"
+              disabled={deletingLessonId === lessonToDelete?.id}
+            >
+              Keep Lesson
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-destructive hover:bg-destructive/90 transition-colors duration-200"
+              onClick={() => lessonToDelete && handleDeleteLesson(lessonToDelete)}
+              disabled={deletingLessonId === lessonToDelete?.id}
+            >
+              {deletingLessonId === lessonToDelete?.id ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                'Remove Lesson'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

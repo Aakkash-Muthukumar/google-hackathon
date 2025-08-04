@@ -69,8 +69,8 @@ const ChallengeHome: React.FC = () => {
         
         // Map completed challenges
         const completedChallenges = challenges
-          .filter((challenge: any) => userProgress?.completed_challenges?.includes(challenge.id))
-          .map((challenge: any) => ({
+          .filter((challenge: { id: number }) => userProgress?.completed_challenges?.includes(challenge.id))
+          .map((challenge: { id: number; title: string; difficulty?: string; topic?: string; xpReward?: number }) => ({
             id: String(challenge.id),
             title: challenge.title,
             difficulty: challenge.difficulty?.toLowerCase() as 'easy' | 'medium' | 'hard',

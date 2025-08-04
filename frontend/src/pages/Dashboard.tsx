@@ -12,7 +12,7 @@ import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 export default function Dashboard() {
   const [user, setUser] = useState<User>(storage.getUser());
   const [progress, setProgress] = useState<ProgressType>(storage.getProgress());
-  const [backendProgress, setBackendProgress] = useState<any>(null);
+  const [backendProgress, setBackendProgress] = useState<{ total_xp?: number; level?: number; completed_challenges?: number[] } | null>(null);
   const [dailyQuote] = useState(() => 
     motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]
   );

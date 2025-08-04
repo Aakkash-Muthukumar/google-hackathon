@@ -17,8 +17,50 @@ def load_challenges() -> List[Dict[str, Any]]:
     with open(CHALLENGES_FILE, 'r') as f:
         challenges = json.load(f)
     
+    # Clean up any duplicates before processing
+    challenges = _remove_duplicate_challenges(challenges)
+    
     # Update completion status based on user progress
     return update_challenge_completion_status(challenges)
+
+def _remove_duplicate_challenges(challenges: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Remove duplicate challenges based on title and description similarity.
+    Keeps the first occurrence and removes subsequent duplicates.
+    """
+    seen_titles = set()
+    seen_descriptions = set()
+    unique_challenges = []
+    
+    for challenge in challenges:
+        title_lower = challenge.get('title', '').lower()
+        description_lower = challenge.get('description', '').lower()
+        
+        # Check if title already exists
+        if title_lower in seen_titles:
+            continue
+        
+        # Check if description is too similar to existing ones
+        is_duplicate = False
+        for existing_desc in seen_descriptions:
+            if _calculate_similarity(description_lower, existing_desc) > 0.8:
+                is_duplicate = True
+                break
+        
+        if is_duplicate:
+            continue
+        
+        # Add to unique challenges
+        seen_titles.add(title_lower)
+        seen_descriptions.add(description_lower)
+        unique_challenges.append(challenge)
+    
+    # If we removed duplicates, save the cleaned data
+    if len(unique_challenges) < len(challenges):
+        save_challenges(unique_challenges)
+        print(f"Removed {len(challenges) - len(unique_challenges)} duplicate challenges")
+    
+    return unique_challenges
 
 def update_challenge_completion_status(challenges: List[Dict[str, Any]], user_id: str = "default_user") -> List[Dict[str, Any]]:
     """Update the completed attribute for all challenges based on user progress"""
@@ -78,6 +120,7 @@ def generate_challenge(difficulty: str = "easy", topic: str = "algorithms", lang
     # Load existing challenges to prevent duplicates
     existing_challenges = load_challenges()
     existing_titles = [challenge.get('title', '').lower() for challenge in existing_challenges]
+    existing_descriptions = [challenge.get('description', '').lower() for challenge in existing_challenges]
     
     # Create a more specific prompt to avoid similar challenges
     similar_challenges = []
@@ -151,6 +194,20 @@ Make sure the challenge is appropriate for the specified difficulty level and in
             json_str = response[start_idx:end_idx]
             challenge = json.loads(json_str)
             
+            # Check for duplicates by title AND description
+            challenge_title_lower = challenge.get('title', '').lower()
+            challenge_description_lower = challenge.get('description', '').lower()
+            
+            # Check if title already exists
+            if challenge_title_lower in existing_titles:
+                raise ValueError(f"Challenge with title '{challenge.get('title')}' already exists")
+            
+            # Check if description already exists (allowing for minor variations)
+            for existing_desc in existing_descriptions:
+                # If descriptions are very similar (80% similarity), consider it a duplicate
+                if _calculate_similarity(challenge_description_lower, existing_desc) > 0.8:
+                    raise ValueError(f"Challenge with similar description already exists")
+            
             # Add an ID
             challenge['id'] = max([c.get('id', 0) for c in existing_challenges], default=0) + 1
             
@@ -179,25 +236,186 @@ Make sure the challenge is appropriate for the specified difficulty level and in
             raise ValueError("No JSON found in response")
     except Exception as e:
         # Return a fallback challenge if AI generation fails
+        return _generate_fallback_challenge(difficulty, topic, language, existing_challenges)
+
+def _calculate_similarity(text1: str, text2: str) -> float:
+    """
+    Calculate similarity between two texts using simple word overlap.
+    Returns a value between 0 and 1, where 1 means identical.
+    """
+    words1 = set(text1.lower().split())
+    words2 = set(text2.lower().split())
+    
+    if not words1 or not words2:
+        return 0.0
+    
+    intersection = words1.intersection(words2)
+    union = words1.union(words2)
+    
+    return len(intersection) / len(union)
+
+def _generate_fallback_challenge(difficulty: str, topic: str, language: str, existing_challenges: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Generate a fallback challenge when AI generation fails.
+    Creates unique challenges based on difficulty and topic.
+    """
+    # Create a variety of fallback challenges based on topic and difficulty
+    fallback_challenges = {
+        "algorithms": {
+            "easy": {
+                "title": "Array Rotation",
+                "description": "Given an array of integers and a rotation count, rotate the array to the right by the specified number of positions. For example, rotating [1, 2, 3, 4, 5] by 2 positions results in [4, 5, 1, 2, 3].",
+                "template": "def rotate_array(arr, k):\n    \"\"\"Rotates the array to the right by k positions.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "[1, 2, 3, 4, 5], 2", "output": "[4, 5, 1, 2, 3]"},
+                    {"input": "[1, 2, 3], 1", "output": "[3, 1, 2]"}
+                ]
+            },
+            "medium": {
+                "title": "Binary Search Tree Validation",
+                "description": "Given a binary tree, determine if it is a valid binary search tree (BST). A BST is valid if for every node, all nodes in its left subtree have values less than the node's value, and all nodes in its right subtree have values greater than the node's value.",
+                "template": "def is_valid_bst(root):\n    \"\"\"Checks if the binary tree is a valid BST.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "TreeNode(2, TreeNode(1), TreeNode(3))", "output": "True"},
+                    {"input": "TreeNode(5, TreeNode(1), TreeNode(4, TreeNode(3), TreeNode(6)))", "output": "False"}
+                ]
+            },
+            "hard": {
+                "title": "Longest Increasing Subsequence",
+                "description": "Given an array of integers, find the length of the longest strictly increasing subsequence. A subsequence is a sequence that can be derived from the array by deleting some or no elements without changing the order of the remaining elements.",
+                "template": "def length_of_lis(nums):\n    \"\"\"Returns the length of the longest increasing subsequence.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "[10, 9, 2, 5, 3, 7, 101, 18]", "output": "4"},
+                    {"input": "[0, 1, 0, 3, 2, 3]", "output": "4"}
+                ]
+            }
+        },
+        "strings": {
+            "easy": {
+                "title": "String Compression",
+                "description": "Given a string, compress it by replacing consecutive repeated characters with the character followed by the count. If the compressed string is longer than the original, return the original string.",
+                "template": "def compress_string(s):\n    \"\"\"Compresses a string by counting consecutive characters.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "aabcccccaaa", "output": "a2b1c5a3"},
+                    {"input": "abcd", "output": "abcd"}
+                ]
+            },
+            "medium": {
+                "title": "Longest Palindromic Substring",
+                "description": "Given a string, find the longest palindromic substring. A palindrome is a string that reads the same backward as forward.",
+                "template": "def longest_palindrome(s):\n    \"\"\"Returns the longest palindromic substring.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "babad", "output": "bab"},
+                    {"input": "cbbd", "output": "bb"}
+                ]
+            },
+            "hard": {
+                "title": "Regular Expression Matching",
+                "description": "Implement regular expression matching with support for '.' and '*'. '.' matches any single character, '*' matches zero or more of the preceding element.",
+                "template": "def is_match(s, p):\n    \"\"\"Checks if string s matches pattern p.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "aa, a", "output": "False"},
+                    {"input": "aa, a*", "output": "True"}
+                ]
+            }
+        },
+        "math": {
+            "easy": {
+                "title": "Perfect Square Check",
+                "description": "Given a positive integer, determine if it is a perfect square. A perfect square is an integer that is the square of an integer.",
+                "template": "def is_perfect_square(num):\n    \"\"\"Checks if the number is a perfect square.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "16", "output": "True"},
+                    {"input": "14", "output": "False"}
+                ]
+            },
+            "medium": {
+                "title": "Integer to Roman",
+                "description": "Convert an integer to a Roman numeral. Roman numerals are represented by seven different symbols: I, V, X, L, C, D, and M.",
+                "template": "def int_to_roman(num):\n    \"\"\"Converts an integer to Roman numeral.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "3", "output": "III"},
+                    {"input": "58", "output": "LVIII"}
+                ]
+            },
+            "hard": {
+                "title": "Trailing Zeroes in Factorial",
+                "description": "Given an integer n, return the number of trailing zeroes in n! (n factorial).",
+                "template": "def trailing_zeroes(n):\n    \"\"\"Returns the number of trailing zeroes in n!.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "3", "output": "0"},
+                    {"input": "5", "output": "1"}
+                ]
+            }
+        },
+        "graphs": {
+            "easy": {
+                "title": "Number of Islands",
+                "description": "Given a 2D grid map of '1's (land) and '0's (water), count the number of islands. An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically.",
+                "template": "def num_islands(grid):\n    \"\"\"Counts the number of islands in the grid.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "[['1','1','0','0','0'], ['1','1','0','0','0'], ['0','0','1','0','0'], ['0','0','0','1','1']]", "output": "3"}
+                ]
+            },
+            "medium": {
+                "title": "Course Schedule",
+                "description": "Given the total number of courses and a list of prerequisite pairs, determine if it is possible to finish all courses.",
+                "template": "def can_finish(num_courses, prerequisites):\n    \"\"\"Checks if all courses can be finished.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "2, [[1,0]]", "output": "True"},
+                    {"input": "2, [[1,0],[0,1]]", "output": "False"}
+                ]
+            },
+            "hard": {
+                "title": "Word Ladder",
+                "description": "Given two words and a dictionary, find the length of shortest transformation sequence from beginWord to endWord.",
+                "template": "def ladder_length(begin_word, end_word, word_list):\n    \"\"\"Returns the length of shortest transformation sequence.\"\"\"\n    # Your code here\n    pass",
+                "examples": [
+                    {"input": "hit, cog, [hot,dot,dog,lot,log,cog]", "output": "5"}
+                ]
+            }
+        }
+    }
+    
+    # Get the appropriate fallback challenge
+    topic_challenges = fallback_challenges.get(topic, fallback_challenges["algorithms"])
+    difficulty_challenge = topic_challenges.get(difficulty, topic_challenges["easy"])
+    
+    # Check if this fallback challenge already exists
+    existing_titles = [c.get('title', '').lower() for c in existing_challenges]
+    if difficulty_challenge["title"].lower() in existing_titles:
+        # If the fallback also exists, create a completely different challenge
         return {
-            "id": len(existing_challenges) + 1,
-            "title": f"String Character Counter",
-            "description": f"Write a function that counts the frequency of each character in a string and returns the character that appears most frequently. If there's a tie, return the character that appears first in the string.",
+            "id": max([c.get('id', 0) for c in existing_challenges], default=0) + 1,
+            "title": f"Unique {topic.title()} Challenge",
+            "description": f"Create a unique {difficulty} level challenge related to {topic}. This is a placeholder challenge that should be replaced by AI generation.",
             "difficulty": difficulty,
             "language": language,
             "topic": topic,
             "xpReward": 50 if difficulty == "easy" else 75 if difficulty == "medium" else 100,
-            "input_format": "A string containing alphanumeric characters",
-            "output_format": "A single character (the most frequent one)",
-            "template": f"def most_frequent_char(text):\n    \"\"\"Returns the most frequent character in the given string.\"\"\"\n    # Your code here\n    pass",
+            "input_format": "Varies based on the specific challenge",
+            "output_format": "Varies based on the specific challenge",
+            "template": f"def solve_{topic.lower()}_challenge():\n    \"\"\"Solves a {difficulty} level {topic} challenge.\"\"\"\n    # Your code here\n    pass",
             "examples": [
-                {"input": "hello", "output": "l"},
-                {"input": "programming", "output": "g"},
-                {"input": "aabbcc", "output": "a"}
+                {"input": "example_input", "output": "example_output"}
             ],
-            "hints": [],  # Hints will be generated dynamically when requested
             "completed": False
         }
+    
+    return {
+        "id": max([c.get('id', 0) for c in existing_challenges], default=0) + 1,
+        "title": difficulty_challenge["title"],
+        "description": difficulty_challenge["description"],
+        "difficulty": difficulty,
+        "language": language,
+        "topic": topic,
+        "xpReward": 50 if difficulty == "easy" else 75 if difficulty == "medium" else 100,
+        "input_format": "Varies based on the specific challenge",
+        "output_format": "Varies based on the specific challenge",
+        "template": difficulty_challenge["template"],
+        "examples": difficulty_challenge["examples"],
+        "completed": False
+    }
 
 def format_verification_prompt(problem: Dict[str, Any], user_code: str, test_cases: List[Dict[str, Any]]) -> str:
     """

@@ -83,29 +83,10 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
   };
 
   const handleSubmit = async () => {
-    // Validate required fields
+    // Validate required fields - only title is required now
     if (!courseData.title?.trim()) {
       console.error('Course title is required');
       return;
-    }
-    
-    if (!courseData.description?.trim()) {
-      console.error('Course description is required');
-      return;
-    }
-    
-    if (!courseData.lessons || courseData.lessons.length === 0) {
-      console.error('At least one lesson is required');
-      return;
-    }
-
-    // Validate each lesson has required fields
-    for (let i = 0; i < courseData.lessons.length; i++) {
-      const lesson = courseData.lessons[i];
-      if (!lesson.title?.trim()) {
-        console.error(`Lesson ${i + 1} title is required`);
-        return;
-      }
     }
 
     try {
@@ -114,16 +95,36 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
       // Prepare course data with proper structure
       const courseToCreate = {
         title: courseData.title.trim(),
-        description: courseData.description.trim(),
+        description: courseData.description?.trim() || `A comprehensive course on ${courseData.title.trim()}`,
         difficulty: courseData.difficulty || 'beginner',
         topics: courseData.topics || [],
         estimatedHours: courseData.estimatedHours || 10,
-        lessons: courseData.lessons.map((lesson, index) => ({
+        lessons: courseData.lessons?.length > 0 ? courseData.lessons.map((lesson, index) => ({
           title: lesson.title.trim(),
           description: lesson.description?.trim() || '',
           order: lesson.order || index + 1,
           xpReward: lesson.xpReward || 100
-        }))
+        })) : [
+          // Default lesson structure if no lessons provided
+          {
+            title: `Introduction to ${courseData.title.trim()}`,
+            description: `Get started with the basics of ${courseData.title.trim()}`,
+            order: 1,
+            xpReward: 100
+          },
+          {
+            title: `${courseData.title.trim()} Fundamentals`,
+            description: `Learn the core concepts and principles`,
+            order: 2,
+            xpReward: 150
+          },
+          {
+            title: `Advanced ${courseData.title.trim()}`,
+            description: `Master advanced techniques and best practices`,
+            order: 3,
+            xpReward: 200
+          }
+        ]
       };
 
       console.log('Creating course with data:', courseToCreate);
@@ -194,19 +195,27 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Description</label>
+            <label className="text-sm font-medium">Description (Optional)</label>
             <Textarea
               value={courseData.description}
               onChange={(e) => setCourseData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Describe your course"
+              placeholder="Describe your course (leave empty to auto-generate)"
               rows={3}
             />
+            <p className="text-xs text-muted-foreground">
+              If left empty, a description will be generated based on the course title
+            </p>
           </div>
 
           {/* Lessons */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">Lessons</label>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Lessons (Optional)</label>
+                <p className="text-xs text-muted-foreground">
+                  Add custom lessons or leave empty to auto-generate based on the course title
+                </p>
+              </div>
               <Button onClick={addLesson} size="sm" disabled={!newLesson.title}>
                 <Plus className="w-4 h-4 mr-1" />
                 Add Lesson
@@ -277,12 +286,7 @@ export default function CreateCourseModal({ isOpen, onClose, onCourseCreated }: 
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={loading || 
-              !courseData.title?.trim() || 
-              !courseData.description?.trim() || 
-              !courseData.lessons?.length ||
-              courseData.lessons.some(lesson => !lesson.title?.trim())
-            }
+            disabled={loading || !courseData.title?.trim()}
           >
             {loading ? 'Creating...' : 'Create Course'}
           </Button>

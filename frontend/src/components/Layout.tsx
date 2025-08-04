@@ -19,7 +19,7 @@ export default function Layout() {
     { to: '/settings', icon: Settings, label: t('nav.settings') },
   ];
 
-  const handleSearchResult = (result: any) => {
+  const handleSearchResult = (result: { type: string }) => {
     // Navigate to appropriate page based on result type
     switch (result.type) {
       case 'flashcard':

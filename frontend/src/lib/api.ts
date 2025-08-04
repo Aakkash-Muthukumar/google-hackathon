@@ -27,12 +27,12 @@ export const flashcardAPI = {
   
   getById: (id: string) => apiRequest(`${API_ENDPOINTS.FLASHCARDS}/${id}`),
   
-  create: (data: any) => apiRequest(API_ENDPOINTS.FLASHCARDS, {
+  create: (data: Record<string, unknown>) => apiRequest(API_ENDPOINTS.FLASHCARDS, {
     method: 'POST',
     body: JSON.stringify(data),
   }),
   
-  update: (id: string, data: any) => apiRequest(`${API_ENDPOINTS.FLASHCARDS}/${id}`, {
+  update: (id: string, data: Record<string, unknown>) => apiRequest(`${API_ENDPOINTS.FLASHCARDS}/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   }),
@@ -95,12 +95,12 @@ export const courseAPI = {
   
   getById: (id: string) => apiRequest(`${API_ENDPOINTS.COURSES}/${id}`),
   
-  create: (data: any) => apiRequest(API_ENDPOINTS.COURSES, {
+  create: (data: Record<string, unknown>) => apiRequest(API_ENDPOINTS.COURSES, {
     method: 'POST',
     body: JSON.stringify(data),
   }),
   
-  update: (id: string, data: any) => apiRequest(`${API_ENDPOINTS.COURSES}/${id}`, {
+  update: (id: string, data: Record<string, unknown>) => apiRequest(`${API_ENDPOINTS.COURSES}/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
@@ -123,6 +123,11 @@ export const courseAPI = {
     apiRequest(`${API_ENDPOINTS.COURSES}/${courseId}/lessons/${lessonId}/generate-content`, {
       method: 'POST',
     }),
+
+  deleteLesson: (courseId: string, lessonId: string) => 
+    apiRequest(`${API_ENDPOINTS.COURSES}/${courseId}/lessons/${lessonId}`, {
+      method: 'DELETE',
+    }),
 };
 
 // Subject API
@@ -131,12 +136,12 @@ export const subjectAPI = {
   
   getById: (id: string) => apiRequest(`${API_ENDPOINTS.SUBJECTS}/${id}`),
   
-  create: (data: any) => apiRequest(API_ENDPOINTS.SUBJECTS, {
+  create: (data: Record<string, unknown>) => apiRequest(API_ENDPOINTS.SUBJECTS, {
     method: 'POST',
     body: JSON.stringify(data),
   }),
   
-  update: (id: string, data: any) => apiRequest(`${API_ENDPOINTS.SUBJECTS}/${id}`, {
+  update: (id: string, data: Record<string, unknown>) => apiRequest(`${API_ENDPOINTS.SUBJECTS}/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
@@ -150,7 +155,7 @@ export const subjectAPI = {
 export const progressAPI = {
   get: () => apiRequest(API_ENDPOINTS.PROGRESS),
   
-  update: (data: any) => apiRequest(API_ENDPOINTS.PROGRESS, {
+  update: (data: Record<string, unknown>) => apiRequest(API_ENDPOINTS.PROGRESS, {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
@@ -160,7 +165,7 @@ export const progressAPI = {
 export const userAPI = {
   get: () => apiRequest(API_ENDPOINTS.USER),
   
-  update: (data: any) => apiRequest(API_ENDPOINTS.USER, {
+  update: (data: Record<string, unknown>) => apiRequest(API_ENDPOINTS.USER, {
     method: 'PUT',
     body: JSON.stringify(data),
   }),

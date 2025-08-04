@@ -224,4 +224,42 @@ async def generate_lesson_content_for_course(course_id: str, lesson_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate lesson content: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Failed to generate lesson content: {str(e)}")
+
+@router.delete("/{course_id}/lessons/{lesson_id}")
+async def delete_lesson(course_id: str, lesson_id: str):
+    """Delete a specific lesson from a course"""
+    try:
+        courses = load_courses()
+        course = next((c for c in courses if c.get("id") == course_id), None)
+        
+        if not course:
+            raise HTTPException(status_code=404, detail="Course not found")
+        
+        lessons = course.get("lessons", [])
+        lesson_index = next((i for i, l in enumerate(lessons) if l.get("id") == lesson_id), None)
+        
+        if lesson_index is None:
+            raise HTTPException(status_code=404, detail="Lesson not found")
+        
+        # Remove the lesson
+        deleted_lesson = lessons.pop(lesson_index)
+        
+        # Recalculate total XP
+        course["totalXP"] = sum(lesson.get("xpReward", 0) for lesson in lessons)
+        
+        # Update course
+        course["updatedAt"] = datetime.datetime.now().isoformat()
+        
+        # Save updated courses
+        save_courses(courses)
+        
+        return {
+            "message": "Lesson deleted successfully",
+            "lesson": deleted_lesson,
+            "course": course
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete lesson: {str(e)}")

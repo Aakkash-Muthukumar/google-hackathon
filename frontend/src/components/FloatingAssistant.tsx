@@ -88,8 +88,24 @@ export function FloatingAssistant() {
     };
 
     const handleWheel = (e: WheelEvent) => {
-      // Disable auto-scroll when user manually scrolls
+      // Disable auto-scroll when user manually scrolls with mouse
       if (e.deltaY !== 0) {
+        autoScrollEnabledRef.current = false;
+        setAutoScrollEnabled(false);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // Disable auto-scroll when user manually scrolls with trackpad/touch
+      if (e.touches.length === 1) {
+        autoScrollEnabledRef.current = false;
+        setAutoScrollEnabled(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Disable auto-scroll when user manually scrolls with arrow keys, Page Up/Down, Home/End
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
         autoScrollEnabledRef.current = false;
         setAutoScrollEnabled(false);
       }
@@ -99,9 +115,14 @@ export function FloatingAssistant() {
     if (scrollElement) {
       scrollElement.addEventListener('scroll', handleScroll);
       scrollElement.addEventListener('wheel', handleWheel);
+      scrollElement.addEventListener('touchmove', handleTouchMove);
+      scrollElement.addEventListener('keydown', handleKeyDown);
+      
       return () => {
         scrollElement.removeEventListener('scroll', handleScroll);
         scrollElement.removeEventListener('wheel', handleWheel);
+        scrollElement.removeEventListener('touchmove', handleTouchMove);
+        scrollElement.removeEventListener('keydown', handleKeyDown);
       };
     }
   }, []);

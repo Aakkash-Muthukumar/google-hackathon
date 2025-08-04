@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from services.ai_service import ask_gemma
+from services.ai_service import ask_gemma_tutor
 
 router = APIRouter()
 
@@ -13,6 +13,6 @@ async def ask(request: AskRequest):
     if not request.prompt:
         raise HTTPException(status_code=400, detail="No prompt provided.")
     def event_stream():
-        for chunk in ask_gemma(request.prompt):
+        for chunk in ask_gemma_tutor(request.prompt):
             yield chunk
     return StreamingResponse(event_stream(), media_type="text/plain") 

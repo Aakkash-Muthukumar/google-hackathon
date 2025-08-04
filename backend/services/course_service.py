@@ -129,7 +129,7 @@ class CourseService:
         
         return False
     
-    def update_lesson_progress(self, course_id: str, lesson_id: str, progress: int, completed: bool = None) -> Optional[Dict[str, Any]]:
+    def update_lesson_progress(self, course_id: str, lesson_id: str, progress: int, completed: Optional[bool] = None) -> Optional[Dict[str, Any]]:
         """Update lesson progress and completion status"""
         course = self.get_course_by_id(course_id)
         if not course:
@@ -168,22 +168,28 @@ class CourseService:
                                 # Generate content if it doesn't exist
                 if not lesson.get('content'):
                     ai_prompt = f"""
-                    Create comprehensive lesson content for a programming course.
+                    Create comprehensive lesson content for any course.
                     
                     Course: {course['title']}
-                    Language: {course.get('language', 'python')}
+                    Subject Area: {course.get('topics', ['General'])}
                     Difficulty: {course['difficulty']}
                     
                     Lesson: {lesson['title']}
                     Description: {lesson['description']}
                     
+                    IMPORTANT: Adapt the content to the subject matter. If this is a programming course, include code examples. 
+                    If this is an art course, focus on techniques, examples, and visual descriptions. 
+                    If this is a math course, include formulas, calculations, and step-by-step solutions.
+                    If this is a science course, include explanations, experiments, and scientific concepts.
+                    
                     Please provide:
-                    1. Detailed lesson content with explanations
-                    2. Code examples
-                    3. Practice exercises
+                    1. Detailed lesson content with explanations appropriate to the subject
+                    2. Relevant examples (code, art techniques, math problems, scientific concepts, etc.)
+                    3. Practice exercises or activities
                     4. Key takeaways
                     
                     Format the response in a structured way that's easy to follow.
+                    Use appropriate terminology and examples for the subject matter.
                     """
                     
                     try:

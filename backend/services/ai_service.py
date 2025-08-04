@@ -8,11 +8,17 @@ def ask_gemma(prompt: str):
         model=MODEL,
         messages=[
             {"role": "system", "content": (
-                "You are a highly skilled and friendly programming tutor. "
-                "You help students understand programming concepts clearly. "
-                "You are well-versed in Python, JavaScript, C++, and Java. "
-                "When creating lesson content, always structure it into 4 equal parts "
-                "with progress breakpoints at 25%, 50%, 75%, and 100% completion."
+                "You are a highly skilled and friendly tutor who provides short, concise, and helpful responses. "
+                "You help students understand concepts clearly across various subjects including programming, math, science, art, and more. "
+                "You are well-versed in Python, JavaScript, C++, Java, and many other subjects. "
+                "IMPORTANT RULES: "
+                "1. Always provide a TLDR (Too Long; Didn't Read) section at the end of your response. "
+                "2. Keep responses focused, practical, and easy to understand. "
+                "3. Avoid unnecessary verbosity and get straight to the point. "
+                "4. DO NOT use course-style formatting with progress checkpoints or part divisions. "
+                "5. DO NOT structure responses into multiple parts with completion percentages. "
+                "6. Provide direct, conversational answers that are helpful and concise. "
+                "7. Always end with a clear TLDR summary."
             )},
             {"role": "user", "content": prompt}
         ],
@@ -24,19 +30,42 @@ def ask_gemma(prompt: str):
             if content:
                 yield content
 
-def generate_lesson_content(lesson_title: str, lesson_description: str, programming_language: str, difficulty: str = "beginner"):
+def ask_gemma_tutor(prompt: str):
+    """Specialized function for AI tutor with explicit non-course formatting"""
+    response = chat(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": (
+                "You are a helpful, concise tutor. You provide direct answers without course-style formatting. "
+                "NEVER use progress checkpoints, part divisions, or completion percentages. "
+                "Keep responses short and conversational. "
+                "ALWAYS end with a TLDR section. "
+                "Be direct and helpful."
+            )},
+            {"role": "user", "content": prompt}
+        ],
+        stream=True
+    )
+    for chunk in response:
+        if chunk and isinstance(chunk, dict):
+            content = chunk.get("message", {}).get("content", "")
+            if content:
+                yield content
+
+def generate_lesson_content(lesson_title: str, lesson_description: str, subject_area: str = "general", difficulty: str = "beginner"):
     """
     Generate comprehensive lesson content using AI with progress breakpoints
     """
     prompt = f"""
-    Create a comprehensive programming lesson with the following details:
+    Create a comprehensive lesson with the following details:
     
     Lesson Title: {lesson_title}
     Lesson Description: {lesson_description}
-    Programming Language: {programming_language}
+    Subject Area: {subject_area}
     Difficulty Level: {difficulty}
     
-    IMPORTANT: Structure the lesson content into 4 equal parts with clear progress breakpoints:
+    IMPORTANT: Structure the lesson content into 4 equal parts with clear progress breakpoints.
+    Adapt the content to the subject matter:
     
     **PART 1 (0-25%): Introduction and Basic Concepts**
     - Brief overview of what will be covered
@@ -45,16 +74,16 @@ def generate_lesson_content(lesson_title: str, lesson_description: str, programm
     
     **PART 2 (25-50%): Detailed Explanation**
     - In-depth explanation of the concept with clear examples
-    - More detailed code examples
+    - More detailed examples appropriate to the subject
     - Step-by-step breakdown of concepts
     
     **PART 3 (50-75%): Advanced Examples and Practice**
-    - Multiple practical code examples demonstrating the concept
+    - Multiple practical examples demonstrating the concept
     - Intermediate-level examples
     - Common use cases and scenarios
     
     **PART 4 (75-100%): Exercises and Summary**
-    - 2-3 hands-on exercises for students to practice
+    - 2-3 hands-on exercises or activities for students to practice
     - Key takeaways and summary of important points
     - Common mistakes and how to avoid them
     - Further reading suggestions
@@ -65,7 +94,12 @@ def generate_lesson_content(lesson_title: str, lesson_description: str, programm
     - After Part 3: "## 🎯 75% Content Complete"
     - At the end: "## 🎯 100% Content Complete"
     
-    Make the content engaging, beginner-friendly, and include plenty of code examples.
+    Make the content engaging, beginner-friendly, and include plenty of relevant examples.
+    For programming courses, include code examples.
+    For art courses, focus on techniques, visual descriptions, and artistic concepts.
+    For math courses, include formulas, calculations, and step-by-step solutions.
+    For science courses, include explanations, experiments, and scientific concepts.
+    
     Use markdown formatting for better readability.
     Keep the total content between 1000-2000 words.
     Ensure each part is roughly equal in length and content depth.
@@ -77,12 +111,14 @@ def generate_lesson_content(lesson_title: str, lesson_description: str, programm
             model=MODEL,
             messages=[
                 {"role": "system", "content": (
-                    "You are an expert programming instructor who creates engaging, "
+                    "You are an expert instructor who creates engaging, "
                     "comprehensive lesson content with clear progress tracking. You excel at "
-                    "explaining complex concepts in simple terms and providing practical code examples. "
+                    "explaining complex concepts in simple terms and providing practical examples. "
+                    "You can teach various subjects including programming, art, math, science, and more. "
                     "Always use markdown formatting and structure content into 4 equal parts with "
                     "progress breakpoints at 25%, 50%, 75%, and 100%. Each part should be "
-                    "roughly equal in length and build upon the previous sections."
+                    "roughly equal in length and build upon the previous sections. "
+                    "Adapt your examples and terminology to the specific subject matter."
                 )},
                 {"role": "user", "content": prompt}
             ],

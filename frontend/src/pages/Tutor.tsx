@@ -90,8 +90,24 @@ export default function Tutor() {
     };
 
     const handleWheel = (e: WheelEvent) => {
-      // Disable auto-scroll when user manually scrolls
+      // Disable auto-scroll when user manually scrolls with mouse
       if (e.deltaY !== 0) {
+        autoScrollEnabledRef.current = false;
+        setAutoScrollEnabled(false);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      // Disable auto-scroll when user manually scrolls with trackpad/touch
+      if (e.touches.length === 1) {
+        autoScrollEnabledRef.current = false;
+        setAutoScrollEnabled(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Disable auto-scroll when user manually scrolls with arrow keys, Page Up/Down, Home/End
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
         autoScrollEnabledRef.current = false;
         setAutoScrollEnabled(false);
       }
@@ -101,9 +117,14 @@ export default function Tutor() {
     if (scrollElement) {
       scrollElement.addEventListener('scroll', handleScroll);
       scrollElement.addEventListener('wheel', handleWheel);
+      scrollElement.addEventListener('touchmove', handleTouchMove);
+      scrollElement.addEventListener('keydown', handleKeyDown);
+      
       return () => {
         scrollElement.removeEventListener('scroll', handleScroll);
         scrollElement.removeEventListener('wheel', handleWheel);
+        scrollElement.removeEventListener('touchmove', handleTouchMove);
+        scrollElement.removeEventListener('keydown', handleKeyDown);
       };
     }
   }, []);
@@ -139,7 +160,7 @@ export default function Tutor() {
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setIsLoading(true);
-    let tutorMessageId = (Date.now() + 1).toString();
+    const tutorMessageId = (Date.now() + 1).toString();
     let tutorMessage: ChatMessageType = {
       id: tutorMessageId,
       content: '',
@@ -371,24 +392,43 @@ export default function Tutor() {
   ];
 
   return (
-    <div className="w-full mx-auto min-h-[calc(100vh-12rem)] flex animate-fade-in">
+    <div className="w-full mx-auto min-h-[calc(100vh-12rem)] flex animate-fade-in overflow-hidden">
       {/* Collapsible Chats Sidebar */}
       {sidebarCollapsed ? (
-        <div className="flex flex-col items-center justify-center w-12 bg-gradient-card border-r shadow-glow animate-slide-in-right">
-          <Button variant="ghost" size="icon" className="mt-4 hover:bg-primary/10" onClick={() => setSidebarCollapsed(false)}>
-            <ChevronRight className="w-5 h-5 text-primary" />
-          </Button>
+        <div className="flex flex-col w-12 bg-gradient-card border-r shadow-glow relative">
+          {/* Always visible close/open button */}
+          <div className="absolute top-4 -right-6 z-50">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="bg-background/90 backdrop-blur-sm border hover:bg-primary/10 shadow-md transition-all duration-200 hover:scale-105" 
+              onClick={() => setSidebarCollapsed(false)}
+              title="Open sidebar"
+            >
+              <Menu className="w-4 h-4 text-primary" />
+            </Button>
+          </div>
         </div>
       ) : (
-        <div className="w-80 bg-gradient-card shadow-glow h-full flex flex-col border-r transition-all duration-300 animate-slide-in-right">
+        <div className="w-80 bg-gradient-card shadow-glow h-full flex flex-col border-r transition-all duration-300 animate-slide-in-right relative">
+          {/* Always visible close/open button */}
+          <div className="absolute top-4 -right-6 z-50">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="bg-background/90 backdrop-blur-sm border hover:bg-primary/10 shadow-md transition-all duration-200 hover:scale-105" 
+              onClick={() => setSidebarCollapsed(true)}
+              title="Close sidebar"
+            >
+              <X className="w-4 h-4 text-primary" />
+            </Button>
+          </div>
+          
           <div className="flex items-center justify-between p-4 border-b border-border">
             <span className="font-bold text-lg text-foreground">Chats</span>
             <div className="flex items-center gap-2">
               <Button className="gap-2 shadow-card hover:shadow-glow transition-all" variant="outline" onClick={createNewChatSession}>
                 <Plus className="w-4 h-4" /> New Chat
-              </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-primary/10" onClick={() => setSidebarCollapsed(true)}>
-                <ChevronLeft className="w-5 h-5 text-primary" />
               </Button>
             </div>
           </div>
@@ -527,7 +567,7 @@ export default function Tutor() {
       )}
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
         <div className="text-center space-y-4 mb-6 relative">
           <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
@@ -618,15 +658,15 @@ export default function Tutor() {
                       </div>
                     )}
                     
-                    <div className={`max-w-[80%] ${message.sender === 'user' ? 'order-2' : ''}`}>
+                    <div className={`max-w-[80%] break-words ${message.sender === 'user' ? 'order-2' : ''}`}>
                       <div
                         className={`p-4 rounded-2xl ${
                           message.sender === 'user'
                             ? 'bg-gradient-primary text-primary-foreground ml-auto'
                             : 'bg-muted'
                         }`}
-                      >
-                        <p className="whitespace-pre-wrap leading-relaxed">{message.sender === 'tutor' ? <ReactMarkdown>{message.content}</ReactMarkdown> : message.content}</p>
+                        >
+                         <div className="whitespace-pre-wrap leading-relaxed break-words overflow-wrap-anywhere">{message.sender === 'tutor' ? <ReactMarkdown>{message.content}</ReactMarkdown> : message.content}</div>
                       </div>
                       
                       <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
@@ -673,13 +713,13 @@ export default function Tutor() {
             
             {/* Input Area */}
             <div className="border-t p-6">
-              <div className="flex gap-3">
+              <div className="flex gap-3 min-w-0">
                 <Textarea
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask your programming question here... (Press Enter to send)"
-                  className="flex-1 min-h-[60px] max-h-32 resize-none"
+                  className="flex-1 min-h-[60px] max-h-32 resize-none min-w-0"
                   disabled={isLoading}
                 />
                 <Button 

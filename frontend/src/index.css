@@ -170,3 +170,8 @@
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
+
+/* Utility for proper text wrapping in chat messages */
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+}

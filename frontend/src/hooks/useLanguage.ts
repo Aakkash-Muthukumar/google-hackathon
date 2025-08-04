@@ -11,7 +11,7 @@ export function useLanguage() {
 
   const t = (key: string): string => {
     const keys = key.split('.');
-    let value: any = translations[language];
+    let value: unknown = translations[language];
     
     for (const k of keys) {
       value = value?.[k];
