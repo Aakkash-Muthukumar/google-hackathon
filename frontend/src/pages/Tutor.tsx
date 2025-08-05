@@ -116,8 +116,8 @@ export default function Tutor() {
     const scrollElement = scrollRef.current;
     if (scrollElement) {
       scrollElement.addEventListener('scroll', handleScroll);
-      scrollElement.addEventListener('wheel', handleWheel);
-      scrollElement.addEventListener('touchmove', handleTouchMove);
+      scrollElement.addEventListener('wheel', handleWheel, { passive: true });
+      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: true });
       scrollElement.addEventListener('keydown', handleKeyDown);
       
       return () => {

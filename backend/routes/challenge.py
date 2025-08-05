@@ -100,13 +100,8 @@ def verify_solution(request: VerifyRequest):
         if is_complete_code and result.get('correct', False):
             xp_earned = challenge.get('xpReward', 50)
             user_progress = update_user_progress(request.user_id, request.challenge_id, xp_earned)
-            mark_challenge_completed(request.challenge_id)
             result['xp_earned'] = xp_earned
             result['user_progress'] = user_progress
-            
-            # Reload challenges with updated completion status
-            updated_challenges = load_challenges()
-            result['updated_challenges'] = updated_challenges
         else:
             # If code is incomplete, override AI result and mark as failed
             result['correct'] = False

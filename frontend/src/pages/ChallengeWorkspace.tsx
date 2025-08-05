@@ -11,6 +11,7 @@ import { storage } from '@/lib/storage';
 import { useLanguage } from '@/hooks/useLanguage';
 import { toast } from 'sonner';
 import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
+import ReactMarkdown from 'react-markdown';
 
 interface TestResult {
   input: string;
@@ -78,7 +79,8 @@ const ChallengeWorkspace: React.FC = () => {
             input: Array.isArray(ex.input) ? JSON.stringify(ex.input) : String(ex.input || ''),
             expectedOutput: String(ex.output || '')
           })) : [],
-          solution: undefined
+          solution: undefined,
+          completed: Boolean(parsedChallenge.completed)
         };
         
         setChallenge(frontendChallenge);
@@ -358,9 +360,9 @@ const ChallengeWorkspace: React.FC = () => {
               <CardTitle>{t('challenges.description')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground leading-relaxed">
-                {challenge.description}
-              </p>
+              <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none">
+                <ReactMarkdown>{challenge.description}</ReactMarkdown>
+              </div>
             </CardContent>
           </Card>
 
@@ -441,7 +443,9 @@ const ChallengeWorkspace: React.FC = () => {
                         <div key={index} className="p-3 bg-muted rounded-lg">
                           <div className="flex items-start gap-2">
                             <span className="text-sm font-semibold text-primary">Hint {index + 1}:</span>
-                            <span className="text-sm text-muted-foreground">{hint}</span>
+                            <div className="text-sm text-muted-foreground prose prose-sm max-w-none">
+                              <ReactMarkdown>{hint}</ReactMarkdown>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -485,9 +489,9 @@ const ChallengeWorkspace: React.FC = () => {
                       <p className="text-sm text-muted-foreground">Generating solution...</p>
                     </div>
                   ) : (
-                    <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
-                      <code>{solution}</code>
-                    </pre>
+                    <div className="bg-muted p-4 rounded-lg text-sm overflow-x-auto prose prose-sm max-w-none">
+                      <ReactMarkdown>{solution}</ReactMarkdown>
+                    </div>
                   )}
                 </CardContent>
               </Card>

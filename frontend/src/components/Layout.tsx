@@ -3,7 +3,6 @@ import { Home, BookOpen, Code, Bot, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
-import { SearchBar } from '@/components/SearchBar';
 import { FloatingAssistant } from '@/components/FloatingAssistant';
 import { useLanguage } from '@/hooks/useLanguage';
 
@@ -19,20 +18,7 @@ export default function Layout() {
     { to: '/settings', icon: Settings, label: t('nav.settings') },
   ];
 
-  const handleSearchResult = (result: { type: string }) => {
-    // Navigate to appropriate page based on result type
-    switch (result.type) {
-      case 'flashcard':
-        window.location.href = '/flashcards';
-        break;
-      case 'challenge':
-        window.location.href = '/challenges';
-        break;
-      case 'chat':
-        window.location.href = '/tutor';
-        break;
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-background">
@@ -42,7 +28,6 @@ export default function Layout() {
           <div className="font-bold text-xl text-primary">📚 CodeTutor</div>
           
           <div className="flex items-center gap-4">
-            <SearchBar onResultSelect={handleSearchResult} />
             <LanguageSelector />
             <ThemeToggle />
           </div>

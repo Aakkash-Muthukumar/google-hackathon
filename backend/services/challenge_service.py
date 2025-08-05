@@ -71,7 +71,7 @@ def update_challenge_completion_status(challenges: List[Dict[str, Any]], user_id
         })
         completed_challenge_ids = set(user_progress.get('completed_challenges', []))
         
-        # Update each challenge's completed status
+        # Update each challenge's completed status based on user progress
         for challenge in challenges:
             challenge['completed'] = challenge.get('id') in completed_challenge_ids
         
@@ -130,14 +130,14 @@ def generate_challenge(difficulty: str = "easy", topic: str = "algorithms", lang
     
     prompt = f"""
 Generate a coding challenge with the following specifications:
-- Difficulty: {difficulty}
-- Topic: {topic}
-- Language: {language}
+- **Difficulty:** {difficulty}
+- **Topic:** {topic}
+- **Language:** {language}
 
-IMPORTANT: Do NOT generate any of these existing challenges or anything too similar:
+**IMPORTANT:** Do NOT generate any of these existing challenges or anything too similar:
 {', '.join(existing_titles)}
 
-Especially avoid these types of challenges that already exist:
+**Especially avoid these types of challenges that already exist:**
 {', '.join(similar_challenges)}
 
 Generate a completely different and unique challenge. Be creative and avoid common patterns like:
@@ -146,7 +146,7 @@ Generate a completely different and unique challenge. Be creative and avoid comm
 - Basic sorting algorithms
 - Simple string manipulations
 
-Instead, consider challenges like:
+**Instead, consider challenges like:**
 - Array manipulation with specific conditions
 - Mathematical sequences or patterns
 - Data structure operations
@@ -156,14 +156,15 @@ Instead, consider challenges like:
 - Recursive patterns
 - Optimization problems
 
-CRITICAL: The template should ONLY contain:
+**CRITICAL:** The template should ONLY contain:
 - Function signature with proper parameters
 - Docstring explaining the function
 - Placeholder comment like "# Your code here" or "pass"
 - NO complete solution or implementation
 - NO working code - only the function signature and docstring
 
-Return a JSON object with the following structure:
+**Return a JSON object with the following structure:**
+```json
 {{
     "title": "Challenge title",
     "description": "Detailed problem description",
@@ -173,7 +174,7 @@ Return a JSON object with the following structure:
     "xpReward": <number between 30-100 based on difficulty>,
     "input_format": "Description of input format",
     "output_format": "Description of output format",
-    "template": "def function_name(params):\n    \"\"\"Docstring\"\"\"\n    # Your code here\n    pass",
+    "template": "def function_name(params):\\n    \"\"\"Docstring\"\"\"\\n    # Your code here\\n    pass",
     "examples": [
         {{
             "input": <input value>,
@@ -181,6 +182,7 @@ Return a JSON object with the following structure:
         }}
     ]
 }}
+```
 
 Make sure the challenge is appropriate for the specified difficulty level and includes clear examples.
 """
@@ -468,23 +470,25 @@ def get_solution(problem: Dict[str, Any]) -> str:
     prompt = f"""
 You are an expert programming tutor. Provide a clean, idiomatic, and CORRECT solution in {problem['language']} for the following problem.
 
-CRITICAL REQUIREMENTS:
+**CRITICAL REQUIREMENTS:**
 - The solution MUST pass all test cases exactly
 - The solution MUST be complete and runnable
 - The solution MUST handle edge cases properly
 - The solution MUST be efficient and well-structured
 - The solution MUST return the exact output format specified
 
-PROBLEM DETAILS:
-Title: {problem['title']}
-Description: {problem['description']}
-Input Format: {problem['input_format']}
-Output Format: {problem['output_format']}
+**PROBLEM DETAILS:**
+- **Title:** {problem['title']}
+- **Description:** {problem['description']}
+- **Input Format:** {problem['input_format']}
+- **Output Format:** {problem['output_format']}
 
-TEST CASES:
+**TEST CASES:**
+```json
 {json.dumps(problem.get('examples', []), indent=2)}
+```
 
-INSTRUCTIONS:
+**INSTRUCTIONS:**
 1. Analyze the problem carefully and understand the requirements
 2. Write a complete, working solution that handles ALL test cases
 3. Ensure the solution returns the EXACT expected output format (string, int, list, etc.)
@@ -493,15 +497,15 @@ INSTRUCTIONS:
 6. Make sure the solution is efficient and readable
 7. Double-check that your solution matches the expected outputs exactly
 
-RESPONSE FORMAT:
+**RESPONSE FORMAT:**
 ```{problem['language']}
 # Complete solution code here
 ```
 
-EXPLANATION:
+**EXPLANATION:**
 Provide a clear explanation of your approach, why it works, and how it handles the test cases.
 
-IMPORTANT: Your solution must be able to pass verification against ALL the test cases provided. Pay special attention to the exact output format expected.
+**IMPORTANT:** Your solution must be able to pass verification against ALL the test cases provided. Pay special attention to the exact output format expected.
 """
     
     try:
@@ -518,17 +522,21 @@ def get_hints(problem: Dict[str, Any]) -> str:
     prompt = f"""
 You are an expert programming tutor. Provide 3 progressive hints for solving the following problem. Do not give away the full solution.
 
-Title: {problem['title']}
-Description: {problem['description']}
-Input Format: {problem['input_format']}
-Output Format: {problem['output_format']}
+**PROBLEM DETAILS:**
+- **Title:** {problem['title']}
+- **Description:** {problem['description']}
+- **Input Format:** {problem['input_format']}
+- **Output Format:** {problem['output_format']}
 
 Provide exactly 3 progressive hints that guide the user toward the solution without revealing it completely.
 
-IMPORTANT: Format your response exactly like this:
-HINT 1: [First hint here]
-HINT 2: [Second hint here]
-HINT 3: [Third hint here]
+**IMPORTANT:** Format your response exactly like this:
+
+**HINT 1:** [First hint here]
+
+**HINT 2:** [Second hint here]
+
+**HINT 3:** [Third hint here]
 
 Make sure each hint builds upon the previous one and helps the user understand the problem better.
 """
@@ -546,12 +554,20 @@ def get_congrats_feedback(challenge_title: str, user_code: str) -> str:
     prompt = f"""
 You are an expert coding tutor. The user has just solved the following challenge:
 
-Title: {challenge_title}
+**Challenge Title:** {challenge_title}
 
-Here is their solution:
+**User's Solution:**
+```python
 {user_code}
+```
 
 Congratulate the user, and provide a brief, constructive review of their code style, efficiency, and any suggestions for improvement. Be positive and encouraging!
+
+**Format your response with:**
+- **Congratulations** section
+- **Code Review** section with specific feedback
+- **Suggestions** for improvement (if any)
+- **Overall Assessment** of their solution
 """
     
     try:
@@ -588,17 +604,14 @@ def update_user_progress(user_id: str, challenge_id: int, xp_earned: int):
 
 def mark_challenge_completed(challenge_id: int) -> bool:
     """
-    Mark a challenge as completed in the challenges.json file.
+    Mark a challenge as completed in the user's progress.
+    Note: We don't modify the challenges.json file anymore, only the user's progress.
     """
     try:
-        challenges = load_challenges()
-        challenge = next((c for c in challenges if c["id"] == challenge_id), None)
-        
-        if challenge:
-            challenge['completed'] = True
-            save_challenges(challenges)
-            return True
-        return False
+        # This function is now deprecated in favor of update_user_progress
+        # which handles both XP and completion tracking
+        print(f"Challenge {challenge_id} completion is now handled by update_user_progress")
+        return True
     except Exception as e:
         print(f"Error marking challenge as completed: {e}")
         return False

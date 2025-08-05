@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Play, Eye, Lightbulb, Trophy, Code, AlertCircle, Plus } from 'lucide-react';
+import { Play, Eye, Lightbulb, Trophy, Code, AlertCircle, Plus, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -128,7 +128,8 @@ export default function Challenges() {
           input: Array.isArray(ex.input) ? JSON.stringify(ex.input) : String(ex.input || ''),
           expectedOutput: String(ex.output || '')
         })) : [],
-        solution: undefined
+        solution: undefined,
+        completed: Boolean(challenge.completed)
       }));
       
       console.log('Mapped challenges:', mappedChallenges);
@@ -676,18 +677,32 @@ export default function Challenges() {
           {challenges.map((challenge) => (
             <Card 
               key={challenge.id} 
-              className="bg-gradient-card shadow-card hover:shadow-glow hover:scale-105 transition-all duration-300 cursor-pointer"
+              className={`bg-gradient-card shadow-card hover:shadow-glow hover:scale-105 transition-all duration-300 cursor-pointer ${
+                Boolean(challenge.completed) ? 'border-success/30 bg-success/5' : ''
+              }`}
               onClick={() => setSelectedChallenge(challenge)}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center justify-between mb-2">
-                    <CardTitle className="text-lg font-semibold">
-                      {challenge.title}
-                    </CardTitle>
-                    <Badge className={getDifficultyColor(challenge.difficulty)}>
-                      {challenge.difficulty}
-                    </Badge>
+                  <div className="flex items-center justify-between mb-2 w-full">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg font-semibold">
+                        {challenge.title}
+                      </CardTitle>
+                      {Boolean(challenge.completed) && (
+                        <CheckCircle className="h-5 w-5 text-success" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {Boolean(challenge.completed) && (
+                        <Badge variant="outline" className="text-success border-success text-xs">
+                          Completed
+                        </Badge>
+                      )}
+                      <Badge className={getDifficultyColor(challenge.difficulty)}>
+                        {challenge.difficulty}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -709,11 +724,20 @@ export default function Challenges() {
                   </div>
                 <Button
                   className="w-full"
-                  variant="default"
+                  variant={Boolean(challenge.completed) ? "outline" : "default"}
                   onClick={() => handleStartChallenge(challenge)}
                 >
-                  <Play className="mr-2 h-4 w-4" />
-                  Start Challenge
+                  {Boolean(challenge.completed) ? (
+                    <>
+                      <CheckCircle className="mr-3 h-4 w-4" />
+                      Completed
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-4 w-4" />
+                      Start Challenge
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>

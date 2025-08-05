@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLanguage } from '@/hooks/useLanguage';
 import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessage {
   id: string;
@@ -114,8 +115,8 @@ export function FloatingAssistant() {
     const scrollElement = scrollRef.current;
     if (scrollElement) {
       scrollElement.addEventListener('scroll', handleScroll);
-      scrollElement.addEventListener('wheel', handleWheel);
-      scrollElement.addEventListener('touchmove', handleTouchMove);
+      scrollElement.addEventListener('wheel', handleWheel, { passive: true });
+      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: true });
       scrollElement.addEventListener('keydown', handleKeyDown);
       
       return () => {
@@ -335,8 +336,8 @@ export function FloatingAssistant() {
                              }`}
                            >
                              {msg.sender === 'assistant' ? (
-                               <div className="whitespace-pre-wrap text-sm">
-                                 {msg.content}
+                               <div className="text-sm prose prose-sm max-w-none">
+                                 <ReactMarkdown>{msg.content}</ReactMarkdown>
                                </div>
                              ) : (
                                <p className="whitespace-pre-wrap">{msg.content}</p>

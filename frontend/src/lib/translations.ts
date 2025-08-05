@@ -31,8 +31,7 @@ export const translations = {
       streak: "Day Streak",
       level: "Level",
       xp: "XP",
-      quote: "Today's Motivation",
-      dailyChallenge: "Daily Challenge"
+      quote: "Today's Motivation"
     },
     flashcards: {
       title: "Programming Flashcards",
@@ -124,8 +123,7 @@ export const translations = {
       streak: "Días Seguidos",
       level: "Nivel",
       xp: "XP",
-      quote: "Motivación de Hoy",
-      dailyChallenge: "Desafío Diario"
+      quote: "Motivación de Hoy"
     },
     // ... add more Spanish translations
   },

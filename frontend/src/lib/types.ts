@@ -35,7 +35,7 @@ export interface Challenge {
   testCases: TestCase[];
   solution?: string;
   hints: string[];
-  completed: boolean;
+  completed?: boolean;
   template: string;
 }
 

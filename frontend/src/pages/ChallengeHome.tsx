@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Target, Clock, Star } from 'lucide-react';
+import { Trophy, Target, Clock, Star, CheckCircle } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { useLanguage } from '@/hooks/useLanguage';
 import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
@@ -260,7 +260,12 @@ const ChallengeHome: React.FC = () => {
                       >
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="font-semibold">{challenge.title}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold">{challenge.title}</h3>
+                              {Boolean(challenge.completed) && (
+                                <CheckCircle className="h-4 w-4 text-success" />
+                              )}
+                            </div>
                             <Badge className={getDifficultyColor(challenge.difficulty)}>
                               {challenge.difficulty}
                             </Badge>
