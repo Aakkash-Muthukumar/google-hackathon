@@ -2,7 +2,6 @@ import json
 import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
-from services.ai_service import ask_gemma
 
 class CourseService:
     def __init__(self):
@@ -167,42 +166,24 @@ class CourseService:
             if lesson['id'] == lesson_id:
                                 # Generate content if it doesn't exist
                 if not lesson.get('content'):
-                    ai_prompt = f"""
-                    Create comprehensive lesson content for any course.
-                    
-                    Course: {course['title']}
-                    Subject Area: {course.get('topics', ['General'])}
-                    Difficulty: {course['difficulty']}
-                    
-                    Lesson: {lesson['title']}
-                    Description: {lesson['description']}
-                    
-                    IMPORTANT: Adapt the content to the subject matter. If this is a programming course, include code examples. 
-                    If this is an art course, focus on techniques, examples, and visual descriptions. 
-                    If this is a math course, include formulas, calculations, and step-by-step solutions.
-                    If this is a science course, include explanations, experiments, and scientific concepts.
-                    
-                    Please provide:
-                    1. Detailed lesson content with explanations appropriate to the subject
-                    2. Relevant examples (code, art techniques, math problems, scientific concepts, etc.)
-                    3. Practice exercises or activities
-                    4. Key takeaways
-                    
-                    Format the response in a structured way that's easy to follow.
-                    Use appropriate terminology and examples for the subject matter.
-                    """
-                    
                     try:
-                        # Collect AI response
-                        ai_response = ""
-                        for chunk in ask_gemma(ai_prompt):
-                            ai_response += chunk
+                        # Import the AI service function
+                        from services.ai_service import generate_lesson_content
+                        
+                        # Generate content using the proper function
+                        ai_response = generate_lesson_content(
+                            lesson_title=lesson['title'],
+                            lesson_description=lesson['description'],
+                            subject_area=course.get('topics', ['General'])[0] if course.get('topics') else 'general',
+                            difficulty=course['difficulty']
+                        )
                         lesson['content'] = ai_response
                         lesson['updatedAt'] = datetime.now().isoformat()
                         
                         self.update_course(course_id, course)
                         return course
                     except Exception as e:
+                        print(f"Error generating lesson content: {e}")
                         return None
                 else:
                     return course
@@ -218,36 +199,24 @@ class CourseService:
         for lesson in course['lessons']:
             if lesson['id'] == lesson_id:
                 # Generate new content
-                ai_prompt = f"""
-                Create comprehensive lesson content for a programming course.
-                
-                Course: {course['title']}
-                Language: {course.get('language', 'python')}
-                Difficulty: {course['difficulty']}
-                
-                Lesson: {lesson['title']}
-                Description: {lesson['description']}
-                
-                Please provide:
-                1. Detailed lesson content with explanations
-                2. Code examples
-                3. Practice exercises
-                4. Key takeaways
-                
-                Format the response in a structured way that's easy to follow.
-                """
-                
                 try:
-                    # Collect AI response
-                    ai_response = ""
-                    for chunk in ask_gemma(ai_prompt):
-                        ai_response += chunk
+                    # Import the AI service function
+                    from services.ai_service import generate_lesson_content
+                    
+                    # Generate new content using the proper function
+                    ai_response = generate_lesson_content(
+                        lesson_title=lesson['title'],
+                        lesson_description=lesson['description'],
+                        subject_area=course.get('topics', ['General'])[0] if course.get('topics') else 'general',
+                        difficulty=course['difficulty']
+                    )
                     lesson['content'] = ai_response
                     lesson['updatedAt'] = datetime.now().isoformat()
                     
                     self.update_course(course_id, course)
                     return course
                 except Exception as e:
+                    print(f"Error regenerating lesson content: {e}")
                     return None
         
         return None 

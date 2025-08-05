@@ -190,35 +190,23 @@ async def generate_lesson(request: GenerateLessonRequest):
 async def generate_lesson_content_for_course(course_id: str, lesson_id: str):
     """Generate content for a specific lesson in a course"""
     try:
-        courses = load_courses()
-        course = next((c for c in courses if c.get("id") == course_id), None)
+        from services.course_service import CourseService
         
-        if not course:
-            raise HTTPException(status_code=404, detail="Course not found")
+        course_service = CourseService()
+        updated_course = course_service.generate_lesson_content(course_id, lesson_id)
         
-        lesson = next((l for l in course.get("lessons", []) if l.get("id") == lesson_id), None)
+        if not updated_course:
+            raise HTTPException(status_code=404, detail="Course or lesson not found")
+        
+        # Find the updated lesson
+        lesson = next((l for l in updated_course.get("lessons", []) if l.get("id") == lesson_id), None)
         
         if not lesson:
             raise HTTPException(status_code=404, detail="Lesson not found")
         
-        # Generate content using AI
-        content = generate_lesson_content(
-            lesson_title=lesson["title"],
-            lesson_description=lesson["description"],
-            programming_language=course.get("language", "python"),  # Default to python if no language specified
-            difficulty=course["difficulty"]
-        )
-        
-        # Update lesson with generated content
-        lesson["content"] = content
-        lesson["updatedAt"] = datetime.datetime.now().isoformat()
-        
-        # Save updated course
-        save_courses(courses)
-        
         return {
             "success": True,
-            "content": content,
+            "content": lesson.get("content", ""),
             "lesson": lesson
         }
     except HTTPException:

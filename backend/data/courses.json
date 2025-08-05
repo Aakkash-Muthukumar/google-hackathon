@@ -220,5 +220,59 @@
     "thumbnail": null,
     "createdAt": "2025-08-03T21:23:10.875522",
     "updatedAt": "2025-08-03 21:26:34.313446"
+  },
+  {
+    "id": "4e92ebe2-d2fc-4497-8cb6-3a66c6374bf9",
+    "title": "Tamil",
+    "description": "A comprehensive course on Tamil",
+    "difficulty": "beginner",
+    "language": null,
+    "topics": [],
+    "estimatedHours": 10,
+    "lessons": [
+      {
+        "id": "4e92ebe2-d2fc-4497-8cb6-3a66c6374bf9_lesson_1",
+        "title": "Introduction to Tamil",
+        "description": "Get started with the basics of Tamil",
+        "order": 1,
+        "xpReward": 100,
+        "content": "# Introduction to Tamil: A Beginner's Guide\n\n## Lesson Description: Get Started with the Basics of Tamil\n\nWelcome to the introductory lesson on the Tamil language! This lesson is designed for absolute beginners and will provide you with a foundational understanding of Tamil \u2013 its history, basic concepts, and how to start learning. We'll cover the alphabet, pronunciation, and some simple phrases.  Don't worry if it seems daunting; we'll break it down step-by-step.\n\n---\n\n## PART 1 (0-25%): Introduction and Basic Concepts\n\n### What We'll Cover\n\nIn this first part, we'll introduce you to Tamil \u2013 what it is, where it's spoken, and why it's a fascinating language. We'll also cover the fundamental building blocks of Tamil: the alphabet (letters), pronunciation basics, and a few essential greetings. Think of this as laying the groundwork for your Tamil learning journey.\n\n### What is Tamil?\n\nTamil is a Dravidian language primarily spoken in Tamil Nadu, a state in southern India, and also by significant communities in Sri Lanka, Singapore, Malaysia, and the diaspora worldwide. It's one of the oldest living languages in the world, with a history spanning over 2000 years.  It has a rich literary tradition and is considered a classical language by the Government of India.\n\n### The Tamil Alphabet (Alphabet Basics)\n\nThe Tamil alphabet consists of 12\u8f85\u97f3 (consonants) and 18\u5143\u97f3 (vowels).  It's written from left to right.  Unlike the Roman alphabet, Tamil letters represent sounds, not individual letters like in English.  The script is beautiful and visually distinct.\n\nHere's a simplified overview of the consonants and vowels.  Don't worry about memorizing them all immediately! We'll gradually introduce them.\n\n*   **Consonants (\u8f85\u97f3):**  These are the building blocks of words.  Some are similar to English sounds, while others are unique.\n*   **Vowels (\u5143\u97f3):** These are the core sounds that vowels form with consonants to create syllables.\n\n### Pronunciation Basics\n\nTamil pronunciation can be tricky for English speakers, but it's not impossible!  Here are a few key points:\n\n*   **Emphasis:**  Tamil words are generally stressed on the last syllable.\n*   **Tones:** Tamil doesn't have tonal variations like Mandarin Chinese.\n*   **Retroflex Consonants:**  These are consonants pronounced with the tongue curled back.  They are important for distinguishing words.\n\n### Simple Greetings\n\nLet's learn a few basic greetings to get you started:\n\n*   **Vanakkam (\u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd):**  This is the most common greeting and means \"Hello\" or \"Greetings.\" It's respectful and appropriate in most situations.\n*   **Ungal Oru Maatram (\u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b92\u0bb0\u0bc1 \u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0bae\u0bcd):** This translates to \"How are you?\"\n*   **Nalla Irukkiren (\u0ba8\u0bb2\u0bcd\u0bb2\u0bbe \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bbf\u0bb1\u0bc7\u0ba9\u0bcd):** This means \"I am fine.\"\n\n### Example\n\nLet's take the greeting \"Vanakkam.\"  It's a single word, but it represents a whole concept of respect and welcome.  It's a great starting point to appreciate the richness of the language.\n\n## \ud83c\udfaf 25% Content Complete\n\n---\n\n## PART 2 (25-50%): Detailed Explanation\n\n### Deeper Dive into the Alphabet\n\nLet's explore the Tamil alphabet in more detail.  Each consonant has a basic form and variations depending on its position in a word (beginning, middle, or end).  The vowels are often combined with consonants to form syllables.\n\nHere's a table showing some of the key consonants and their approximate English equivalents.  Remember, these are *approximations* \u2013 the sounds are not always identical.\n\n| Tamil Letter | Approximate English Equivalent |\n|---|---|\n| \u0b85 (a) |  \"a\" as in \"father\" |\n| \u0b87 (i) | \"i\" as in \"machine\" |\n| \u0b89 (u) | \"u\" as in \"put\" |\n| \u0b8e (e) | \"e\" as in \"bed\" |\n| \u0b92 (a with a dot) | \"a\" as in \"car\" |\n| \u0b95 (ka) | \"k\" as in \"kite\" |\n| \u0b9a (sa) | \"s\" as in \"sun\" |\n| \u0b9f (ta) | \"t\" as in \"top\" |\n| \u0ba4 (tha) | \"th\" as in \"thin\" |\n| \u0baa (pa) | \"p\" as in \"pen\" |\n| \u0bae (ma) | \"m\" as in \"man\" |\n| \u0ba8 (na) | \"n\" as in \"no\" |\n\n**Important Note:**  The dots above some letters change their pronunciation.  For example, '\u0b92' (a with a dot) is pronounced differently from '\u0b85' (a without a dot).\n\n### Syllable Formation\n\nTamil syllables are generally structured as consonant-vowel (CV) or consonant-vowel-consonant (CVC).  This is a fundamental aspect of the language's phonology.\n\nFor example:\n\n*   **ka** (\u0b95) -  A single syllable.\n*   **kuta** (\u0b95\u0bc1\u0ba4) -  A consonant-vowel-consonant syllable.\n\n###  A Simple Sentence\n\nLet's try constructing a simple sentence:\n\n*   **Naan vanakkam irukiren.** (\u0ba8\u0bbe\u0ba9\u0bcd \u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bbf\u0bb1\u0bc7\u0ba9\u0bcd.)\n    *   **Naan** (\u0ba8\u0bbe\u0ba9\u0bcd) - I\n    *   **Vanakkam** (\u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd) - Greetings/Hello\n    *   **Irukiren** (\u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bbf\u0bb1\u0bc7\u0ba9\u0bcd) - I am (to be)\n\nSo, the sentence translates to \"I am greeting you\" or \"I greet you.\"\n\n### Step-by-Step Breakdown\n\n1.  **Identify the words:**  Break down the sentence into individual words.\n2.  **Recognize the meaning:**  Understand the meaning of each word.\n3.  **Combine the words:**  Put the words together in the correct order.\n\n## \ud83c\udfaf 50% Content Complete\n\n---\n\n## PART 3 (50-75%): Advanced Examples and Practice\n\n### More Complex Phrases\n\nLet's learn some more useful phrases:\n\n*   **En peyar... (\u0b8e\u0ba9\u0bcd \u0baa\u0bc6\u0baf\u0bb0\u0bcd...)** - My name is... (followed by your name)\n*   **Anda varuven (\u0b85\u0ba8\u0bcd\u0ba4 \u0bb5\u0bb0\u0bc1\u0bb5\u0bc7\u0ba9\u0bcd)** - I will come.\n*   **Theri (\u0ba4\u0bc6\u0bb0\u0bbf)** - Thank you.\n*   **Polakken (\u0baa\u0bcblakken)** - You're welcome.\n*   **Enakku... illa (\u0b8e\u0ba9\u0b95\u0bcd\u0b95\u0bc1... \u0b87\u0bb2\u0bcd\u0bb2)** - I don't have... (followed by the object)\n\n###  Example Conversation\n\nLet's create a short conversation:\n\n**Person A:** Vanakkam! Ungal oru maatram? (\u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd! \u0b89\u0b99\u0bcd\u0b95\u0bb3\u0bcd \u0b92\u0bb0\u0bc1 \u0bae\u0bbe\u0bb1\u0bcd\u0bb1\u0bae\u0bcd?) - Hello! How are you?\n**Person B:** Vanakkam! Nalla irukkiren. Unakku theriyuma? (\u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd! \u0ba8\u0bb2\u0bcd\u0bb2\u0bbe \u0b87\u0bb0\u0bc1\u0b95\u0bcd\u0b95\u0bbf\u0bb1\u0bc7\u0ba9\u0bcd. \u0b8e\u0ba9\u0b95\u0bcd\u0b95\u0bc1 \u0ba4\u0bc6\u0bb0\u0bbf\u0baf\u0bc1\u0bae\u0bbe?) - Hello! I am fine. Do you know?\n**Person A:**  En peyar... (My name is...)  Theri. (Thank you.) (followed by your name)\n**Person B:** Polakken. (You're welcome.)\n\n###  Practical Scenarios\n\n*   **Introducing yourself:**  \"Vanakkam! En peyar [your name].  Theri.\"\n*   **Asking for directions:**  \"Theri, [direction] pogalaamka?\" (\u0ba4\u0bc6\u0bb0\u0bbf, [direction] \u0baa\u0bcb\u0b95\u0bb2\u0bbe\u0bae\u0bbe?) - \"Excuse me, can I go to [direction]?\"\n*   **Expressing gratitude:** \"Theri!\" (Thank you!)\n\n###  Common Use Cases\n\nThese phrases are useful for basic interactions \u2013 greetings, introductions, and expressing gratitude. They are a great starting point for building conversational skills.\n\n## \ud83c\udfaf 75% Content Complete\n\n---\n\n## PART 4 (75-100%): Exercises and Summary\n\n### Exercises\n\n1.  **Translate:** Translate the following sentences into Tamil:\n    *   \"I am going home.\"\n    *   \"What is your name?\"\n    *   \"I don't understand.\"\n2.  **Construct a sentence:** Using the vocabulary learned, create a sentence about your favorite food.\n3.  **Pronunciation Practice:** Find audio examples of the Tamil alphabet and practice pronouncing the letters and syllables.\n\n### Key Takeaways\n\n*   Tamil is a beautiful and ancient language with a rich cultural heritage.\n*   The Tamil alphabet is unique and represents sounds, not individual letters.\n*   Syllable formation is crucial in Tamil.\n*   Basic greetings and phrases are essential for starting conversations.\n\n### Common Mistakes to Avoid\n\n*   **Incorrect Pronunciation:** Pay attention to the retroflex consonants and vowel combinations.\n*   **Incorrect Word Order:** Tamil word order can differ from English.\n*   **Ignoring the Dots:** The dots above vowels change their pronunciation.\n\n### Further Reading\n\n*   **Apps:** Memrise, Duolingo (offers a Tamil course)\n*   **Websites:** TamilOnline, LearnTamil.in\n*   **Books:** \"A Comprehensive Grammar of Modern Tamil\" by David Shiel\n\n## \ud83c\udfaf 100% Content Complete\n\n\n\n",
+        "completed": false,
+        "progress": 0,
+        "createdAt": "2025-08-04T01:39:10.082833",
+        "updatedAt": "2025-08-04T01:46:35.758716"
+      },
+      {
+        "id": "4e92ebe2-d2fc-4497-8cb6-3a66c6374bf9_lesson_2",
+        "title": "Tamil Fundamentals",
+        "description": "Learn the core concepts and principles",
+        "order": 2,
+        "xpReward": 150,
+        "content": "",
+        "completed": false,
+        "progress": 0,
+        "createdAt": "2025-08-04T01:39:10.082833",
+        "updatedAt": "2025-08-04T01:39:10.082833"
+      },
+      {
+        "id": "4e92ebe2-d2fc-4497-8cb6-3a66c6374bf9_lesson_3",
+        "title": "Advanced Tamil",
+        "description": "Master advanced techniques and best practices",
+        "order": 3,
+        "xpReward": 200,
+        "content": "",
+        "completed": false,
+        "progress": 0,
+        "createdAt": "2025-08-04T01:39:10.082833",
+        "updatedAt": "2025-08-04T01:39:10.082833"
+      }
+    ],
+    "progress": 0,
+    "totalXP": 450,
+    "dailyStreak": 0,
+    "completed": false,
+    "thumbnail": null,
+    "createdAt": "2025-08-04T01:39:10.082833",
+    "updatedAt": "2025-08-04T01:46:35.772642"
   }
 ]
