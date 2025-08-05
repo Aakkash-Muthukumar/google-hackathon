@@ -169,4 +169,36 @@ export const userAPI = {
     method: 'PUT',
     body: JSON.stringify(data),
   }),
+};
+
+// Chat API
+export const chatAPI = {
+  getAll: () => apiRequest(API_ENDPOINTS.CHATS),
+  
+  getById: (id: string) => apiRequest(`${API_ENDPOINTS.CHATS}/${id}`),
+  
+  create: (data: Record<string, unknown>) => apiRequest(API_ENDPOINTS.CHATS, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
+  update: (id: string, data: Record<string, unknown>) => apiRequest(`${API_ENDPOINTS.CHATS}/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  
+  delete: (id: string) => apiRequest(`${API_ENDPOINTS.CHATS}/${id}`, {
+    method: 'DELETE',
+  }),
+  
+  saveAll: (chats: Record<string, unknown>[]) => apiRequest(`${API_ENDPOINTS.CHATS}/bulk`, {
+    method: 'POST',
+    body: JSON.stringify(chats),
+  }),
+  
+  setCurrentChat: (id: string) => apiRequest(`${API_ENDPOINTS.CHATS}/current/${id}`, {
+    method: 'POST',
+  }),
+  
+  getCurrentChat: () => apiRequest(`${API_ENDPOINTS.CHATS}/current/id`),
 }; 

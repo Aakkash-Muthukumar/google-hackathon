@@ -15,7 +15,7 @@ export function ExportImport() {
         user: storage.getUser(),
         flashcards: storage.getFlashCards(),
         challenges: storage.getChallenges(),
-        chats: storage.getChats(),
+        chats: storage.getChatsSync(),
         progress: storage.getProgress(),
         exportDate: new Date().toISOString(),
         version: '1.0'
@@ -64,7 +64,7 @@ export function ExportImport() {
         storage.saveUser(data.user);
         if (data.flashcards) storage.saveFlashCards(data.flashcards);
         if (data.challenges) storage.saveChallenges(data.challenges);
-        if (data.chats) storage.saveChats(data.chats);
+        if (data.chats) storage.saveChatsSync(data.chats);
         if (data.progress) storage.saveProgress(data.progress);
 
         toast({

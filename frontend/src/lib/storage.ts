@@ -1,4 +1,5 @@
 import { User, FlashCard, Challenge, ChatMessage, Progress } from './types';
+import { chatAPI } from './api';
 
 class LocalStorage {
   private getItem<T>(key: string, defaultValue: T): T {
@@ -57,21 +58,56 @@ class LocalStorage {
     this.setItem('challenges', challenges);
   }
 
-  // Multi-chat support
-  getChats(): import('./types').ChatSession[] {
+  // Multi-chat support - now using backend storage
+  async getChats(): Promise<import('./types').ChatSession[]> {
+    try {
+      const chats = await chatAPI.getAll() as import('./types').ChatSession[];
+      return chats || [];
+    } catch (error) {
+      console.error('Failed to load chats from backend:', error);
+      // Fallback to localStorage if backend fails
+      return this.getItem('chats', []);
+    }
+  }
+
+  async saveChats(chats: import('./types').ChatSession[]): Promise<void> {
+    try {
+      await chatAPI.saveAll(chats as unknown as Record<string, unknown>[]);
+    } catch (error) {
+      console.error('Failed to save chats to backend:', error);
+      // Fallback to localStorage if backend fails
+      this.setItem('chats', chats);
+    }
+  }
+
+  // Synchronous version for backwards compatibility (uses localStorage as cache)
+  getChatsSync(): import('./types').ChatSession[] {
     return this.getItem('chats', []);
   }
 
-  saveChats(chats: import('./types').ChatSession[]): void {
+  // Fire-and-forget save to backend with localStorage cache
+  saveChatsSync(chats: import('./types').ChatSession[]): void {
+    // Immediately save to localStorage for quick access
     this.setItem('chats', chats);
+    // Save to backend in the background
+    chatAPI.saveAll(chats as unknown as Record<string, unknown>[]).catch(error => {
+      console.error('Background chat save failed:', error);
+    });
   }
 
   getCurrentChatId(): string | null {
+    // For now, keep current chat ID in localStorage for session persistence
+    // In a real app, this could be stored in user preferences on the backend
     return this.getItem('currentChatId', null);
   }
 
   setCurrentChatId(id: string): void {
+    // Store locally for session persistence
     this.setItem('currentChatId', id);
+    // Also notify backend (fire and forget)
+    chatAPI.setCurrentChat(id).catch(error => {
+      console.warn('Failed to set current chat on backend:', error);
+    });
   }
 
   // Deprecated single chat

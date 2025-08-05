@@ -222,37 +222,21 @@ export function FloatingAssistant() {
     }
   };
 
-  // Collapsible toggle button - always visible
-  const toggleButton = (
-    <Button
-      onClick={() => setIsOpen(!isOpen)}
-      size="sm"
-      className="fixed top-4 left-4 z-50 w-10 h-10 rounded-full shadow-lg bg-gradient-primary hover:scale-110 transition-all duration-200 animate-pulse-glow"
-      title={isOpen ? "Close Assistant" : "Open Assistant"}
-    >
-      {isOpen ? <X className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
-    </Button>
-  );
-
   // Chat floating button when closed
   if (!isOpen) {
     return (
-      <>
-        {toggleButton}
-        <Button
-          onClick={() => setIsOpen(true)}
-          size="lg"
-          className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-glow z-40 bg-gradient-primary hover:scale-110 transition-all duration-300 animate-bounce-subtle"
-        >
-          <MessageCircle className="w-7 h-7" />
-        </Button>
-      </>
+      <Button
+        onClick={() => setIsOpen(true)}
+        size="lg"
+        className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-glow z-40 bg-gradient-primary hover:scale-110 transition-all duration-300"
+      >
+        <MessageCircle className="w-7 h-7" />
+      </Button>
     );
   }
 
   return (
     <>
-      {toggleButton}
       <Card className={`floating-chat fixed transition-all duration-300 z-40 ${
         isMinimized 
           ? 'bottom-6 right-6 w-80 h-12 shadow-card' 
