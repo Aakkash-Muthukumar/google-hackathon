@@ -93,9 +93,23 @@ export default function Dashboard() {
   const getXPPercentage = () => {
     const currentXP = backendProgress?.total_xp || 0;
     const currentLevel = backendProgress?.level || 1;
-    const xpToNextLevel = currentLevel * 100; // Simple calculation: each level requires level * 100 XP
-    const xpInCurrentLevel = currentXP % xpToNextLevel;
-    return (xpInCurrentLevel / xpToNextLevel) * 100;
+    
+    // Calculate XP needed for current level
+    let xpForCurrentLevel = 0;
+    for (let i = 1; i < currentLevel; i++) {
+      xpForCurrentLevel += i * 100;
+    }
+    
+    // Calculate XP needed for next level
+    let xpForNextLevel = 0;
+    for (let i = 1; i <= currentLevel; i++) {
+      xpForNextLevel += i * 100;
+    }
+    
+    const xpInCurrentLevel = currentXP - xpForCurrentLevel;
+    const xpNeededForNextLevel = xpForNextLevel - xpForCurrentLevel;
+    
+    return (xpInCurrentLevel / xpNeededForNextLevel) * 100;
   };
 
   const quickAccessCards = [

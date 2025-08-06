@@ -576,31 +576,81 @@ Congratulate the user, and provide a brief, constructive review of their code st
     except Exception as e:
         return "Great job solving this challenge! Keep up the excellent work!"
 
-def update_user_progress(user_id: str, challenge_id: int, xp_earned: int):
+def update_user_progress(user_id: str, challenge_id: int, xp_earned: int, challenge_data: Dict[str, Any] = None):
     """
     Update user progress when they complete a challenge.
     """
+    from .achievement_service import update_achievement_progress, update_streak, calculate_level
+    
     progress = load_progress()
     
     if user_id not in progress:
         progress[user_id] = {
             'total_xp': 0,
             'completed_challenges': [],
-            'level': 1
+            'level': 1,
+            'streak': 0,
+            'longest_streak': 0,
+            'last_active_date': '',
+            'achievements': [],
+            'achievement_progress': {
+                'challenges_completed': 0,
+                'flashcards_learned': 0,
+                'streak_days': 0,
+                'perfect_solutions': 0,
+                'different_topics': 0,
+                'different_difficulties': 0
+            },
+            'stats': {
+                'total_challenges_completed': 0,
+                'total_flashcards_learned': 0,
+                'total_perfect_solutions': 0,
+                'total_topics_covered': 0,
+                'total_difficulties_tried': 0,
+                'average_challenge_time': 0,
+                'favorite_topic': '',
+                'favorite_difficulty': ''
+            }
         }
     
+    # Update streak first
+    user_progress = update_streak(user_id)
+    
     # Add XP
-    progress[user_id]['total_xp'] += xp_earned
+    user_progress['total_xp'] += xp_earned
     
     # Add challenge to completed list if not already there
-    if challenge_id not in progress[user_id]['completed_challenges']:
-        progress[user_id]['completed_challenges'].append(challenge_id)
+    if challenge_id not in user_progress['completed_challenges']:
+        user_progress['completed_challenges'].append(challenge_id)
     
-    # Calculate level (every 100 XP = 1 level)
-    progress[user_id]['level'] = (progress[user_id]['total_xp'] // 100) + 1
+    # Update achievement progress
+    additional_data = {}
+    if challenge_data:
+        additional_data = {
+            'topic': challenge_data.get('topic', ''),
+            'difficulty': challenge_data.get('difficulty', '')
+        }
     
+    achievement_result = update_achievement_progress(
+        user_id, 
+        'challenge_completed', 
+        1, 
+        additional_data
+    )
+    
+    # Recalculate level with new XP
+    user_progress['level'] = calculate_level(user_progress['total_xp'])
+    
+    # Update progress in main progress dict
+    progress[user_id] = user_progress
     save_progress(progress)
-    return progress[user_id]
+    
+    return {
+        'progress': user_progress,
+        'new_achievements': achievement_result['new_achievements'],
+        'achievement_xp_earned': achievement_result['xp_earned'],
+        'total_xp_earned': xp_earned + achievement_result['xp_earned']
+    }
 
 def mark_challenge_completed(challenge_id: int) -> bool:
     """

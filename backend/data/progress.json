@@ -6,6 +6,32 @@
       4,
       1
     ],
-    "level": 3
+    "level": 3,
+    "streak": 5,
+    "longest_streak": 7,
+    "last_active_date": "2024-01-15",
+    "achievements": [
+      "first_challenge",
+      "streak_3_days",
+      "level_3"
+    ],
+    "achievement_progress": {
+      "challenges_completed": 3,
+      "flashcards_learned": 12,
+      "streak_days": 5,
+      "perfect_solutions": 2,
+      "different_topics": 2,
+      "different_difficulties": 2
+    },
+    "stats": {
+      "total_challenges_completed": 3,
+      "total_flashcards_learned": 12,
+      "total_perfect_solutions": 2,
+      "total_topics_covered": 2,
+      "total_difficulties_tried": 2,
+      "average_challenge_time": 0,
+      "favorite_topic": "algorithms",
+      "favorite_difficulty": "easy"
+    }
   }
 }

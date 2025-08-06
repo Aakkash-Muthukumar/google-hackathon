@@ -99,9 +99,19 @@ def verify_solution(request: VerifyRequest):
         # Only consider AI verification if code is actually complete
         if is_complete_code and result.get('correct', False):
             xp_earned = challenge.get('xpReward', 50)
-            user_progress = update_user_progress(request.user_id, request.challenge_id, xp_earned)
-            result['xp_earned'] = xp_earned
-            result['user_progress'] = user_progress
+            progress_result = update_user_progress(
+                request.user_id, 
+                request.challenge_id, 
+                xp_earned,
+                {
+                    'topic': challenge.get('topic', ''),
+                    'difficulty': challenge.get('difficulty', '')
+                }
+            )
+            result['xp_earned'] = progress_result['total_xp_earned']
+            result['user_progress'] = progress_result['progress']
+            result['new_achievements'] = progress_result['new_achievements']
+            result['achievement_xp_earned'] = progress_result['achievement_xp_earned']
         else:
             # If code is incomplete, override AI result and mark as failed
             result['correct'] = False
@@ -170,6 +180,26 @@ def get_progress(request: ProgressRequest):
         return progress
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get progress: {str(e)}")
+
+@router.post("/achievements")
+def get_achievements(request: ProgressRequest):
+    """Get user achievements and progress"""
+    try:
+        from services.achievement_service import get_user_achievements
+        achievements = get_user_achievements(request.user_id)
+        return achievements
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get achievements: {str(e)}")
+
+@router.post("/level-info")
+def get_level_info(request: ProgressRequest):
+    """Get detailed level information for the user"""
+    try:
+        from services.achievement_service import get_level_up_info
+        level_info = get_level_up_info(request.user_id)
+        return level_info
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get level info: {str(e)}")
 
 @router.post("/test")
 def test_challenge_generation():

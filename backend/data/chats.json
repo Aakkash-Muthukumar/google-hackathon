@@ -1,9 +1,22 @@
 [
   {
-    "id": "1754373445549",
-    "name": "Test chat 1",
-    "messages": [],
-    "createdAt": "2025-08-05T05:57:25.549000+00:00",
-    "updatedAt": "2025-08-05T05:58:01.742Z"
+    "id": "1754437744597",
+    "name": "Untitled Chat",
+    "messages": [
+      {
+        "id": "1754437758753",
+        "content": "Can you explain object-oriented programming concepts?",
+        "sender": "user",
+        "timestamp": "2025-08-05T23:49:18.753Z"
+      },
+      {
+        "id": "1754437758754",
+        "content": "Object-oriented programming (OOP) is a programming paradigm centered around **\"objects\"** which contain data, in the form of **attributes**, and code to manipulate that data, in the form of **methods**. It's a way to structure software design so that it can be more organized, reusable, and easier to maintain.\n\nHere are the core concepts:\n\n*   **Objects:**  A fundamental building block. An object is an instance of a class. Think of it as a real-world entity (like a car, a person, or a bank account).\n*   **Classes:** A blueprint for creating objects. It defines the attributes and methods that objects of that class will have.\n*   **Attributes:**  Data associated with an object. These are variables that hold information about the object (e.g., a car's color, model, and speed).\n*   **Methods:** Functions associated with an object. These define the actions an object can perform (e.g., a car's `accelerate()`, `brake()`, and `turn()`).\n*   **Encapsulation:** Bundling data (attributes) and methods that operate on that data within a class. It helps protect data from accidental modification and simplifies code.\n*   **Inheritance:**  A mechanism where a new class (a subclass) can inherit attributes and methods from an existing class (a superclass). This promotes code reusability and creates a hierarchical relationship between classes.\n*   **Polymorphism:**  The ability of objects of different classes to respond to the same method call in their own way.  \"Poly\" means many, and \"morph\" means form.  This allows for flexibility and extensibility.\n\n**Example (Python):**\n\n```python\nclass Dog:  # Define a class named 'Dog'\n    def __init__(self, name, breed): # Constructor - initializes attributes\n        self.name = name   # Attribute: name\n        self.breed = breed # Attribute: breed\n\n    def bark(self):       # Method: bark\n        print(\"Woof!\")\n\n# Create objects (instances) of the Dog class\nmy_dog = Dog(\"Buddy\", \"Golden Retriever\")\nyour_dog = Dog(\"Lucy\", \"Poodle\")\n\n# Access attributes and call methods\nprint(my_dog.name)   # Output: Buddy\nmy_dog.bark()        # Output: Woof!\nprint(your_dog.breed) # Output: Poodle\n```\n\n**TLDR:** **OOP organizes code around objects that have data (attributes) and actions (methods). Key benefits are code reusability (inheritance), data protection (encapsulation), and flexibility (polymorphism).**\n",
+        "sender": "tutor",
+        "timestamp": "2025-08-05T23:49:18.753Z"
+      }
+    ],
+    "createdAt": "2025-08-05T23:49:04.597Z",
+    "updatedAt": "2025-08-05T23:51:54.273Z"
   }
 ]
