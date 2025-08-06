@@ -6,6 +6,7 @@ from routes import challenge
 from routes import flashcard
 from routes import course
 from routes import chat
+from routes import xp
 
 app = FastAPI()
 
@@ -23,6 +24,7 @@ app.include_router(challenge.router)
 app.include_router(flashcard.router)
 app.include_router(course.router)
 app.include_router(chat.router)
+app.include_router(xp.router)
 
 if __name__ == "__main__":
     import uvicorn

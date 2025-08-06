@@ -547,6 +547,82 @@ Make sure each hint builds upon the previous one and helps the user understand t
     except Exception as e:
         return f"HINT 1: Start by understanding the problem requirements.\nHINT 2: Break down the problem into smaller steps.\nHINT 3: Consider the edge cases and test your solution."
 
+def get_single_hint(problem: Dict[str, Any], hint_number: int) -> str:
+    """
+    Generate a single hint for the given problem using the AI model.
+    Returns only the requested hint number (1, 2, or 3).
+    """
+    if hint_number < 1 or hint_number > 3:
+        raise ValueError("Hint number must be 1, 2, or 3")
+    
+    # Create context-aware prompts for each hint
+    if hint_number == 1:
+        prompt = f"""
+You are an expert programming tutor. Provide the FIRST hint for solving the following problem. This should be a gentle nudge to get the user started.
+
+**PROBLEM DETAILS:**
+- **Title:** {problem['title']}
+- **Description:** {problem['description']}
+- **Input Format:** {problem['input_format']}
+- **Output Format:** {problem['output_format']}
+
+Provide ONLY the first hint that helps the user understand the problem and get started. Do not give away the solution or provide multiple hints.
+
+**IMPORTANT:** Return ONLY the hint text, no formatting or numbering.
+"""
+    elif hint_number == 2:
+        prompt = f"""
+You are an expert programming tutor. Provide the SECOND hint for solving the following problem. This should build upon the first hint and provide more specific guidance.
+
+**PROBLEM DETAILS:**
+- **Title:** {problem['title']}
+- **Description:** {problem['description']}
+- **Input Format:** {problem['input_format']}
+- **Output Format:** {problem['output_format']}
+
+Provide ONLY the second hint that gives more specific guidance toward the solution. This should be more detailed than the first hint but still not reveal the complete solution.
+
+**IMPORTANT:** Return ONLY the hint text, no formatting or numbering.
+"""
+    else:  # hint_number == 3
+        prompt = f"""
+You are an expert programming tutor. Provide the THIRD and final hint for solving the following problem. This should be the most specific hint that almost reveals the solution.
+
+**PROBLEM DETAILS:**
+- **Title:** {problem['title']}
+- **Description:** {problem['description']}
+- **Input Format:** {problem['input_format']}
+- **Output Format:** {problem['output_format']}
+
+Provide ONLY the third hint that gives very specific guidance toward the solution. This should be the most detailed hint that almost reveals the complete solution.
+
+**IMPORTANT:** Return ONLY the hint text, no formatting or numbering.
+"""
+    
+    try:
+        response = collect_ai_response(ask_gemma(prompt))
+        # Clean up the response - remove any TLDR sections and extra formatting
+        cleaned_response = response.strip()
+        
+        # Remove TLDR section if present
+        if '**TLDR:**' in cleaned_response:
+            cleaned_response = cleaned_response.split('**TLDR:**')[0].strip()
+        elif 'TLDR:' in cleaned_response:
+            cleaned_response = cleaned_response.split('TLDR:')[0].strip()
+        
+        # Remove any extra newlines and formatting
+        cleaned_response = '\n'.join(line.strip() for line in cleaned_response.split('\n') if line.strip())
+        
+        return cleaned_response
+    except Exception as e:
+        # Fallback hints
+        fallback_hints = [
+            "Start by understanding the problem requirements and what the function should return.",
+            "Break down the problem into smaller steps and consider the data structures you might need.",
+            "Consider the edge cases and test your solution with different inputs to ensure it works correctly."
+        ]
+        return fallback_hints[hint_number - 1]
+
 def get_congrats_feedback(challenge_title: str, user_code: str) -> str:
     """
     Generate congratulatory feedback when user solves a challenge.

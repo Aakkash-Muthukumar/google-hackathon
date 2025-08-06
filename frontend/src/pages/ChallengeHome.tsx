@@ -145,7 +145,7 @@ const ChallengeHome: React.FC = () => {
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Header Section */}
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold mb-4 text-primary">
           {t('challenges.title')}
         </h1>
         <p className="text-lg text-muted-foreground mb-6">

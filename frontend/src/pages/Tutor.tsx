@@ -73,6 +73,17 @@ export default function Tutor() {
     }
   }, [isLoading, scrollToBottom]);
 
+  // Auto-scroll during content updates (for streaming)
+  useEffect(() => {
+    if (messages.length > 0 && autoScrollEnabledRef.current) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === 'tutor' && lastMessage.content.length > 0) {
+        // Auto-scroll during streaming content updates
+        scrollToBottom('auto');
+      }
+    }
+  }, [messages]);
+
   // Handle scroll events to show/hide scroll button and manage auto-scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -115,9 +126,10 @@ export default function Tutor() {
 
     const scrollElement = scrollRef.current;
     if (scrollElement) {
-      scrollElement.addEventListener('scroll', handleScroll);
-      scrollElement.addEventListener('wheel', handleWheel, { passive: true });
-      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: true });
+      // Add event listeners to the scroll container
+      scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+      scrollElement.addEventListener('wheel', handleWheel, { passive: false });
+      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: false });
       scrollElement.addEventListener('keydown', handleKeyDown);
       
       return () => {
@@ -544,8 +556,8 @@ export default function Tutor() {
           </CardHeader>
           <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
             {/* Messages */}
-            <ScrollArea className="flex-1 px-6 overflow-y-auto" ref={scrollRef}>
-              <div className="space-y-4 pb-4 relative">
+                        <ScrollArea className="flex-1 px-6 overflow-y-auto">
+              <div ref={scrollRef} className="space-y-4 pb-4 relative">
                 {/* Scroll to bottom button */}
                 {showScrollButton && (
                   <Button

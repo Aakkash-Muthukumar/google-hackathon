@@ -52,6 +52,7 @@ const ChallengeWorkspace: React.FC = () => {
   const [loadingHints, setLoadingHints] = useState(false);
   const [visibleHints, setVisibleHints] = useState<number>(0);
   const [parsedHints, setParsedHints] = useState<string[]>([]);
+  const [loadingNextHint, setLoadingNextHint] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showRewardModal, setShowRewardModal] = useState(false);
@@ -187,20 +188,33 @@ const ChallengeWorkspace: React.FC = () => {
       
       const result = await response.json();
       
-      if (result.correct) {
-        const xpEarned = result.xp_earned || challenge.xpReward;
-        const achievementXp = result.achievement_xp_earned || 0;
-        const totalXp = xpEarned + achievementXp;
-        
-        let message = `🎉 Challenge completed! Earned ${totalXp} XP!`;
-        if (achievementXp > 0) {
-          message += ` (${xpEarned} + ${achievementXp} bonus from achievements)`;
-        }
-        
-        setSubmitMessage({
-          type: 'success',
-          message: message
-        });
+              if (result.correct) {
+          const xpEarned = result.xp_earned || challenge.xpReward;
+          const achievementXp = result.achievement_xp_earned || 0;
+          const perfectBonus = result.perfect_solution_bonus || 0;
+          const totalXp = xpEarned + achievementXp + perfectBonus;
+          
+          let message = `🎉 Challenge completed! Earned ${totalXp} XP!`;
+          let breakdown = [];
+          
+          if (xpEarned > 0) {
+            breakdown.push(`${xpEarned} base XP`);
+          }
+          if (achievementXp > 0) {
+            breakdown.push(`${achievementXp} achievement bonus`);
+          }
+          if (perfectBonus > 0) {
+            breakdown.push(`${perfectBonus} perfect solution bonus`);
+          }
+          
+          if (breakdown.length > 1) {
+            message += ` (${breakdown.join(' + ')})`;
+          }
+          
+          setSubmitMessage({
+            type: 'success',
+            message: message
+          });
 
         // Check for new achievements
         if (result.new_achievements && result.new_achievements.length > 0) {
@@ -292,71 +306,86 @@ const ChallengeWorkspace: React.FC = () => {
   };
 
   const loadAiHints = async () => {
-    if (!challenge || aiHints) return;
+    if (!challenge) return;
     
-    console.log('Loading hints for challenge:', challenge.id, challenge.title);
+    // Reset visible hints to 1 when loading new hints
+    setVisibleHints(1);
+    
+    // If we already have hints, don't reload
+    if (aiHints) return;
+    
     setLoadingHints(true);
     try {
-      const requestBody = { challenge_id: Number(challenge.id) };
-      console.log('Hints request body:', requestBody);
+      const requestBody = { challenge_id: Number(challenge.id), hint_number: 1 };
       
-      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/hints`), {
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/hint`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
       });
       
-      console.log('Hints response status:', response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Hints response error:', errorText);
-        throw new Error('Failed to load hints');
+        console.error('Hint response error:', errorText);
+        throw new Error('Failed to load hint');
       }
       
       const result = await response.json();
-      console.log('Hints result:', result);
       
-      // Parse the structured hints response
-      const hintsText = result.hints || 'No hints available';
-      const hintsArray = parseHints(hintsText);
-      
-      setAiHints(hintsText);
-      setParsedHints(hintsArray);
+      // Set the first hint
+      const firstHint = result.hint || 'No hint available';
+      setAiHints(firstHint);
+      setParsedHints([firstHint]);
       setVisibleHints(1); // Show first hint immediately
     } catch (error) {
-      console.error('Error loading hints:', error);
-      setAiHints('Error loading hints');
-      setParsedHints(['Error loading hints']);
+      console.error('Error loading hint:', error);
+      setAiHints('Error loading hint');
+      setParsedHints(['Error loading hint']);
       setVisibleHints(1);
     } finally {
       setLoadingHints(false);
     }
   };
 
-  const parseHints = (hintsText: string): string[] => {
-    const hints: string[] = [];
-    const lines = hintsText.split('\n');
-    
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine.startsWith('HINT 1:') || trimmedLine.startsWith('HINT 2:') || trimmedLine.startsWith('HINT 3:')) {
-        const hintContent = trimmedLine.replace(/^HINT \d+:\s*/, '');
-        hints.push(hintContent);
-      }
-    }
-    
-    // If parsing fails, return the original text as a single hint
-    if (hints.length === 0) {
-      return [hintsText];
-    }
-    
-    return hints;
-  };
 
-  const showNextHint = () => {
-    if (visibleHints < parsedHints.length) {
-      setVisibleHints(visibleHints + 1);
+
+  const showNextHint = async () => {
+    if (!challenge) return;
+    
+    const nextHintNumber = visibleHints + 1;
+    if (nextHintNumber > 3) return; // Maximum 3 hints
+    
+    setLoadingNextHint(true);
+    try {
+      const requestBody = { challenge_id: Number(challenge.id), hint_number: nextHintNumber };
+      
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/hint`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Next hint response error:', errorText);
+        throw new Error('Failed to load next hint');
+      }
+      
+      const result = await response.json();
+      
+      // Add the new hint to the array
+      const newHint = result.hint || 'No hint available';
+      const updatedHints = [...parsedHints, newHint];
+      setParsedHints(updatedHints);
+      setVisibleHints(nextHintNumber);
+      
+      // Update aiHints to include all hints for display
+      setAiHints(updatedHints.join('\n\n'));
+    } catch (error) {
+      console.error('Error loading next hint:', error);
+      toast.error('Failed to load next hint');
+    } finally {
+      setLoadingNextHint(false);
     }
   };
 
@@ -457,13 +486,16 @@ const ChallengeWorkspace: React.FC = () => {
                 onClick={() => {
                   if (!showHints) {
                     loadAiHints();
+                  } else {
+                    // Reset to show only first hint when toggling back on
+                    setVisibleHints(1);
                   }
                   setShowHints(!showHints);
                 }}
                 disabled={loadingHints}
               >
                 <Lightbulb className="h-4 w-4 mr-2" />
-                {loadingHints ? 'Loading...' : parsedHints.length > 0 ? 'Show Hints' : 'Generate AI Hints'}
+                {loadingHints ? 'Loading...' : parsedHints.length > 0 ? 'Show Hints' : 'Generate First Hint'}
               </Button>
               <Button
                 variant="outline"
@@ -506,19 +538,20 @@ const ChallengeWorkspace: React.FC = () => {
                         </div>
                       ))}
                       
-                      {visibleHints < parsedHints.length && (
+                      {visibleHints < 3 && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={showNextHint}
+                          disabled={loadingNextHint}
                           className="w-full"
                         >
                           <Lightbulb className="h-4 w-4 mr-2" />
-                          Show Next Hint ({visibleHints + 1}/{parsedHints.length})
+                          {loadingNextHint ? 'Loading...' : `Show Next Hint (${visibleHints + 1}/3)`}
                         </Button>
                       )}
                       
-                      {visibleHints === parsedHints.length && (
+                      {visibleHints === 3 && (
                         <div className="text-center py-2">
                           <p className="text-sm text-muted-foreground">All hints revealed!</p>
                         </div>

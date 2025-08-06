@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLanguage } from '@/hooks/useLanguage';
 import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessage {
   id: string;
@@ -59,6 +60,17 @@ export function FloatingAssistant() {
     }
   }, [isLoading, scrollToBottom]);
 
+  // Auto-scroll during content updates (for streaming)
+  useEffect(() => {
+    if (messages.length > 0 && autoScrollEnabledRef.current) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === 'assistant' && lastMessage.content.length > 0) {
+        // Auto-scroll during streaming content updates
+        scrollToBottom('auto');
+      }
+    }
+  }, [messages]);
+
   // Check online status
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -73,17 +85,46 @@ export function FloatingAssistant() {
 
   // Handle scroll events to show/hide scroll button and manage auto-scroll
   useEffect(() => {
+    let lastScrollTop = 0;
+    let scrollTimeout: NodeJS.Timeout;
+
     const handleScroll = () => {
       if (scrollRef.current) {
         const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
         const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+        const isUserScrolling = Math.abs(scrollTop - lastScrollTop) > 5; // Detect significant scroll movement
+        
+        // Scroll event detected
+        
         setShowScrollButton(!isAtBottom);
+        
+        // If user is scrolling up, disable auto-scroll
+        if (isUserScrolling && scrollTop < lastScrollTop && !isAtBottom) {
+          autoScrollEnabledRef.current = false;
+          setAutoScrollEnabled(false);
+        }
         
         // Re-enable auto-scroll when user scrolls to bottom
         if (isAtBottom && !autoScrollEnabledRef.current) {
           autoScrollEnabledRef.current = true;
           setAutoScrollEnabled(true);
         }
+        
+        lastScrollTop = scrollTop;
+        
+        // Clear previous timeout and set new one
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          // After scroll stops, check if we're at bottom
+          if (scrollRef.current) {
+            const { scrollTop: currentScrollTop, scrollHeight, clientHeight } = scrollRef.current;
+            const currentIsAtBottom = scrollHeight - currentScrollTop - clientHeight < 50;
+            if (currentIsAtBottom && !autoScrollEnabledRef.current) {
+              autoScrollEnabledRef.current = true;
+              setAutoScrollEnabled(true);
+            }
+          }
+        }, 150);
       }
     };
 
@@ -113,9 +154,10 @@ export function FloatingAssistant() {
 
     const scrollElement = scrollRef.current;
     if (scrollElement) {
-      scrollElement.addEventListener('scroll', handleScroll);
-      scrollElement.addEventListener('wheel', handleWheel);
-      scrollElement.addEventListener('touchmove', handleTouchMove);
+      // Add event listeners to the scroll container
+      scrollElement.addEventListener('scroll', handleScroll, { passive: true });
+      scrollElement.addEventListener('wheel', handleWheel, { passive: false });
+      scrollElement.addEventListener('touchmove', handleTouchMove, { passive: false });
       scrollElement.addEventListener('keydown', handleKeyDown);
       
       return () => {
@@ -123,6 +165,7 @@ export function FloatingAssistant() {
         scrollElement.removeEventListener('wheel', handleWheel);
         scrollElement.removeEventListener('touchmove', handleTouchMove);
         scrollElement.removeEventListener('keydown', handleKeyDown);
+        clearTimeout(scrollTimeout);
       };
     }
   }, []);
@@ -248,7 +291,7 @@ export function FloatingAssistant() {
           <CardTitle className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-primary" />
-              <span className="bg-gradient-primary bg-clip-text text-transparent font-bold">
+              <span className="text-primary font-bold">
                 AI Assistant
               </span>
             </div>
@@ -280,7 +323,11 @@ export function FloatingAssistant() {
           <CardContent className="pt-0 flex flex-col gap-4 flex-1 min-h-0">
             
             {/* Chat Messages */}
-            <div className="flex-1 min-h-0 max-h-64 overflow-y-auto" ref={scrollRef}>
+            <div 
+              className="flex-1 min-h-0 max-h-64 overflow-y-auto scroll-smooth" 
+              ref={scrollRef}
+              style={{ scrollBehavior: 'smooth' }}
+            >
               <div className="space-y-3 pb-4 px-2 relative">
                 {/* Scroll to bottom button */}
                 {showScrollButton && (
@@ -335,8 +382,8 @@ export function FloatingAssistant() {
                              }`}
                            >
                              {msg.sender === 'assistant' ? (
-                               <div className="whitespace-pre-wrap text-sm">
-                                 {msg.content}
+                               <div className="text-sm prose prose-sm max-w-none">
+                                 <ReactMarkdown>{msg.content}</ReactMarkdown>
                                </div>
                              ) : (
                                <p className="whitespace-pre-wrap">{msg.content}</p>

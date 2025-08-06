@@ -24,7 +24,7 @@ export default function Dashboard() {
   // Load progress from backend
   const loadBackendProgress = async () => {
     try {
-      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/progress`), {
+      const response = await fetch(buildApiUrl('/xp/progress'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: "default_user" })
@@ -32,7 +32,7 @@ export default function Dashboard() {
       
       if (response.ok) {
         const data = await response.json();
-        setBackendProgress(data);
+        setBackendProgress(data.progress || data);
       }
     } catch (error) {
       console.error('Error loading backend progress:', error);
@@ -83,6 +83,18 @@ export default function Dashboard() {
     loadChallenges();
   }, []);
 
+  // Refresh progress when component becomes visible (e.g., when navigating back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadBackendProgress();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -119,7 +131,7 @@ export default function Dashboard() {
       icon: BookOpen,
       link: '/flashcards',
       color: 'bg-gradient-to-br from-blue-500 to-blue-600',
-      learned: progress.flashcardsLearned
+      learned: backendProgress?.achievement_progress?.flashcards_learned || 0
     },
     {
       title: 'Challenges',
@@ -199,7 +211,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <CardTitle className="text-lg text-streak-fire">
-                  {user.streak} Day Streak
+                  {backendProgress?.streak || 0} Day Streak
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">Keep it going!</p>
               </div>
@@ -230,7 +242,7 @@ export default function Dashboard() {
                 <Zap className="w-6 h-6 text-white" />
               </div>
               <div>
-                <CardTitle className="text-lg">{user.achievements.length}</CardTitle>
+                <CardTitle className="text-lg">{backendProgress?.achievements?.length || 0}</CardTitle>
                 <p className="text-sm text-muted-foreground">Achievements</p>
               </div>
             </div>

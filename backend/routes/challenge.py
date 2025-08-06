@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from services.challenge_service import (
     load_challenges, save_challenges, generate_challenge, verify_with_model,
-    get_solution, get_hints, get_congrats_feedback, update_user_progress, get_user_progress,
+    get_solution, get_hints, get_single_hint, get_congrats_feedback, update_user_progress, get_user_progress,
     mark_challenge_completed, reset_completed_challenges
 )
 import json
@@ -12,6 +12,10 @@ router = APIRouter(prefix="/challenge")
 
 class ChallengeIdRequest(BaseModel):
     challenge_id: int
+
+class HintRequest(BaseModel):
+    challenge_id: int
+    hint_number: int  # 1, 2, or 3
 
 class VerifyRequest(BaseModel):
     challenge_id: int
@@ -99,6 +103,19 @@ def verify_solution(request: VerifyRequest):
         # Only consider AI verification if code is actually complete
         if is_complete_code and result.get('correct', False):
             xp_earned = challenge.get('xpReward', 50)
+            
+            # Check if all test cases passed (perfect solution)
+            test_results = result.get('test_results', [])
+            all_tests_passed = all(test.get('pass', False) for test in test_results)
+            
+            # Award bonus XP for perfect solution
+            if all_tests_passed:
+                from services.xp_service import award_xp_for_perfect_solution
+                perfect_xp_result = award_xp_for_perfect_solution(request.user_id, 25)
+                perfect_bonus = perfect_xp_result['total_xp_earned']
+            else:
+                perfect_bonus = 0
+            
             progress_result = update_user_progress(
                 request.user_id, 
                 request.challenge_id, 
@@ -108,7 +125,11 @@ def verify_solution(request: VerifyRequest):
                     'difficulty': challenge.get('difficulty', '')
                 }
             )
-            result['xp_earned'] = progress_result['total_xp_earned']
+            
+            total_xp_earned = progress_result['total_xp_earned'] + perfect_bonus
+            
+            result['xp_earned'] = total_xp_earned
+            result['perfect_solution_bonus'] = perfect_bonus
             result['user_progress'] = progress_result['progress']
             result['new_achievements'] = progress_result['new_achievements']
             result['achievement_xp_earned'] = progress_result['achievement_xp_earned']
@@ -148,7 +169,7 @@ def get_solution_endpoint(request: ChallengeIdRequest):
 
 @router.post("/hints")
 def get_hints_endpoint(request: ChallengeIdRequest):
-    """Get AI-generated hints for a challenge"""
+    """Get AI-generated hints for a challenge (legacy - generates all hints at once)"""
     try:
         challenges = load_challenges()
         challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
@@ -162,6 +183,26 @@ def get_hints_endpoint(request: ChallengeIdRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to get hints: {str(e)}")
+
+@router.post("/hint")
+def get_single_hint_endpoint(request: HintRequest):
+    """Get a single AI-generated hint for a challenge"""
+    try:
+        challenges = load_challenges()
+        challenge = next((c for c in challenges if c["id"] == request.challenge_id), None)
+        
+        if not challenge:
+            raise HTTPException(status_code=404, detail="Challenge not found")
+        
+        if request.hint_number < 1 or request.hint_number > 3:
+            raise HTTPException(status_code=400, detail="Hint number must be 1, 2, or 3")
+        
+        hint = get_single_hint(challenge, request.hint_number)
+        return {"hint": hint, "hint_number": request.hint_number}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get hint: {str(e)}")
 
 @router.post("/congrats")
 def congrats_feedback(request: CongratsRequest):

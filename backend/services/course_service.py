@@ -128,14 +128,20 @@ class CourseService:
         
         return False
     
-    def update_lesson_progress(self, course_id: str, lesson_id: str, progress: int, completed: Optional[bool] = None) -> Optional[Dict[str, Any]]:
+    def update_lesson_progress(self, course_id: str, lesson_id: str, progress: int, completed: Optional[bool] = None, user_id: str = "default_user") -> Optional[Dict[str, Any]]:
         """Update lesson progress and completion status"""
         course = self.get_course_by_id(course_id)
         if not course:
             return None
         
+        lesson_completed = False
+        course_completed = False
+        
         for lesson in course['lessons']:
             if lesson['id'] == lesson_id:
+                # Check if lesson was just completed
+                was_completed = lesson.get('completed', False)
+                
                 # Update progress (0-100)
                 lesson['progress'] = max(0, min(100, progress))
                 lesson['updatedAt'] = datetime.now().isoformat()
@@ -144,15 +150,42 @@ class CourseService:
                 if completed is not None:
                     lesson['completed'] = completed
                 
+                # Check if lesson was just completed
+                if not was_completed and lesson['completed']:
+                    lesson_completed = True
+                
                 # Update course progress based on average of all lesson progress
                 total_progress = sum(l.get('progress', 0) for l in course['lessons'])
                 total_lessons = len(course['lessons'])
                 course['progress'] = int(total_progress / total_lessons) if total_lessons > 0 else 0
+                
+                # Check if course was just completed
+                was_course_completed = course.get('completed', False)
                 course['completed'] = course['progress'] == 100
+                if not was_course_completed and course['completed']:
+                    course_completed = True
+                
                 course['updatedAt'] = datetime.now().isoformat()
                 
                 self.update_course(course_id, course)
-                return course
+                
+                # Award XP for lesson completion
+                if lesson_completed:
+                    from .xp_service import award_xp_for_lesson_completion
+                    xp_result = award_xp_for_lesson_completion(user_id, course_id, lesson_id, lesson.get('xpReward', 100))
+                
+                # Award XP for course completion
+                if course_completed:
+                    from .xp_service import award_xp_for_course_completion
+                    course_xp_result = award_xp_for_course_completion(user_id, course_id, 200)  # Bonus XP for course completion
+                
+                return {
+                    'course': course,
+                    'lesson_completed': lesson_completed,
+                    'course_completed': course_completed,
+                    'lesson_xp_earned': xp_result['total_xp_earned'] if lesson_completed else 0,
+                    'course_xp_earned': course_xp_result['total_xp_earned'] if course_completed else 0
+                }
         
         return None
     

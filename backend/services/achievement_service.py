@@ -188,6 +188,46 @@ ACHIEVEMENTS = {
         "xp_reward": 300
     },
     
+    # Course achievements
+    "course_learner": {
+        "id": "course_learner",
+        "title": "Course Learner",
+        "description": "Complete 3 courses",
+        "icon": "📖",
+        "type": "course",
+        "requirement": {"courses_completed": 3},
+        "xp_reward": 200
+    },
+    "course_master": {
+        "id": "course_master",
+        "title": "Course Master",
+        "description": "Complete 10 courses",
+        "icon": "📖📖",
+        "type": "course",
+        "requirement": {"courses_completed": 10},
+        "xp_reward": 500
+    },
+    
+    # Lesson achievements
+    "lesson_learner": {
+        "id": "lesson_learner",
+        "title": "Lesson Learner",
+        "description": "Complete 10 lessons",
+        "icon": "📝",
+        "type": "lesson",
+        "requirement": {"lessons_completed": 10},
+        "xp_reward": 150
+    },
+    "lesson_master": {
+        "id": "lesson_master",
+        "title": "Lesson Master",
+        "description": "Complete 50 lessons",
+        "icon": "📝📝",
+        "type": "lesson",
+        "requirement": {"lessons_completed": 50},
+        "xp_reward": 400
+    },
+    
     # Perfect solution achievements
     "perfect_solver": {
         "id": "perfect_solver",
@@ -259,14 +299,18 @@ def update_streak(user_id: str) -> Dict[str, Any]:
         progress[user_id] = {
             'total_xp': 0,
             'completed_challenges': [],
+            'completed_courses': [],
+            'completed_lessons': [],
             'level': 1,
             'streak': 0,
             'longest_streak': 0,
-            'last_active_date': date.today().isoformat(),
+            'last_active_date': datetime.now().isoformat(),
             'achievements': [],
             'achievement_progress': {
                 'challenges_completed': 0,
                 'flashcards_learned': 0,
+                'courses_completed': 0,
+                'lessons_completed': 0,
                 'streak_days': 0,
                 'perfect_solutions': 0,
                 'different_topics': 0,
@@ -275,6 +319,8 @@ def update_streak(user_id: str) -> Dict[str, Any]:
             'stats': {
                 'total_challenges_completed': 0,
                 'total_flashcards_learned': 0,
+                'total_courses_completed': 0,
+                'total_lessons_completed': 0,
                 'total_perfect_solutions': 0,
                 'total_topics_covered': 0,
                 'total_difficulties_tried': 0,
@@ -285,36 +331,48 @@ def update_streak(user_id: str) -> Dict[str, Any]:
         }
     
     user_progress = progress[user_id]
-    today = date.today().isoformat()
-    last_active = user_progress.get('last_active_date', '')
+    now = datetime.now()
+    today = now.date()
+    last_active_str = user_progress.get('last_active_date', '')
     
-    # Check if user was active yesterday
-    if last_active == today:
-        # Already updated today
-        return user_progress
-    
-    try:
-        last_active_date = datetime.strptime(last_active, '%Y-%m-%d').date()
-        yesterday = date.today() - timedelta(days=1)
-        
-        if last_active_date == yesterday:
-            # Consecutive day
-            user_progress['streak'] += 1
-        elif last_active_date < yesterday:
-            # Streak broken
-            user_progress['streak'] = 1
-        else:
-            # Same day or future date (shouldn't happen)
+    # Check if user was already active today
+    if last_active_str:
+        try:
+            last_active_date = datetime.fromisoformat(last_active_str).date()
+            if last_active_date == today:
+                # Already updated today, just return current progress
+                return user_progress
+        except (ValueError, TypeError):
             pass
-    except (ValueError, TypeError):
-        # First time or invalid date
+    
+    # Calculate streak
+    if last_active_str:
+        try:
+            last_active_date = datetime.fromisoformat(last_active_str).date()
+            yesterday = today - timedelta(days=1)
+            
+            if last_active_date == yesterday:
+                # Consecutive day - increment streak
+                user_progress['streak'] += 1
+            elif last_active_date < yesterday:
+                # Streak broken - reset to 1
+                user_progress['streak'] = 1
+            else:
+                # Same day (shouldn't happen due to check above) or future date
+                pass
+        except (ValueError, TypeError):
+            # First time or invalid date - start streak
+            user_progress['streak'] = 1
+    else:
+        # First time user - start streak
         user_progress['streak'] = 1
     
     # Update longest streak
     if user_progress['streak'] > user_progress.get('longest_streak', 0):
         user_progress['longest_streak'] = user_progress['streak']
     
-    user_progress['last_active_date'] = today
+    # Update last active date with full timestamp
+    user_progress['last_active_date'] = now.isoformat()
     user_progress['achievement_progress']['streak_days'] = user_progress['streak']
     
     save_progress(progress)
@@ -445,6 +503,25 @@ def update_achievement_progress(user_id: str, progress_type: str, value: int = 1
         achievement_progress['flashcards_learned'] += value
         stats['total_flashcards_learned'] += value
     
+    elif progress_type == 'course_completed':
+        achievement_progress['courses_completed'] += value
+        stats['total_courses_completed'] += value
+        
+        if additional_data:
+            course_id = additional_data.get('course_id', '')
+            if course_id and course_id not in user_progress.get('completed_courses', []):
+                user_progress.setdefault('completed_courses', []).append(course_id)
+    
+    elif progress_type == 'lesson_completed':
+        achievement_progress['lessons_completed'] += value
+        stats['total_lessons_completed'] += value
+        
+        if additional_data:
+            lesson_id = additional_data.get('lesson_id', '')
+            course_id = additional_data.get('course_id', '')
+            if lesson_id and lesson_id not in user_progress.get('completed_lessons', []):
+                user_progress.setdefault('completed_lessons', []).append(lesson_id)
+    
     elif progress_type == 'perfect_solution':
         achievement_progress['perfect_solutions'] += value
         stats['total_perfect_solutions'] += value
@@ -461,8 +538,71 @@ def update_achievement_progress(user_id: str, progress_type: str, value: int = 1
         'updated_progress': user_progress
     }
 
+def fix_achievement_progress(user_id: str):
+    """Fix achievement progress by recalculating based on actual data."""
+    progress = load_progress()
+    
+    if user_id not in progress:
+        return
+    
+    user_progress = progress[user_id]
+    achievement_progress = user_progress['achievement_progress']
+    stats = user_progress['stats']
+    
+    # Recalculate challenges completed based on actual completed_challenges array
+    actual_challenges_completed = len(user_progress.get('completed_challenges', []))
+    achievement_progress['challenges_completed'] = actual_challenges_completed
+    stats['total_challenges_completed'] = actual_challenges_completed
+    
+    # Recalculate flashcards learned
+    flashcards_learned = user_progress.get('achievement_progress', {}).get('flashcards_learned', 0)
+    stats['total_flashcards_learned'] = flashcards_learned
+    
+    # Recalculate perfect solutions
+    perfect_solutions = user_progress.get('achievement_progress', {}).get('perfect_solutions', 0)
+    stats['total_perfect_solutions'] = perfect_solutions
+    
+    # Recalculate topics and difficulties
+    topics_covered = set()
+    difficulties_tried = set()
+    
+    # Get all challenges to check topics and difficulties
+    from .challenge_service import load_challenges
+    challenges = load_challenges()
+    
+    for challenge_id in user_progress.get('completed_challenges', []):
+        challenge = next((c for c in challenges if c.get('id') == challenge_id), None)
+        if challenge:
+            topic = challenge.get('topic', '')
+            difficulty = challenge.get('difficulty', '')
+            if topic:
+                topics_covered.add(topic)
+            if difficulty:
+                difficulties_tried.add(difficulty)
+    
+    stats['topics_covered'] = list(topics_covered)
+    stats['total_topics_covered'] = len(topics_covered)
+    achievement_progress['different_topics'] = len(topics_covered)
+    
+    stats['difficulties_tried'] = list(difficulties_tried)
+    stats['total_difficulties_tried'] = len(difficulties_tried)
+    achievement_progress['different_difficulties'] = len(difficulties_tried)
+    
+    # Save the fixed progress
+    save_progress(progress)
+
 def get_user_achievements(user_id: str) -> Dict[str, Any]:
     """Get user's achievements and progress."""
+    progress = load_progress()
+    user_progress = progress.get(user_id, {})
+    
+    # Update streak first
+    user_progress = update_streak(user_id)
+    
+    # Fix achievement progress by recalculating based on actual data
+    fix_achievement_progress(user_id)
+    
+    # Reload progress after fixing
     progress = load_progress()
     user_progress = progress.get(user_id, {})
     

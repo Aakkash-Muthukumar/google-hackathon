@@ -39,15 +39,16 @@ def delete_flashcard(flashcard_id: int):
     save_flashcards(new_flashcards)
 
 def mark_flashcard_learned(user_id: str, flashcard_id: int) -> Dict[str, Any]:
-    """Mark a flashcard as learned and update achievement progress."""
-    from .achievement_service import update_achievement_progress
+    """Mark a flashcard as learned and award XP."""
+    from .xp_service import award_xp_for_flashcard
     
-    # Update achievement progress
-    result = update_achievement_progress(user_id, 'flashcard_learned', 1)
+    # Award XP for learning flashcard
+    result = award_xp_for_flashcard(user_id, flashcard_id, 10)
     
     return {
         'success': True,
         'new_achievements': result['new_achievements'],
-        'achievement_xp_earned': result['xp_earned'],
-        'updated_progress': result['updated_progress']
+        'achievement_xp_earned': result['achievement_xp_earned'],
+        'total_xp_earned': result['total_xp_earned'],
+        'updated_progress': result['progress']
     } 

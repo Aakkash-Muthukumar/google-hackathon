@@ -21,6 +21,16 @@ interface ShareStatsModalProps {
     total_xp?: number;
     level?: number;
     completed_challenges?: number[];
+    streak?: number;
+    achievements?: string[];
+    achievement_progress?: {
+      challenges_completed?: number;
+      flashcards_learned?: number;
+      streak_days?: number;
+      perfect_solutions?: number;
+      different_topics?: number;
+      different_difficulties?: number;
+    };
   } | null;
   challenges: Challenge[];
 }
@@ -192,7 +202,7 @@ export function ShareStatsModal({ isOpen, onClose, user, backendProgress, challe
                   </div>
                   <div>
                     <div className="text-3xl font-bold text-gray-800">
-                      {user.streak}
+                      {backendProgress?.streak || user.streak}
                     </div>
                     <div className="text-sm text-gray-600">Day Streak</div>
                   </div>
@@ -222,10 +232,43 @@ export function ShareStatsModal({ isOpen, onClose, user, backendProgress, challe
                   </div>
                   <div>
                     <div className="text-3xl font-bold text-gray-800">
-                      {user.achievements.length}
+                      {backendProgress?.achievements?.length || user.achievements.length}
                     </div>
                     <div className="text-sm text-gray-600">Achievements</div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Stats Grid */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              {/* Perfect Solutions */}
+              <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600 mb-1">
+                    {backendProgress?.achievement_progress?.perfect_solutions || 0}
+                  </div>
+                  <div className="text-xs text-gray-600">Perfect Solutions</div>
+                </div>
+              </div>
+
+              {/* Topics Covered */}
+              <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-indigo-600 mb-1">
+                    {backendProgress?.achievement_progress?.different_topics || 0}
+                  </div>
+                  <div className="text-xs text-gray-600">Topics Covered</div>
+                </div>
+              </div>
+
+              {/* Flashcards Learned */}
+              <div className="bg-white rounded-lg p-4 shadow-md border border-gray-200">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-teal-600 mb-1">
+                    {backendProgress?.achievement_progress?.flashcards_learned || 0}
+                  </div>
+                  <div className="text-xs text-gray-600">Flashcards Learned</div>
                 </div>
               </div>
             </div>

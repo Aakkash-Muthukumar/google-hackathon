@@ -115,22 +115,32 @@ export default function Flashcards() {
     setProgress(updatedProgress);
     storage.saveProgress(updatedProgress);
     
-    // Update the backend
+    // Award XP through backend
     try {
-      await fetch(buildApiUrl(`${API_ENDPOINTS.FLASHCARDS}/${currentCard.id}`), {
-        method: 'PATCH',
+      const response = await fetch(buildApiUrl('/xp/flashcard'), {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ known: true, lastReviewed: new Date() }),
+        body: JSON.stringify({ 
+          user_id: 'default_user',
+          flashcard_id: currentCard.id,
+          xp_amount: 10
+        }),
       });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('XP earned:', result.xp_earned);
+        
+        // Update user XP from backend
+        if (result.user_progress) {
+          const updatedUser = { ...user, xp: result.user_progress.total_xp };
+          setUser(updatedUser);
+          storage.saveUser(updatedUser);
+        }
+      }
     } catch (err) {
-      console.error('Failed to update flashcard on server:', err);
+      console.error('Failed to award XP:', err);
     }
-    
-    // Award XP
-    const newXP = user.xp + 10;
-    const updatedUser = { ...user, xp: newXP };
-    setUser(updatedUser);
-    storage.saveUser(updatedUser);
   };
 
   const markAsUnknown = async () => {
@@ -162,11 +172,32 @@ export default function Flashcards() {
       console.error('Failed to update flashcard on server:', err);
     }
     
-    // Deduct XP
-    const newXP = Math.max(0, user.xp - 10); // Ensure XP doesn't go below 0
-    const updatedUser = { ...user, xp: newXP };
-    setUser(updatedUser);
-    storage.saveUser(updatedUser);
+    // Deduct XP through backend
+    try {
+      const response = await fetch(buildApiUrl('/xp/flashcard/deduct'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          user_id: 'default_user',
+          flashcard_id: currentCard.id,
+          xp_amount: 10
+        }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('XP deducted:', result.xp_earned);
+        
+        // Update user XP from backend
+        if (result.user_progress) {
+          const updatedUser = { ...user, xp: result.user_progress.total_xp };
+          setUser(updatedUser);
+          storage.saveUser(updatedUser);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to deduct XP:', err);
+    }
   };
 
   const markForReview = () => {

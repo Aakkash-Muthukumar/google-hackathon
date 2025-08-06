@@ -116,7 +116,37 @@ export default function LessonDetail() {
   };
 
   const markLessonAsCompleted = async () => {
-    await updateLessonProgress(100);
+    if (!lesson || !course || !courseId || !lessonId) return;
+    
+    try {
+      // Update lesson progress to 100%
+      await updateLessonProgress(100);
+      
+      // Award XP for lesson completion
+      const response = await fetch(buildApiUrl('/xp/lesson'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: 'default_user',
+          course_id: courseId,
+          lesson_id: lessonId,
+          xp_amount: lesson.xpReward || 100
+        }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Lesson XP earned:', result.xp_earned);
+        
+        // Show success message
+        toast({
+          title: "Lesson Completed!",
+          description: `Earned ${result.xp_earned} XP for completing this lesson.`,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to award lesson XP:', err);
+    }
   };
 
   const getProgressColor = (progress: number) => {

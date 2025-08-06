@@ -67,7 +67,7 @@
       }
     ],
     "id": 2,
-    "completed": false
+    "completed": true
   },
   {
     "title": "Array Reordering Challenge",
@@ -247,6 +247,41 @@
         "output": "False"
       }
     ],
+    "completed": false
+  },
+  {
+    "title": "Array Partition Sum",
+    "description": "Given an array of integers `nums` and an integer `k`, determine if it's possible to partition the array into two non-empty subsets such that the absolute difference between the sums of the two subsets is at most `k`. \n\nFor example, if `nums = [1, 2, 3, 4]` and `k = 2`, we want to see if we can divide `nums` into two subsets whose sums differ by at most 2.  One possible partition is `{1, 2, 3}, {4}`, which has sums of 6 and 4, a difference of 2. Another is `{1, 4}, {2, 3}`, which has sums of 5 and 5, a difference of 0.  \n\nThis problem requires exploring different combinations of subsets and calculating their sums to determine if the condition is met.",
+    "difficulty": "easy",
+    "language": "python",
+    "topic": "arrays",
+    "xpReward": 60,
+    "input_format": "A list of integers `nums` and an integer `k`.",
+    "output_format": "An integer, 1 if a valid partition exists, 0 otherwise.",
+    "template": "def can_partition(nums, k):\n   \"\"\"Determines if the array can be partitioned into two subsets with a difference of at most k.\n\n   Args:\n       nums (list of int): The input array of integers.\n       k (int): The maximum allowed difference between subset sums.\n\n   Returns:\n       int: 1 if a valid partition exists, 0 otherwise.\n   \"\"\"\n   # Your code here\n   pass",
+    "examples": [
+      {
+        "input": "[1, 2, 3, 4]",
+        "output": 1
+      },
+      {
+        "input": "[1, 5, 3, 8]",
+        "output": 1
+      },
+      {
+        "input": "[1, 2, 3]",
+        "output": 0
+      },
+      {
+        "input": "[10, 4, 6, 3, 7, 9, 2]",
+        "output": 1
+      },
+      {
+        "input": "[1, 1, 1, 1, 1]",
+        "output": 1
+      }
+    ],
+    "id": 7,
     "completed": false
   }
 ]
