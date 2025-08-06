@@ -14,5 +14,13 @@
     "topic": "Life",
     "difficulty": "easy",
     "id": 5
+  },
+  {
+    "term": "Python",
+    "definition": "Interpreted Language",
+    "language": "python",
+    "topic": "Programming",
+    "difficulty": "easy",
+    "id": 6
   }
 ]

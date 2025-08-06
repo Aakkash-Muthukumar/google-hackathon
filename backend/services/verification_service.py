@@ -2,7 +2,7 @@ import time
 from ollama import chat
 import json
 
-# Use a different model for verification - you can change this to any model you prefer
+
 VERIFICATION_MODEL = "gemma3n"
 def collect_verification_response(generator) -> str:
     """Collect all chunks from the AI generator into a single string"""
@@ -41,29 +41,23 @@ def verify_code_with_ai(problem: dict, user_code: str, test_cases: list) -> dict
     prompt = f"""
 You are an expert code evaluator. Carefully analyze the given code and test cases to determine if the code is correct.
 
-**PROBLEM DESCRIPTION:**
+PROBLEM DESCRIPTION:
 {problem['description']}
 
-**USER CODE:**
-```{problem.get('language', 'python')}
+USER CODE:
 {user_code}
-```
 
-**TEST CASES:**
-```json
+TEST CASES:
 {json.dumps(test_cases, indent=2)}
-```
 
-**INSTRUCTIONS:**
+INSTRUCTIONS:
 1. Analyze the user's code for syntax errors, logic errors, and completeness
 2. For each test case, determine what the code would output given the input
 3. Compare the expected output with what the code would actually produce
 4. Be strict but fair - if the code is incomplete, has errors, or won't produce the expected output, mark it as failed
 
-**RESPONSE FORMAT:**
+RESPONSE FORMAT:
 Return ONLY a valid JSON object with this exact structure:
-
-```json
 {{
     "correct": true/false,
     "feedback": "brief explanation of why the code passed or failed",
@@ -76,9 +70,8 @@ Return ONLY a valid JSON object with this exact structure:
         }}
     ]
 }}
-```
 
-**IMPORTANT:** 
+IMPORTANT: 
 - Return ONLY the JSON object, no other text
 - Be accurate in your analysis
 - If the code has syntax errors or won't run, mark all tests as failed
@@ -96,22 +89,8 @@ Return ONLY a valid JSON object with this exact structure:
                 model=VERIFICATION_MODEL,
                 messages=[
                     {"role": "system", "content": (
-                        "You are an expert programming evaluator who analyzes code and determines if it correctly solves programming problems. "
+                        "You are an expert programming evaluator. You analyze code and determine if it correctly solves programming problems. "
                         "You are precise, thorough, and provide accurate assessments."
-                        "\n\n"
-                        "**FORMATTING RULES:**\n"
-                        "1. Use proper markdown formatting for better readability\n"
-                        "2. Use **bold** for emphasis and important points\n"
-                        "3. Use `code` for code snippets, variables, and technical terms\n"
-                        "4. Use ```code blocks``` for multi-line code examples\n"
-                        "5. Ensure proper spacing and newlines for clean formatting\n"
-                        "6. Make feedback clear and actionable\n"
-                        "\n\n"
-                        "**EVALUATION RULES:**\n"
-                        "1. Be precise and thorough in your analysis\n"
-                        "2. Provide accurate assessments of code correctness\n"
-                        "3. Give clear, actionable feedback\n"
-                        "4. Be strict but fair in your evaluation"
                     )},
                     {"role": "user", "content": prompt}
                 ],

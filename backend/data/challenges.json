@@ -32,7 +32,7 @@
       }
     ],
     "id": 1,
-    "completed": false
+    "completed": true
   },
   {
     "title": "Hidden Sequence",
@@ -224,6 +224,29 @@
       }
     ],
     "id": 5,
+    "completed": false
+  },
+  {
+    "id": 6,
+    "title": "Binary Search Tree Validation",
+    "description": "Given a binary tree, determine if it is a valid binary search tree (BST). A BST is valid if for every node, all nodes in its left subtree have values less than the node's value, and all nodes in its right subtree have values greater than the node's value.",
+    "difficulty": "medium",
+    "language": "python",
+    "topic": "dynamic-programming",
+    "xpReward": 75,
+    "input_format": "Varies based on the specific challenge",
+    "output_format": "Varies based on the specific challenge",
+    "template": "def is_valid_bst(root):\n    \"\"\"Checks if the binary tree is a valid BST.\"\"\"\n    # Your code here\n    pass",
+    "examples": [
+      {
+        "input": "TreeNode(2, TreeNode(1), TreeNode(3))",
+        "output": "True"
+      },
+      {
+        "input": "TreeNode(5, TreeNode(1), TreeNode(4, TreeNode(3), TreeNode(6)))",
+        "output": "False"
+      }
+    ],
     "completed": false
   }
 ]

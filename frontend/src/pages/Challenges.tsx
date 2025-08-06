@@ -729,7 +729,7 @@ export default function Challenges() {
                 >
                   {Boolean(challenge.completed) ? (
                     <>
-                      <CheckCircle className="mr-3 h-4 w-4" />
+                      <CheckCircle className="mr-2 h-4 w-4" />
                       Completed
                     </>
                   ) : (

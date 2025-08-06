@@ -260,11 +260,11 @@
         "description": "Master advanced techniques and best practices",
         "order": 3,
         "xpReward": 200,
-        "content": "",
+        "content": "Error generating lesson content: [Errno 61] Connection refused",
         "completed": false,
         "progress": 0,
         "createdAt": "2025-08-04T01:39:10.082833",
-        "updatedAt": "2025-08-04T01:39:10.082833"
+        "updatedAt": "2025-08-05T20:31:42.235063"
       }
     ],
     "progress": 0,
@@ -273,7 +273,7 @@
     "completed": false,
     "thumbnail": null,
     "createdAt": "2025-08-04T01:39:10.082833",
-    "updatedAt": "2025-08-04T01:46:35.772642"
+    "updatedAt": "2025-08-05T20:31:42.236248"
   },
   {
     "id": "da8f5a5d-8a95-4e16-8552-46edef0e24f1",
@@ -328,5 +328,59 @@
     "thumbnail": null,
     "createdAt": "2025-08-04T22:58:44.977144",
     "updatedAt": "2025-08-04 23:01:49.488715"
+  },
+  {
+    "id": "042b96b3-e7fb-47a5-b4ee-35f975f8cf98",
+    "title": "Leather Work",
+    "description": "A comprehensive course on Leather Work",
+    "difficulty": "beginner",
+    "language": null,
+    "topics": [],
+    "estimatedHours": 10,
+    "lessons": [
+      {
+        "id": "042b96b3-e7fb-47a5-b4ee-35f975f8cf98_lesson_1",
+        "title": "Introduction to Leather Work",
+        "description": "Get started with the basics of Leather Work",
+        "order": 1,
+        "xpReward": 100,
+        "content": "# Introduction to Leather Work: A Beginner's Guide\n\nWelcome to the world of leatherworking! This lesson will guide you through the fundamental concepts and techniques needed to begin your leather crafting journey. We'll cover everything from understanding the material to basic tools and simple projects. Get ready to explore the beauty and versatility of leather!\n\n## PART 1 (0-25%): Introduction and Basic Concepts\n\nLeatherworking is the craft of shaping and assembling leather to create various items \u2013 from wallets and belts to bags and armor. It's a rewarding hobby that combines creativity, skill, and a connection to traditional craftsmanship.\n\n**What will we cover?**\n\n*   **Types of Leather:**  We'll explore different types of leather and their uses.\n*   **Basic Tools:**  An introduction to the essential tools you'll need.\n*   **Leather Properties:** Understanding how leather behaves and how to work with it.\n*   **Safety First:**  Important safety precautions to take while working with leather.\n\n**Basic Definitions and Fundamental Concepts:**\n\n*   **Grain:** The natural pattern on the leather's surface.  It affects the leather's appearance and durability.  Full-grain leather is considered the highest quality, showing the full grain.\n*   **Vegetable-Tanned Leather:** Leather tanned using vegetable tannins (derived from plants). It's popular for leatherworking because it holds its shape well and can be easily dyed and finished.\n*   **Chrome-Tanned Leather:** Leather tanned using chromium salts. It's softer and more pliable than vegetable-tanned leather, often used for clothing and upholstery.\n*   **Stiffness:** A measure of how firm or flexible the leather is. Vegetable-tanned leather is generally stiffer than chrome-tanned.\n*   **Thickness (Weight):** Measured in ounces (oz).  Thicker leather (8oz+) is used for heavy-duty projects, while thinner leather (2-4oz) is suitable for lighter items.\n\n**Simple Examples:**\n\nImagine you want to make a simple key fob. This will give you a hands-on feel for the basic process of cutting, punching holes, and attaching pieces of leather.\n\n```\n// Example:  A simple key fob design (conceptual)\n// This isn't code, but illustrates the idea of a simple project.\n// We'll cover the actual steps in later sections.\n```\n\n# # \ud83c\udfaf 25% Content Complete\n\n## PART 2 (25-50%): Detailed Explanation\n\nNow, let's dive deeper into the concepts introduced in the first part. We'll explore the different types of leather in more detail, discuss the tools you'll need, and learn about the properties of leather that affect how it behaves during crafting.\n\n**Types of Leather - A Closer Look:**\n\n*   **Full-Grain Leather:** The highest quality. It retains the entire grain structure, making it strong and durable. It develops a beautiful patina over time. *Example:* A saddle or a high-end briefcase.\n*   **Top-Grain Leather:** The top layer of the hide has been sanded and finished to remove imperfections. It's still durable but less rugged than full-grain. *Example:*  Most leather jackets.\n*   **Corrected-Grain Leather:** The sanded surface has been embossed with a pattern to mimic full-grain leather. It's less expensive but less durable. *Example:*  Cheaper leather goods.\n*   **Bonded Leather:** Made from scraps of leather bonded together with adhesives. It's the least expensive and least durable. *Example:*  Often used in car seats or furniture.\n\n**Essential Tools:**\n\n*   **Cutting Tools:**\n    *   **Utility Knife:** For general cutting.\n    *   **Leather Knife (or Rotary Cutter):**  Provides cleaner, more precise cuts.\n*   **Marking Tools:**\n    *   **Scratch Awl:**  For marking lines on the leather.\n    *   **Ruler/Straight Edge:**  For accurate measurements.\n*   **Punching Tools:**\n    *   **Hole Punch:**  For creating holes for stitching.\n    *   **Pricking Irons:**  For marking stitch lines.\n*   **Stitching Tools:**\n    *   **Needles:**  Special leather needles with a blunt tip.\n    *   **Thread:**  Waxed linen or nylon thread.\n*   **Finishing Tools:**\n    *   **Edge Beveler:**  For rounding the edges of the leather.\n    *   **Burnishing Tool:**  For smoothing and polishing the edges.\n*   **Other Useful Tools:**\n    *   **Mallet:**  For striking punches and other tools.\n    *   **Cutting Mat:**  To protect your work surface.\n\n**Leather Properties - A Step-by-Step Breakdown:**\n\n1.  **Flexibility:** Leather can be bent and shaped, but it can also crease or tear if stressed too much.\n2.  **Absorption:** Leather absorbs moisture, which can affect its appearance and durability.\n3.  **Durability:**  The durability of leather depends on the type and thickness.\n4.  **Workability:**  Leather can be cut, punched, stitched, and finished.\n\n**Example: Creating a Simple Wallet**\n\nLet's break down the process of making a simple bifold wallet.\n\n1.  **Pattern Creation:**  Draw a pattern for the wallet pieces on paper.\n2.  **Leather Cutting:**  Lay the pattern on the leather and carefully cut out the pieces using a leather knife.\n3.  **Punching Holes:**  Use a hole punch to create holes for stitching.\n4.  **Stitching:**  Use a leather needle and waxed thread to stitch the pieces together.\n5.  **Finishing:**  Edge bevel the edges and burnish them for a smooth finish.\n\n# # \ud83c\udfaf 50% Content Complete\n\n## PART 3 (50-75%): Advanced Examples and Practice\n\nNow that you have a basic understanding of leatherworking, let's explore some more practical examples and common use cases. We'll also cover some intermediate-level techniques.\n\n**Practical Examples:**\n\n*   **Belt Making:**  Involves cutting, punching, and attaching a buckle to a strip of leather.\n*   **Card Holder:**  A simple project that introduces basic stitching and edge finishing.\n*   **Key Fob:**  A great starting point for practicing cutting, punching, and attaching hardware.\n*   **Small Pouch:**  A more complex project that involves assembling multiple pieces of leather.\n\n**Common Use Cases:**\n\n*   **Accessories:** Wallets, belts, bags, keychains.\n*   **Home Decor:** Coasters, trivets, wall organizers.\n*   **Functional Items:**  Tool pouches, phone cases, book covers.\n\n**Intermediate Techniques:**\n\n*   **Edge Painting:**  Using specialized paints to color and protect the edges of the leather.\n*   **Skiving:**  Thinning the edges of the leather to reduce bulk and improve the fit of seams.\n*   **Installing Snaps/Rivets:**  Using tools to attach metal fasteners to leather.\n\n**Scenario: Repairing a Scuffed Leather Bag**\n\nLet's say you have a leather bag with a small scuff. You can:\n\n1.  **Clean the area:** Gently clean the scuffed area with a leather cleaner.\n2.  **Apply a leather conditioner:**  Condition the leather to restore its moisture and suppleness.\n3.  **Use a leather repair pigment:**  Apply a matching pigment to cover the scuff.\n4.  **Buff the area:**  Buff the area to blend the pigment with the surrounding leather.\n\n# # \ud83c\udfaf 75% Content Complete\n\n## PART 4 (75-100%): Exercises and Summary\n\nLet's solidify your understanding with some hands-on exercises and a summary of the key takeaways.\n\n**Exercises:**\n\n1.  **Practice Stitching:**  Using scrap leather, practice different stitching techniques (e.g., saddle stitch, straight stitch).\n2.  **Edge Beveling and Burnishing:**  Practice beveling and burnishing the edges of leather scraps.\n3.  **Simple Key Fob Project:**  Create a simple key fob using a piece of leather, a hole punch, and some stitching.\n\n**Key Takeaways:**\n\n*   Understanding the different types of leather is crucial for choosing the right material for your project.\n*   Having the right tools will make your leatherworking projects much easier.\n*   Leather is a versatile material that can be used to create a wide variety of items.\n*   Practice is key to mastering leatherworking techniques.\n\n**Common Mistakes to Avoid:**\n\n*   Using the wrong type of leather for a project.\n*   Using dull tools.\n*   Using the wrong thread.\n*   Rushing the process.\n\n**Further Reading:**\n\n*   \"The Leathercraft Handbook\" by Tom Eckerson\n*   \"Leatherworking for Dummies\" by David M. Ross\n*   Online leatherworking forums and tutorials.\n\n**Important Note:** Always prioritize safety when working with sharp tools. Use a cutting mat and wear appropriate safety gear.\n\n# # \ud83c\udfaf 100% Content Complete\n\n\n\n",
+        "completed": false,
+        "progress": 0,
+        "createdAt": "2025-08-05T18:07:15.799384",
+        "updatedAt": "2025-08-05T18:29:31.217674"
+      },
+      {
+        "id": "042b96b3-e7fb-47a5-b4ee-35f975f8cf98_lesson_2",
+        "title": "Leather Work Fundamentals",
+        "description": "Learn the core concepts and principles",
+        "order": 2,
+        "xpReward": 150,
+        "content": "",
+        "completed": false,
+        "progress": 0,
+        "createdAt": "2025-08-05T18:07:15.799384",
+        "updatedAt": "2025-08-05T18:07:15.799384"
+      },
+      {
+        "id": "042b96b3-e7fb-47a5-b4ee-35f975f8cf98_lesson_3",
+        "title": "Advanced Leather Work",
+        "description": "Master advanced techniques and best practices",
+        "order": 3,
+        "xpReward": 200,
+        "content": "",
+        "completed": false,
+        "progress": 0,
+        "createdAt": "2025-08-05T18:07:15.799384",
+        "updatedAt": "2025-08-05T18:07:15.799384"
+      }
+    ],
+    "progress": 0,
+    "totalXP": 450,
+    "dailyStreak": 0,
+    "completed": false,
+    "thumbnail": null,
+    "createdAt": "2025-08-05T18:07:15.799384",
+    "updatedAt": "2025-08-05T18:29:31.219763"
   }
 ]
