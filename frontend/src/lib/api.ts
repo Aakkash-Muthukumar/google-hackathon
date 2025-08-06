@@ -201,4 +201,24 @@ export const chatAPI = {
   }),
   
   getCurrentChat: () => apiRequest(`${API_ENDPOINTS.CHATS}/current/id`),
+};
+
+// Settings API
+export const settingsAPI = {
+  getUserProgress: (userId: string = 'default_user') => 
+    apiRequest(`${API_ENDPOINTS.SETTINGS}/user-progress?user_id=${userId}`),
+  
+  exportData: (userId: string = 'default_user', exportType: string = 'all') => 
+    apiRequest(`${API_ENDPOINTS.SETTINGS}/export?user_id=${userId}&export_type=${exportType}`),
+  
+  importData: (exportData: Record<string, unknown>, userId: string = 'default_user') => 
+    apiRequest(`${API_ENDPOINTS.SETTINGS}/import?user_id=${userId}`, {
+      method: 'POST',
+      body: JSON.stringify({ export_data: exportData }),
+    }),
+  
+  resetProgress: (userId: string = 'default_user', resetAll: boolean = false) => 
+    apiRequest(`${API_ENDPOINTS.SETTINGS}/reset-progress?user_id=${userId}&reset_all=${resetAll}`, {
+      method: 'POST',
+    }),
 }; 

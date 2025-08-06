@@ -26,7 +26,10 @@ export default function Layout() {
       {/* Header */}
       <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-40">
         <div className="flex h-16 items-center justify-between px-6">
-          <div className="font-bold text-xl text-primary">📚 CodeTutor</div>
+          <div className="flex items-center gap-3 font-bold text-xl text-primary">
+            <img src="/codivus-logo.png" alt="Codivus" className="w-8 h-8" />
+            Codivus
+          </div>
           
           <div className="flex items-center gap-4">
             <LanguageSelector />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, User, Globe, Palette, RotateCcw, Download, Trash2 } from 'lucide-react';
+import { Settings as SettingsIcon, User, Globe, Palette, RotateCcw, Download, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,13 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { storage } from '@/lib/storage';
+import { settingsAPI } from '@/lib/api';
 import { User as UserType } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Settings() {
   const [user, setUser] = useState<UserType>(storage.getUser());
   const [isDarkMode, setIsDarkMode] = useState(
     document.documentElement.classList.contains('dark')
   );
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Apply theme changes
@@ -29,37 +33,114 @@ export default function Settings() {
     storage.saveUser(updatedUser);
   }, [isDarkMode]);
 
+  // Fetch current progress from backend
+  const fetchCurrentProgress = async () => {
+    try {
+      setIsLoading(true);
+      const response = await settingsAPI.getUserProgress();
+      
+      if (response.success && response.progress) {
+        const progress = response.progress;
+        
+        // Update user with current progress data
+        const updatedUser = {
+          ...user,
+          level: progress.level || 1,
+          xp: progress.total_xp || 0,
+          xpToNextLevel: (progress.level || 1) * 100, // Calculate XP needed for next level
+          streak: progress.streak || 0,
+          achievements: progress.achievements || []
+        };
+        
+        setUser(updatedUser);
+        storage.saveUser(updatedUser);
+      }
+    } catch (error) {
+      console.error('Failed to fetch current progress:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load current progress data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch progress on component mount
+  useEffect(() => {
+    fetchCurrentProgress();
+  }, []);
+
   const handleUserUpdate = (updates: Partial<UserType>) => {
     const updatedUser = { ...user, ...updates };
     setUser(updatedUser);
     storage.saveUser(updatedUser);
   };
 
-  const resetProgress = () => {
+  const resetProgress = async () => {
     if (confirm('Are you sure you want to reset all your progress? This action cannot be undone.')) {
-      storage.clearAllData();
-      // Reload the page to reset the app state
-      window.location.reload();
+      try {
+        setIsLoading(true);
+        const response = await settingsAPI.resetProgress();
+        
+        if (response.success) {
+          toast({
+            title: "Success",
+            description: "Progress reset successfully",
+          });
+          
+          // Refresh progress data
+          await fetchCurrentProgress();
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to reset progress",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Failed to reset progress:', error);
+        toast({
+          title: "Error",
+          description: "Failed to reset progress",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const exportData = () => {
-    const data = {
-      user: storage.getUser(),
-      flashcards: storage.getFlashCards(),
-      challenges: storage.getChallenges(),
-      chats: storage.getChatsSync(),
-      progress: storage.getProgress(),
-      exportDate: new Date().toISOString()
-    };
-    
-    const dataStr = JSON.stringify(data, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(dataBlob);
-    link.download = `programming-tutor-backup-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
+  const exportData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await settingsAPI.exportData();
+      
+      if (response) {
+        const dataStr = JSON.stringify(response, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `codivus-backup-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        toast({
+          title: "Success",
+          description: "Data exported successfully",
+        });
+      }
+    } catch (error) {
+      console.error('Failed to export data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to export data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const languageOptions = [
@@ -82,10 +163,22 @@ export default function Settings() {
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
       {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
-          <SettingsIcon className="w-10 h-10 text-primary" />
-          Settings
-        </h1>
+        <div className="flex items-center justify-center gap-4">
+          <h1 className="text-4xl font-bold flex items-center gap-3">
+            <SettingsIcon className="w-10 h-10 text-primary" />
+            Settings
+          </h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchCurrentProgress}
+            disabled={isLoading}
+            className="ml-4"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
         <p className="text-lg text-muted-foreground">
           Customize your learning experience
         </p>
@@ -237,18 +330,20 @@ export default function Settings() {
                 variant="outline" 
                 className="w-full justify-start"
                 onClick={exportData}
+                disabled={isLoading}
               >
                 <Download className="w-4 h-4 mr-2" />
-                Export Learning Data
+                {isLoading ? 'Exporting...' : 'Export Learning Data'}
               </Button>
               
               <Button 
                 variant="outline" 
                 className="w-full justify-start text-warning hover:text-warning"
                 onClick={resetProgress}
+                disabled={isLoading}
               >
                 <RotateCcw className="w-4 h-4 mr-2" />
-                Reset All Progress
+                {isLoading ? 'Resetting...' : 'Reset All Progress'}
               </Button>
             </div>
             
@@ -289,7 +384,7 @@ export default function Settings() {
       {/* App Info */}
       <Card className="bg-gradient-card shadow-card">
         <CardHeader>
-          <CardTitle>About Programming Tutor</CardTitle>
+          <CardTitle>About Codivus</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground space-y-2">

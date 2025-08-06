@@ -448,6 +448,8 @@ def update_achievement_progress(user_id: str, progress_type: str, value: int = 1
             'achievement_progress': {
                 'challenges_completed': 0,
                 'flashcards_learned': 0,
+                'courses_completed': 0,
+                'lessons_completed': 0,
                 'streak_days': 0,
                 'perfect_solutions': 0,
                 'different_topics': 0,
@@ -456,12 +458,16 @@ def update_achievement_progress(user_id: str, progress_type: str, value: int = 1
             'stats': {
                 'total_challenges_completed': 0,
                 'total_flashcards_learned': 0,
+                'total_courses_completed': 0,
+                'total_lessons_completed': 0,
                 'total_perfect_solutions': 0,
                 'total_topics_covered': 0,
                 'total_difficulties_tried': 0,
                 'average_challenge_time': 0,
                 'favorite_topic': '',
-                'favorite_difficulty': ''
+                'favorite_difficulty': '',
+                'topics_covered': [],
+                'difficulties_tried': []
             }
         }
     
@@ -526,15 +532,19 @@ def update_achievement_progress(user_id: str, progress_type: str, value: int = 1
         achievement_progress['perfect_solutions'] += value
         stats['total_perfect_solutions'] += value
     
-    # Check for new achievements
+    # Check for new achievements (but don't award XP - achievements are cosmetic)
     new_achievements = check_achievements(user_id, progress)
-    xp_earned = unlock_achievements(user_id, new_achievements)
+    # Don't call unlock_achievements to avoid adding XP
+    # Just add achievements to the list without XP
+    for achievement in new_achievements:
+        if achievement['id'] not in user_progress.get('achievements', []):
+            user_progress.setdefault('achievements', []).append(achievement['id'])
     
     save_progress(progress)
     
     return {
         'new_achievements': new_achievements,
-        'xp_earned': xp_earned,
+        'xp_earned': 0,  # No XP from achievements
         'updated_progress': user_progress
     }
 

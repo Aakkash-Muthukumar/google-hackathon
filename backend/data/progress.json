@@ -1,44 +1,41 @@
 {
   "default_user": {
-    "total_xp": 885,
+    "total_xp": 90,
     "completed_challenges": [
-      3,
-      4,
-      1,
       2
     ],
-    "level": 4,
-    "streak": 2,
-    "longest_streak": 7,
-    "last_active_date": "2025-08-06T00:04:22.417652",
+    "completed_courses": [],
+    "completed_lessons": [],
+    "level": 1,
+    "streak": 0,
+    "longest_streak": 0,
+    "last_active_date": "2025-08-06T12:16:36.405319",
     "achievements": [
-      "first_challenge",
-      "streak_3_days",
-      "level_3",
-      "topic_explorer",
-      "flashcard_learner"
+      "first_challenge"
     ],
     "achievement_progress": {
-      "challenges_completed": 4,
-      "flashcards_learned": 12,
-      "streak_days": 2,
-      "perfect_solutions": 2,
-      "different_topics": 3,
+      "challenges_completed": 1,
+      "flashcards_learned": 0,
+      "courses_completed": 0,
+      "lessons_completed": 0,
+      "streak_days": 0,
+      "perfect_solutions": 0,
+      "different_topics": 1,
       "different_difficulties": 1
     },
     "stats": {
-      "total_challenges_completed": 4,
-      "total_flashcards_learned": 12,
-      "total_perfect_solutions": 2,
-      "total_topics_covered": 3,
+      "total_challenges_completed": 1,
+      "total_flashcards_learned": 0,
+      "total_courses_completed": 0,
+      "total_lessons_completed": 0,
+      "total_perfect_solutions": 0,
+      "total_topics_covered": 1,
       "total_difficulties_tried": 1,
       "average_challenge_time": 0,
-      "favorite_topic": "algorithms",
-      "favorite_difficulty": "easy",
+      "favorite_topic": "",
+      "favorite_difficulty": "",
       "topics_covered": [
-        "algorithms",
-        "algorithm",
-        "arrays"
+        "algorithm"
       ],
       "difficulties_tried": [
         "easy"

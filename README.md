@@ -1,4 +1,4 @@
-# Programming Learning Platform
+# Codivus - Programming Learning Platform
 
 A comprehensive platform for learning programming through interactive challenges, flashcards, and AI-powered tutoring.
 
@@ -53,7 +53,7 @@ programming-learning-platform/
 
 - **Interactive Coding Challenges**: Practice with real programming problems
 - **Flashcards**: Learn programming concepts with spaced repetition
-- **AI Tutor**: Get help from an AI-powered programming tutor
+- **AI Tutor**: Get help from an AI-powered Codivus tutor
 - **Progress Tracking**: Monitor your learning progress and earn XP
 - **Offline Support**: Work offline with local storage
 - **Multi-language Support**: Support for Python, JavaScript, C++, and Java

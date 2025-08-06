@@ -32,7 +32,7 @@
       }
     ],
     "id": 1,
-    "completed": true
+    "completed": false
   },
   {
     "title": "Hidden Sequence",
@@ -67,7 +67,7 @@
       }
     ],
     "id": 2,
-    "completed": true
+    "completed": false
   },
   {
     "title": "Array Reordering Challenge",
@@ -102,7 +102,7 @@
       }
     ],
     "id": 3,
-    "completed": true
+    "completed": false
   },
   {
     "title": "Prime Factor Sum Challenge",
@@ -141,7 +141,7 @@
       }
     ],
     "id": 4,
-    "completed": true
+    "completed": false
   },
   {
     "title": "Island Perimeter",

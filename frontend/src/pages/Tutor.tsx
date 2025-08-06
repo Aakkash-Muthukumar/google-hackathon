@@ -533,7 +533,7 @@ export default function Tutor() {
          <div className="text-center space-y-4 mb-6 relative flex-shrink-0 p-4">
            <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
              <Bot className="w-10 h-10 text-primary" />
-             AI Programming Tutor
+             AI Codivus Tutor
            </h1>
            <p className="text-lg text-muted-foreground">
              Ask questions about programming concepts, debugging, or best practices
@@ -584,7 +584,7 @@ export default function Tutor() {
                   <div className="text-center py-8 space-y-6">
                     <div className="text-6xl">🤖</div>
                     <div>
-                      <h3 className="text-xl font-semibold mb-2">Welcome to your AI Programming Tutor!</h3>
+                      <h3 className="text-xl font-semibold mb-2">Welcome to your AI Codivus Tutor!</h3>
                       <p className="text-muted-foreground mb-6">
                         I'm here to help you learn programming. Ask me anything!
                       </p>

@@ -2,16 +2,15 @@
 
 echo "Resetting user progress..."
 
-# Reset progress.json
-cat > backend/data/progress.json << EOF
-{
-  "default_user": {
-    "total_xp": 0,
-    "completed_challenges": [],
-    "level": 1
-  }
-}
-EOF
+# Navigate to backend directory
+cd backend
+
+# Run the reset service using Python
+python3 -c "
+from services.reset_service import reset_user_progress
+result = reset_user_progress('default_user')
+print('Reset result:', result)
+"
 
 echo "User progress reset successfully!"
-echo "All completed challenges have been cleared." 
+echo "All progress data has been reset while preserving content data." 

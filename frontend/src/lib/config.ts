@@ -15,6 +15,7 @@ export const API_ENDPOINTS = {
   PROGRESS: '/progress',
   USER: '/user',
   CHATS: '/chat',
+  SETTINGS: '/settings',
 } as const;
 
 // Helper function to build API URLs

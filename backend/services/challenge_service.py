@@ -664,6 +664,8 @@ def update_user_progress(user_id: str, challenge_id: int, xp_earned: int, challe
         progress[user_id] = {
             'total_xp': 0,
             'completed_challenges': [],
+            'completed_courses': [],
+            'completed_lessons': [],
             'level': 1,
             'streak': 0,
             'longest_streak': 0,
@@ -672,6 +674,8 @@ def update_user_progress(user_id: str, challenge_id: int, xp_earned: int, challe
             'achievement_progress': {
                 'challenges_completed': 0,
                 'flashcards_learned': 0,
+                'courses_completed': 0,
+                'lessons_completed': 0,
                 'streak_days': 0,
                 'perfect_solutions': 0,
                 'different_topics': 0,
@@ -680,17 +684,27 @@ def update_user_progress(user_id: str, challenge_id: int, xp_earned: int, challe
             'stats': {
                 'total_challenges_completed': 0,
                 'total_flashcards_learned': 0,
+                'total_courses_completed': 0,
+                'total_lessons_completed': 0,
                 'total_perfect_solutions': 0,
                 'total_topics_covered': 0,
                 'total_difficulties_tried': 0,
                 'average_challenge_time': 0,
                 'favorite_topic': '',
-                'favorite_difficulty': ''
+                'favorite_difficulty': '',
+                'topics_covered': [],
+                'difficulties_tried': []
             }
         }
     
+    # Get current user progress
+    user_progress = progress[user_id]
+    
     # Update streak first
-    user_progress = update_streak(user_id)
+    updated_progress = update_streak(user_id)
+    
+    # Merge the updated progress with current progress
+    user_progress.update(updated_progress)
     
     # Add XP
     user_progress['total_xp'] += xp_earned
@@ -698,6 +712,10 @@ def update_user_progress(user_id: str, challenge_id: int, xp_earned: int, challe
     # Add challenge to completed list if not already there
     if challenge_id not in user_progress['completed_challenges']:
         user_progress['completed_challenges'].append(challenge_id)
+    
+    # Save progress before calling achievement service
+    progress[user_id] = user_progress
+    save_progress(progress)
     
     # Update achievement progress
     additional_data = {}
@@ -714,12 +732,27 @@ def update_user_progress(user_id: str, challenge_id: int, xp_earned: int, challe
         additional_data
     )
     
+    # Ensure achievements are unlocked (but don't add XP - achievements are cosmetic)
+    if achievement_result['new_achievements']:
+        # Add achievements to user_progress
+        for achievement in achievement_result['new_achievements']:
+            if achievement['id'] not in user_progress.get('achievements', []):
+                user_progress.setdefault('achievements', []).append(achievement['id'])
+        
+        # Save the updated progress
+        progress[user_id] = user_progress
+        save_progress(progress)
+    
     # Recalculate level with new XP
     user_progress['level'] = calculate_level(user_progress['total_xp'])
     
-    # Update progress in main progress dict
+    # Save the final progress with updated level
     progress[user_id] = user_progress
     save_progress(progress)
+    
+    # Reload progress to get the updated data
+    progress = load_progress()
+    user_progress = progress[user_id]
     
     return {
         'progress': user_progress,

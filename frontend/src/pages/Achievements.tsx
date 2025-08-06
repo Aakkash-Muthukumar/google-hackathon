@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Lock, Star, Zap, Flame, Target, BookOpen, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Trophy, Lock, Star, Zap, Flame, Target, BookOpen, MapPin, RefreshCw } from 'lucide-react';
 import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 import { useLanguage } from '@/hooks/useLanguage';
 
@@ -45,11 +46,27 @@ const Achievements: React.FC = () => {
     loadAchievements();
   }, []);
 
+  // Refresh achievements when component becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadAchievements();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const loadAchievements = async () => {
     try {
+      setLoading(true);
       const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHALLENGES}/achievements`), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
         body: JSON.stringify({ user_id: "default_user" })
       });
 
@@ -168,9 +185,21 @@ const Achievements: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
       {/* Header */}
       <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-foreground">
-          Achievements
-        </h1>
+        <div className="flex items-center justify-center gap-4">
+          <h1 className="text-4xl font-bold text-foreground">
+            Achievements
+          </h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadAchievements}
+            disabled={loading}
+            className="ml-4"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Track your progress and unlock badges as you master programming concepts
         </p>
