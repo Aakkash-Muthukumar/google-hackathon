@@ -12,6 +12,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { toast } from 'sonner';
 import { buildApiUrl, API_ENDPOINTS } from '@/lib/config';
 import ReactMarkdown from 'react-markdown';
+import { RewardModal } from '@/components/RewardModal';
 
 interface TestResult {
   input: string;
@@ -53,6 +54,14 @@ const ChallengeWorkspace: React.FC = () => {
   const [parsedHints, setParsedHints] = useState<string[]>([]);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showRewardModal, setShowRewardModal] = useState(false);
+  const [rewardData, setRewardData] = useState<{
+    type: 'level_up' | 'streak' | 'badge';
+    title: string;
+    description: string;
+    xpGained?: number;
+    badgeIcon?: string;
+  } | null>(null);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -179,10 +188,57 @@ const ChallengeWorkspace: React.FC = () => {
       const result = await response.json();
       
       if (result.correct) {
+        const xpEarned = result.xp_earned || challenge.xpReward;
+        const achievementXp = result.achievement_xp_earned || 0;
+        const totalXp = xpEarned + achievementXp;
+        
+        let message = `🎉 Challenge completed! Earned ${totalXp} XP!`;
+        if (achievementXp > 0) {
+          message += ` (${xpEarned} + ${achievementXp} bonus from achievements)`;
+        }
+        
         setSubmitMessage({
           type: 'success',
-          message: `🎉 Challenge completed! Earned ${result.xp_earned || challenge.xpReward} XP!`
+          message: message
         });
+
+        // Check for new achievements
+        if (result.new_achievements && result.new_achievements.length > 0) {
+          const achievements = result.new_achievements;
+          if (achievements.length === 1) {
+            const achievement = achievements[0];
+            setRewardData({
+              type: 'badge',
+              title: achievement.title,
+              description: achievement.description,
+              xpGained: achievement.xp_reward,
+              badgeIcon: achievement.icon
+            });
+          } else {
+            setRewardData({
+              type: 'badge',
+              title: `${achievements.length} Achievements Unlocked!`,
+              description: `You've unlocked ${achievements.length} new achievements!`,
+              xpGained: achievementXp
+            });
+          }
+          setShowRewardModal(true);
+        }
+
+        // Check for level up
+        if (result.user_progress) {
+          const currentLevel = result.user_progress.level;
+          const user = storage.getUser();
+          if (currentLevel > user.level) {
+            setRewardData({
+              type: 'level_up',
+              title: `Level ${currentLevel} Unlocked!`,
+              description: `Congratulations! You've reached level ${currentLevel}!`,
+              xpGained: totalXp
+            });
+            setShowRewardModal(true);
+          }
+        }
       } else {
         setSubmitMessage({
           type: 'error',
@@ -617,6 +673,18 @@ const ChallengeWorkspace: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Reward Modal */}
+      {rewardData && (
+        <RewardModal
+          isOpen={showRewardModal}
+          onClose={() => {
+            setShowRewardModal(false);
+            setRewardData(null);
+          }}
+          reward={rewardData}
+        />
+      )}
     </div>
   );
 };

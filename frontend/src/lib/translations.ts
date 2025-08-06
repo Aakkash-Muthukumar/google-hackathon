@@ -16,6 +16,7 @@ export const translations = {
       flashcards: "Flashcards",
       challenges: "Challenges",
       courses: "Courses",
+      achievements: "Achievements",
       tutor: "AI Tutor",
       settings: "Settings"
     },

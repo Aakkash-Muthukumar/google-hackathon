@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Home, BookOpen, Code, Bot, Settings } from 'lucide-react';
+import { Home, BookOpen, Code, Bot, Settings, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -14,6 +14,7 @@ export default function Layout() {
     { to: '/flashcards', icon: BookOpen, label: t('nav.flashcards') },
     { to: '/challenges', icon: Code, label: t('nav.challenges') },
     { to: '/courses', icon: BookOpen, label: t('nav.courses') },
+    { to: '/achievements', icon: Trophy, label: t('nav.achievements') },
     { to: '/tutor', icon: Bot, label: t('nav.tutor') },
     { to: '/settings', icon: Settings, label: t('nav.settings') },
   ];

@@ -15,6 +15,7 @@ import CourseDetail from "./pages/CourseDetail";
 import LessonDetail from "./pages/LessonDetail";
 import Tutor from "./pages/Tutor";
 import Settings from "./pages/Settings";
+import Achievements from "./pages/Achievements";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="course/:courseId/lesson/:lessonId" element={<LessonDetail />} />
             <Route path="tutor" element={<Tutor />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="achievements" element={<Achievements />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

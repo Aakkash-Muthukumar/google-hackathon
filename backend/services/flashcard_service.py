@@ -36,4 +36,18 @@ def delete_flashcard(flashcard_id: int):
     new_flashcards = [f for f in flashcards if f.get('id') != flashcard_id]
     if len(new_flashcards) == len(flashcards):
         raise ValueError('Flashcard not found')
-    save_flashcards(new_flashcards) 
+    save_flashcards(new_flashcards)
+
+def mark_flashcard_learned(user_id: str, flashcard_id: int) -> Dict[str, Any]:
+    """Mark a flashcard as learned and update achievement progress."""
+    from .achievement_service import update_achievement_progress
+    
+    # Update achievement progress
+    result = update_achievement_progress(user_id, 'flashcard_learned', 1)
+    
+    return {
+        'success': True,
+        'new_achievements': result['new_achievements'],
+        'achievement_xp_earned': result['xp_earned'],
+        'updated_progress': result['updated_progress']
+    } 
